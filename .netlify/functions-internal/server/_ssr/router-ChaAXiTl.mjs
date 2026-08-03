@@ -3,15 +3,15 @@ import { u as require_react } from "../_libs/@floating-ui/react-dom+[...].mjs";
 import { F as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
 import { t as AuthProvider } from "./auth-yKdBkDzp.mjs";
 import { A as redirect, c as HeadContent, d as createRouter, f as Outlet, g as Link, h as createRootRouteWithContext, m as createFileRoute, p as lazyRouteComponent, s as Scripts, v as useRouter } from "../_libs/@tanstack/react-router+[...].mjs";
-import { t as Route$8 } from "./admin.admissions._admissionId.edit-5Gh-lG4o.mjs";
+import { t as Route$8 } from "./admin.admissions._admissionId.edit-Dnjco5fs.mjs";
 import { t as QueryClient } from "../_libs/tanstack__query-core.mjs";
 import { n as QueryClientProvider } from "../_libs/tanstack__react-query.mjs";
 import { t as Toaster } from "../_libs/sonner.mjs";
 import { t as Route$9 } from "./admin.admissions._admissionId.index-C6bTmobl.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/router-DKdbszDD.js
+//#region node_modules/.nitro/vite/services/ssr/assets/router-ChaAXiTl.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
-var styles_default = "/assets/styles-6lhuJIS5.css";
+var styles_default = "/assets/styles-D31F1l87.css";
 function reportLovableError(error, context = {}) {
 	if (typeof window === "undefined") return;
 	window.__lovableEvents?.captureException?.(error, {
@@ -117,7 +117,7 @@ var Route$7 = createRootRouteWithContext()({
 			{ charSet: "utf-8" },
 			{
 				name: "viewport",
-				content: "width=device-width, initial-scale=1"
+				content: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
 			},
 			{ title: "NivasiSpace Admission Management" },
 			{
@@ -274,7 +274,7 @@ var Route$2 = createFileRoute("/admin/settings")({
 	] }),
 	component: lazyRouteComponent($$splitComponentImporter$2, "component")
 });
-var $$splitComponentImporter$1 = () => import("./admin.admissions.index-ColEIlY8.mjs");
+var $$splitComponentImporter$1 = () => import("./admin.admissions.index-FVDofyzr.mjs");
 var Route$1 = createFileRoute("/admin/admissions/")({
 	head: () => ({ meta: [
 		{ title: "Admissions — NivasiSpace Admin" },
@@ -293,7 +293,7 @@ var Route$1 = createFileRoute("/admin/admissions/")({
 	] }),
 	component: lazyRouteComponent($$splitComponentImporter$1, "component")
 });
-var $$splitComponentImporter = () => import("./admin.admissions.new-B30V2Mn7.mjs");
+var $$splitComponentImporter = () => import("./admin.admissions.new-CpuqqDZ3.mjs");
 var Route = createFileRoute("/admin/admissions/new")({
 	head: () => ({ meta: [
 		{ title: "New Admission — NivasiSpace Admin" },

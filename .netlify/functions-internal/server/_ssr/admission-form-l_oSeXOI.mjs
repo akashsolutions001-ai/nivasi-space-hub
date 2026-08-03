@@ -8,14 +8,14 @@ import { t as Input } from "./input-D8rGBYdA.mjs";
 import { t as Label } from "./label-D4M9CFn6.mjs";
 import { n as SERVICE_OPTIONS, t as Checkbox } from "./types-rNLhG5nq.mjs";
 import { i as Trigger, n as Portal, r as Root2, t as Content2 } from "../_libs/@radix-ui/react-popover+[...].mjs";
-import { a as SelectValue, i as SelectTrigger, n as SelectContent, r as SelectItem, t as Select } from "./select-Cdk1ACxq.mjs";
+import { a as SelectValue, i as SelectTrigger, n as SelectContent, r as SelectItem, t as Select } from "./select-BZlLJS6l.mjs";
 import { _ as updateAdmission, d as generateAdmissionId, r as createAdmission } from "./db-CtvUGKRP.mjs";
 import { r as useQueryClient } from "../_libs/tanstack__react-query.mjs";
 import { a as usePackages, i as useColleges, o as useProperties, s as useRooms } from "./hooks-B1VfaGDB.mjs";
 import { a as isValidIndianMobile, o as todayISO, r as formatINR, t as addDays } from "./format-Bg5w10xg.mjs";
 import { n as toast } from "../_libs/sonner.mjs";
 import { t as _e } from "../_libs/cmdk.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/admission-form-wq4I1XBn.js
+//#region node_modules/.nitro/vite/services/ssr/assets/admission-form-l_oSeXOI.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var Textarea = import_react.forwardRef(({ className, ...props }, ref) => {
@@ -486,10 +486,9 @@ function AdmissionForm({ existing }) {
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Field, {
 							label: "Date of Birth",
-							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Input, {
-								type: "date",
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(DobPicker, {
 								value: form.dateOfBirth,
-								onChange: (e) => set("dateOfBirth", e.target.value)
+								onChange: (v) => set("dateOfBirth", v)
 							})
 						})
 					]
@@ -904,6 +903,66 @@ function AdmissionForm({ existing }) {
 					className: "min-w-52",
 					children: saving ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(LoaderCircle, { className: "size-4 animate-spin" }), "Saving Admission…"] }) : existing ? "Save Changes →" : "Save Admission →"
 				})]
+			})
+		]
+	});
+}
+var MONTHS = [
+	"January",
+	"February",
+	"March",
+	"April",
+	"May",
+	"June",
+	"July",
+	"August",
+	"September",
+	"October",
+	"November",
+	"December"
+];
+function DobPicker({ value, onChange }) {
+	const parts = value ? value.split("-") : [
+		"",
+		"",
+		""
+	];
+	const year = parts[0] ?? "";
+	const month = parts[1] ?? "";
+	const day = parts[2] ?? "";
+	function update(y, m, d) {
+		if (y && m && d) onChange(`${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`);
+		else onChange("");
+	}
+	const daysInMonth = year && month ? new Date(Number(year), Number(month), 0).getDate() : 31;
+	const currentYear = (/* @__PURE__ */ new Date()).getFullYear();
+	const years = Array.from({ length: 60 }, (_, i) => currentYear - 5 - i);
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "grid grid-cols-3 gap-2",
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Select, {
+				value: day,
+				onValueChange: (v) => update(year, month, v),
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectTrigger, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectValue, { placeholder: "Day" }) }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectContent, { children: Array.from({ length: daysInMonth }, (_, i) => String(i + 1)).map((d) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectItem, {
+					value: d,
+					children: d
+				}, d)) })]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Select, {
+				value: month,
+				onValueChange: (v) => update(year, v, day),
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectTrigger, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectValue, { placeholder: "Month" }) }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectContent, { children: MONTHS.map((m, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectItem, {
+					value: String(i + 1).padStart(2, "0"),
+					children: m
+				}, m)) })]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Select, {
+				value: year,
+				onValueChange: (v) => update(v, month, day),
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectTrigger, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectValue, { placeholder: "Year" }) }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectContent, { children: years.map((y) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectItem, {
+					value: String(y),
+					children: y
+				}, y)) })]
 			})
 		]
 	});

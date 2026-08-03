@@ -447,10 +447,9 @@ export function AdmissionForm({ existing }: { existing?: Admission | null }) {
             </Select>
           </Field>
           <Field label="Date of Birth">
-            <Input
-              type="date"
+            <DobPicker
               value={form.dateOfBirth}
-              onChange={(e) => set("dateOfBirth", e.target.value)}
+              onChange={(v) => set("dateOfBirth", v)}
             />
           </Field>
         </div>
@@ -790,6 +789,67 @@ export function AdmissionForm({ existing }: { existing?: Admission | null }) {
         </Button>
       </div>
     </form>
+  );
+}
+
+/* ----------------------------- DobPicker ----------------------------- */
+
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+
+function DobPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  // value is YYYY-MM-DD or ""
+  const parts = value ? value.split("-") : ["", "", ""];
+  const year  = parts[0] ?? "";
+  const month = parts[1] ?? "";
+  const day   = parts[2] ?? "";
+
+  function update(y: string, m: string, d: string) {
+    if (y && m && d) onChange(`${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`);
+    else onChange("");
+  }
+
+  const daysInMonth = year && month
+    ? new Date(Number(year), Number(month), 0).getDate()
+    : 31;
+
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 60 }, (_, i) => currentYear - 5 - i);
+
+  return (
+    <div className="grid grid-cols-3 gap-2">
+      {/* Day */}
+      <Select value={day} onValueChange={(v) => update(year, month, v)}>
+        <SelectTrigger><SelectValue placeholder="Day" /></SelectTrigger>
+        <SelectContent>
+          {Array.from({ length: daysInMonth }, (_, i) => String(i + 1)).map((d) => (
+            <SelectItem key={d} value={d}>{d}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      {/* Month */}
+      <Select value={month} onValueChange={(v) => update(year, v, day)}>
+        <SelectTrigger><SelectValue placeholder="Month" /></SelectTrigger>
+        <SelectContent>
+          {MONTHS.map((m, i) => (
+            <SelectItem key={m} value={String(i + 1).padStart(2, "0")}>{m}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      {/* Year */}
+      <Select value={year} onValueChange={(v) => update(v, month, day)}>
+        <SelectTrigger><SelectValue placeholder="Year" /></SelectTrigger>
+        <SelectContent>
+          {years.map((y) => (
+            <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
   );
 }
 
