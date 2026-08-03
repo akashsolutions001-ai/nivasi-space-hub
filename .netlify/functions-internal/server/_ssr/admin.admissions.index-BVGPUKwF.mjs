@@ -3,14 +3,14 @@ import { u as require_react } from "../_libs/@floating-ui/react-dom+[...].mjs";
 import { F as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
 import { _ as useNavigate, g as Link } from "../_libs/@tanstack/react-router+[...].mjs";
 import { f as Search, p as Plus } from "../_libs/lucide-react.mjs";
-import { a as Skeleton, n as Button, t as AdminShell } from "./admin-shell-q_SH2sYS.mjs";
-import { t as Input } from "./input-D8rGBYdA.mjs";
-import { a as SelectValue, i as SelectTrigger, n as SelectContent, r as SelectItem, t as Select } from "./select-BZlLJS6l.mjs";
-import { r as useAdmissions } from "./hooks-B1VfaGDB.mjs";
+import { a as Skeleton, n as Button, t as AdminShell } from "./admin-shell-CHBrYa7c.mjs";
+import { t as Input } from "./input-D7CPUA3X.mjs";
+import { a as SelectValue, i as SelectTrigger, n as SelectContent, r as SelectItem, t as Select } from "./select-C_v9RN57.mjs";
+import { r as useAdmissions } from "./hooks-CvIMf7dK.mjs";
 import { n as formatDate, r as formatINR } from "./format-Bg5w10xg.mjs";
-import { t as EmptyState } from "./stat-card-CICCBvWu.mjs";
-import { i as StatusPill, n as PaymentBadge, r as ProfileAvatar, t as MattressBadge } from "./badges-CB69Mx94.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/admin.admissions.index-FVDofyzr.js
+import { t as EmptyState } from "./stat-card-en3Sqr1s.mjs";
+import { i as StatusPill, n as PaymentBadge, r as ProfileAvatar, t as MattressBadge } from "./badges-BDEpsa2z.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/admin.admissions.index-BVGPUKwF.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 function AdmissionsListPage() {

@@ -1,18 +1,18 @@
 import { o as __toESM } from "../_runtime.mjs";
 import { u as require_react } from "../_libs/@floating-ui/react-dom+[...].mjs";
 import { F as require_jsx_runtime, a as Overlay2, c as Title2, i as Description2, l as Trigger2, n as Cancel, o as Portal2, r as Content2, s as Root2, t as Action } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
-import { i as isFirebaseConfigured } from "./auth-yKdBkDzp.mjs";
+import { i as isFirebaseConfigured } from "./auth-CoXP-0dY.mjs";
 import { _ as useNavigate, g as Link } from "../_libs/@tanstack/react-router+[...].mjs";
 import { c as Trash2, k as ArrowLeft, m as Pencil } from "../_libs/lucide-react.mjs";
-import { a as Skeleton, n as Button, o as buttonVariants, s as cn, t as AdminShell } from "./admin-shell-q_SH2sYS.mjs";
-import { a as fetchAdmission, i as deleteAdmission } from "./db-CtvUGKRP.mjs";
+import { a as Skeleton, n as Button, o as buttonVariants, s as cn, t as AdminShell } from "./admin-shell-CHBrYa7c.mjs";
+import { a as fetchAdmission, i as deleteAdmission } from "./db-B591BTQo.mjs";
 import { r as useQueryClient, t as useQuery } from "../_libs/tanstack__react-query.mjs";
 import { n as formatDate, r as formatINR } from "./format-Bg5w10xg.mjs";
 import { n as toast } from "../_libs/sonner.mjs";
-import { t as EmptyState } from "./stat-card-CICCBvWu.mjs";
-import { t as Route } from "./admin.admissions._admissionId.index-C6bTmobl.mjs";
-import { i as StatusPill, n as PaymentBadge, r as ProfileAvatar, t as MattressBadge } from "./badges-CB69Mx94.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/admin.admissions._admissionId.index-DjiVZGGS.js
+import { t as EmptyState } from "./stat-card-en3Sqr1s.mjs";
+import { t as Route } from "./admin.admissions._admissionId.index-DvXrz5WO.mjs";
+import { i as StatusPill, n as PaymentBadge, r as ProfileAvatar, t as MattressBadge } from "./badges-BDEpsa2z.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/admin.admissions._admissionId.index-t1po4nyu.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var AlertDialog = Root2;

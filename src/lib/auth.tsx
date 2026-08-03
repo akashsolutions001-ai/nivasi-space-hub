@@ -73,14 +73,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   async function login(email: string, password: string) {
-    // Check hardcoded admin credentials first — skip Firebase entirely to avoid 400 errors
+    // Check hardcoded admin credentials first — no Firebase call to avoid 400 errors
     if (email.trim() === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
       sessionStorage.setItem(LOCAL_AUTH_KEY, "1");
       setUser(HARDCODED_ADMIN_USER);
-      // Attempt Firebase Auth silently in background so Firestore rules work if user exists
-      signInWithEmailAndPassword(getFirebaseAuth(), email.trim(), password).catch(() => {
-        // Silently ignore — user may not exist in Firebase Auth yet
-      });
       return;
     }
 

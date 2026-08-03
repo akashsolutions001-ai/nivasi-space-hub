@@ -2,18 +2,18 @@ import { o as __toESM } from "../_runtime.mjs";
 import { u as require_react } from "../_libs/@floating-ui/react-dom+[...].mjs";
 import { F as require_jsx_runtime, d as DialogClose, f as DialogContent$1, g as DialogTitle$1, h as DialogPortal$1, m as DialogOverlay$1, p as DialogDescription$1, u as Dialog$1 } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
 import { h as Package, m as Pencil, p as Plus, t as X, v as LoaderCircle } from "../_libs/lucide-react.mjs";
-import { a as Skeleton, n as Button, s as cn, t as AdminShell } from "./admin-shell-q_SH2sYS.mjs";
-import { t as Input } from "./input-D8rGBYdA.mjs";
-import { t as Label } from "./label-D4M9CFn6.mjs";
-import { n as SERVICE_OPTIONS, t as Checkbox } from "./types-rNLhG5nq.mjs";
-import { f as savePackage, h as setPackageActive } from "./db-CtvUGKRP.mjs";
+import { a as Skeleton, n as Button, s as cn, t as AdminShell } from "./admin-shell-CHBrYa7c.mjs";
+import { t as Input } from "./input-D7CPUA3X.mjs";
+import { t as Label } from "./label-DWHDGQ93.mjs";
+import { n as SERVICE_OPTIONS, t as Checkbox } from "./types-MVXNia4e.mjs";
+import { f as savePackage, h as setPackageActive } from "./db-B591BTQo.mjs";
 import { r as useQueryClient } from "../_libs/tanstack__react-query.mjs";
-import { a as usePackages } from "./hooks-B1VfaGDB.mjs";
+import { a as usePackages } from "./hooks-CvIMf7dK.mjs";
 import { r as formatINR } from "./format-Bg5w10xg.mjs";
 import { n as toast } from "../_libs/sonner.mjs";
-import { t as EmptyState } from "./stat-card-CICCBvWu.mjs";
-import { t as Switch } from "./switch-DX3ASaes.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/admin.packages-nlrJIGwi.js
+import { t as EmptyState } from "./stat-card-en3Sqr1s.mjs";
+import { t as Switch } from "./switch-D6CkgN0l.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/admin.packages-D1h0BCz3.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var Dialog = Dialog$1;

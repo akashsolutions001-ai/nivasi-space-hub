@@ -1,12 +1,12 @@
 import { o as __toESM } from "../_runtime.mjs";
 import { u as require_react } from "../_libs/@floating-ui/react-dom+[...].mjs";
 import { F as require_jsx_runtime, _ as DialogTrigger, d as DialogClose, f as DialogContent, g as DialogTitle, h as DialogPortal, j as Slot, m as DialogOverlay, p as DialogDescription, u as Dialog } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
-import { a as useAuth } from "./auth-yKdBkDzp.mjs";
+import { a as useAuth } from "./auth-CoXP-0dY.mjs";
 import { _ as useNavigate, g as Link, l as useRouterState } from "../_libs/@tanstack/react-router+[...].mjs";
 import { _ as LogOut, d as Settings, g as Menu, h as Package, i as Users, t as X, u as ShieldAlert, y as LayoutDashboard } from "../_libs/lucide-react.mjs";
 import { n as clsx, t as cva } from "../_libs/class-variance-authority+clsx.mjs";
 import { t as twMerge } from "../_libs/tailwind-merge.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/admin-shell-q_SH2sYS.js
+//#region node_modules/.nitro/vite/services/ssr/assets/admin-shell-CHBrYa7c.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 function cn(...inputs) {

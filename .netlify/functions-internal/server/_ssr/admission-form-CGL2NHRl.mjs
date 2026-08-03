@@ -3,19 +3,19 @@ import { u as require_react } from "../_libs/@floating-ui/react-dom+[...].mjs";
 import { F as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
 import { _ as useNavigate } from "../_libs/@tanstack/react-router+[...].mjs";
 import { S as ChevronsUpDown, T as Check, a as User, f as Search, v as LoaderCircle } from "../_libs/lucide-react.mjs";
-import { n as Button, s as cn } from "./admin-shell-q_SH2sYS.mjs";
-import { t as Input } from "./input-D8rGBYdA.mjs";
-import { t as Label } from "./label-D4M9CFn6.mjs";
-import { n as SERVICE_OPTIONS, t as Checkbox } from "./types-rNLhG5nq.mjs";
+import { n as Button, s as cn } from "./admin-shell-CHBrYa7c.mjs";
+import { t as Input } from "./input-D7CPUA3X.mjs";
+import { t as Label } from "./label-DWHDGQ93.mjs";
+import { n as SERVICE_OPTIONS, t as Checkbox } from "./types-MVXNia4e.mjs";
 import { i as Trigger, n as Portal, r as Root2, t as Content2 } from "../_libs/@radix-ui/react-popover+[...].mjs";
-import { a as SelectValue, i as SelectTrigger, n as SelectContent, r as SelectItem, t as Select } from "./select-BZlLJS6l.mjs";
-import { _ as updateAdmission, d as generateAdmissionId, r as createAdmission } from "./db-CtvUGKRP.mjs";
+import { a as SelectValue, i as SelectTrigger, n as SelectContent, r as SelectItem, t as Select } from "./select-C_v9RN57.mjs";
+import { _ as updateAdmission, d as generateAdmissionId, r as createAdmission } from "./db-B591BTQo.mjs";
 import { r as useQueryClient } from "../_libs/tanstack__react-query.mjs";
-import { a as usePackages, i as useColleges, o as useProperties, s as useRooms } from "./hooks-B1VfaGDB.mjs";
+import { a as usePackages, i as useColleges, o as useProperties, s as useRooms } from "./hooks-CvIMf7dK.mjs";
 import { a as isValidIndianMobile, o as todayISO, r as formatINR, t as addDays } from "./format-Bg5w10xg.mjs";
 import { n as toast } from "../_libs/sonner.mjs";
 import { t as _e } from "../_libs/cmdk.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/admission-form-l_oSeXOI.js
+//#region node_modules/.nitro/vite/services/ssr/assets/admission-form-CGL2NHRl.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var Textarea = import_react.forwardRef(({ className, ...props }, ref) => {
@@ -922,27 +922,36 @@ var MONTHS = [
 	"December"
 ];
 function DobPicker({ value, onChange }) {
-	const parts = value ? value.split("-") : [
-		"",
-		"",
-		""
-	];
-	const year = parts[0] ?? "";
-	const month = parts[1] ?? "";
-	const day = parts[2] ?? "";
-	function update(y, m, d) {
+	const [day, setDay] = (0, import_react.useState)(() => value ? String(Number(value.split("-")[2] ?? "")) : "");
+	const [month, setMonth] = (0, import_react.useState)(() => value ? String(Number(value.split("-")[1] ?? "")) : "");
+	const [year, setYear] = (0, import_react.useState)(() => value ? value.split("-")[0] ?? "" : "");
+	function notify(y, m, d) {
 		if (y && m && d) onChange(`${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`);
-		else onChange("");
+	}
+	function handleDay(v) {
+		setDay(v);
+		notify(year, month, v);
+	}
+	function handleMonth(v) {
+		setMonth(v);
+		const maxDays = year ? new Date(Number(year), Number(v), 0).getDate() : 31;
+		const safeDay = Number(day) > maxDays ? "" : day;
+		if (Number(day) > maxDays) setDay("");
+		notify(year, v, safeDay);
+	}
+	function handleYear(v) {
+		setYear(v);
+		notify(v, month, day);
 	}
 	const daysInMonth = year && month ? new Date(Number(year), Number(month), 0).getDate() : 31;
 	const currentYear = (/* @__PURE__ */ new Date()).getFullYear();
-	const years = Array.from({ length: 60 }, (_, i) => currentYear - 5 - i);
+	const years = Array.from({ length: 55 }, (_, i) => currentYear - 5 - i);
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 		className: "grid grid-cols-3 gap-2",
 		children: [
 			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Select, {
 				value: day,
-				onValueChange: (v) => update(year, month, v),
+				onValueChange: handleDay,
 				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectTrigger, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectValue, { placeholder: "Day" }) }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectContent, { children: Array.from({ length: daysInMonth }, (_, i) => String(i + 1)).map((d) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectItem, {
 					value: d,
 					children: d
@@ -950,15 +959,15 @@ function DobPicker({ value, onChange }) {
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Select, {
 				value: month,
-				onValueChange: (v) => update(year, v, day),
+				onValueChange: handleMonth,
 				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectTrigger, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectValue, { placeholder: "Month" }) }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectContent, { children: MONTHS.map((m, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectItem, {
-					value: String(i + 1).padStart(2, "0"),
+					value: String(i + 1),
 					children: m
 				}, m)) })]
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Select, {
 				value: year,
-				onValueChange: (v) => update(v, month, day),
+				onValueChange: handleYear,
 				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectTrigger, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectValue, { placeholder: "Year" }) }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectContent, { children: years.map((y) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectItem, {
 					value: String(y),
 					children: y

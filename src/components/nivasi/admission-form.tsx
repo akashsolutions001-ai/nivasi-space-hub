@@ -800,15 +800,33 @@ const MONTHS = [
 ];
 
 function DobPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  // value is YYYY-MM-DD or ""
-  const parts = value ? value.split("-") : ["", "", ""];
-  const year  = parts[0] ?? "";
-  const month = parts[1] ?? "";
-  const day   = parts[2] ?? "";
+  // Internal state — unpadded strings, independent of each other
+  const [day,   setDay]   = useState<string>(() => value ? String(Number(value.split("-")[2] ?? "")) : "");
+  const [month, setMonth] = useState<string>(() => value ? String(Number(value.split("-")[1] ?? "")) : "");
+  const [year,  setYear]  = useState<string>(() => value ? (value.split("-")[0] ?? "") : "");
 
-  function update(y: string, m: string, d: string) {
-    if (y && m && d) onChange(`${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`);
-    else onChange("");
+  // When all three are set, notify parent; otherwise clear
+  function notify(y: string, m: string, d: string) {
+    if (y && m && d) {
+      onChange(`${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`);
+    }
+  }
+
+  function handleDay(v: string) {
+    setDay(v);
+    notify(year, month, v);
+  }
+  function handleMonth(v: string) {
+    setMonth(v);
+    // If selected month has fewer days than current day, reset day
+    const maxDays = year ? new Date(Number(year), Number(v), 0).getDate() : 31;
+    const safeDay = Number(day) > maxDays ? "" : day;
+    if (Number(day) > maxDays) setDay("");
+    notify(year, v, safeDay);
+  }
+  function handleYear(v: string) {
+    setYear(v);
+    notify(v, month, day);
   }
 
   const daysInMonth = year && month
@@ -816,12 +834,12 @@ function DobPicker({ value, onChange }: { value: string; onChange: (v: string) =
     : 31;
 
   const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 60 }, (_, i) => currentYear - 5 - i);
+  const years = Array.from({ length: 55 }, (_, i) => currentYear - 5 - i);
 
   return (
     <div className="grid grid-cols-3 gap-2">
       {/* Day */}
-      <Select value={day} onValueChange={(v) => update(year, month, v)}>
+      <Select value={day} onValueChange={handleDay}>
         <SelectTrigger><SelectValue placeholder="Day" /></SelectTrigger>
         <SelectContent>
           {Array.from({ length: daysInMonth }, (_, i) => String(i + 1)).map((d) => (
@@ -831,17 +849,17 @@ function DobPicker({ value, onChange }: { value: string; onChange: (v: string) =
       </Select>
 
       {/* Month */}
-      <Select value={month} onValueChange={(v) => update(year, v, day)}>
+      <Select value={month} onValueChange={handleMonth}>
         <SelectTrigger><SelectValue placeholder="Month" /></SelectTrigger>
         <SelectContent>
           {MONTHS.map((m, i) => (
-            <SelectItem key={m} value={String(i + 1).padStart(2, "0")}>{m}</SelectItem>
+            <SelectItem key={m} value={String(i + 1)}>{m}</SelectItem>
           ))}
         </SelectContent>
       </Select>
 
       {/* Year */}
-      <Select value={year} onValueChange={(v) => update(v, month, day)}>
+      <Select value={year} onValueChange={handleYear}>
         <SelectTrigger><SelectValue placeholder="Year" /></SelectTrigger>
         <SelectContent>
           {years.map((y) => (

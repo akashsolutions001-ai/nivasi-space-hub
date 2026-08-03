@@ -5,7 +5,7 @@ import { a as getApp, o as getApps, s as initializeApp } from "../_libs/@firebas
 import { i as signOut, n as onAuthStateChanged, r as signInWithEmailAndPassword, t as getAuth } from "../_libs/firebase__auth.mjs";
 import "../_libs/firebase.mjs";
 import { L as getFirestore } from "../_libs/@firebase/firestore+[...].mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/auth-yKdBkDzp.js
+//#region node_modules/.nitro/vite/services/ssr/assets/auth-CoXP-0dY.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 /**
@@ -81,7 +81,6 @@ function AuthProvider({ children }) {
 		if (email.trim() === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
 			sessionStorage.setItem(LOCAL_AUTH_KEY, "1");
 			setUser(HARDCODED_ADMIN_USER);
-			signInWithEmailAndPassword(getFirebaseAuth(), email.trim(), password).catch(() => {});
 			return;
 		}
 		try {

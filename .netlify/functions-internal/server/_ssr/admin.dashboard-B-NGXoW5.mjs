@@ -3,13 +3,13 @@ import { u as require_react } from "../_libs/@floating-ui/react-dom+[...].mjs";
 import { F as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
 import { g as Link } from "../_libs/@tanstack/react-router+[...].mjs";
 import { D as Briefcase, O as BedDouble, b as IndianRupee, i as Users, n as Wallet, p as Plus, r as UtensilsCrossed, s as TrendingUp } from "../_libs/lucide-react.mjs";
-import { a as Skeleton, n as Button, s as cn, t as AdminShell } from "./admin-shell-q_SH2sYS.mjs";
-import { n as filterByPeriod, r as useAdmissions, t as computeStats } from "./hooks-B1VfaGDB.mjs";
+import { a as Skeleton, n as Button, s as cn, t as AdminShell } from "./admin-shell-CHBrYa7c.mjs";
+import { n as filterByPeriod, r as useAdmissions, t as computeStats } from "./hooks-CvIMf7dK.mjs";
 import { n as formatDate, r as formatINR } from "./format-Bg5w10xg.mjs";
-import { n as StatCard, t as EmptyState } from "./stat-card-CICCBvWu.mjs";
-import { n as PaymentBadge, r as ProfileAvatar } from "./badges-CB69Mx94.mjs";
+import { n as StatCard, t as EmptyState } from "./stat-card-en3Sqr1s.mjs";
+import { n as PaymentBadge, r as ProfileAvatar } from "./badges-BDEpsa2z.mjs";
 import { i as Trigger, n as List, r as Root2, t as Content } from "../_libs/radix-ui__react-tabs.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/admin.dashboard-B4bDdsjC.js
+//#region node_modules/.nitro/vite/services/ssr/assets/admin.dashboard-B-NGXoW5.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var Tabs = Root2;
