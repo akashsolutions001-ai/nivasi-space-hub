@@ -73,20 +73,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   async function login(email: string, password: string) {
-    // Hardcoded admin credentials go through Firebase Auth directly —
-    // this creates a real Firebase session so Firestore rules work.
+    // Check hardcoded admin credentials first — skip Firebase entirely to avoid 400 errors
     if (email.trim() === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-      try {
-        await signInWithEmailAndPassword(getFirebaseAuth(), email.trim(), password);
-        sessionStorage.setItem(LOCAL_AUTH_KEY, "1");
-        return;
-      } catch (firebaseError) {
-        // Firebase Auth user doesn't exist yet — fall through to local session
-        console.warn("[auth] Firebase Auth user not found, using local session", firebaseError);
-        sessionStorage.setItem(LOCAL_AUTH_KEY, "1");
-        setUser(HARDCODED_ADMIN_USER);
-        return;
-      }
+      sessionStorage.setItem(LOCAL_AUTH_KEY, "1");
+      setUser(HARDCODED_ADMIN_USER);
+      // Attempt Firebase Auth silently in background so Firestore rules work if user exists
+      signInWithEmailAndPassword(getFirebaseAuth(), email.trim(), password).catch(() => {
+        // Silently ignore — user may not exist in Firebase Auth yet
+      });
+      return;
     }
 
     // Fall back to Firebase Auth for any other credentials

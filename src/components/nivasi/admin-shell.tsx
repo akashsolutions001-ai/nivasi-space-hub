@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   LayoutDashboard,
@@ -107,6 +107,13 @@ export function AdminShell({
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
 
+  // Fix: move redirect into useEffect to avoid setState-during-render warning
+  useEffect(() => {
+    if (!loading && configured && !user) {
+      navigate({ to: "/admin/login", replace: true });
+    }
+  }, [loading, configured, user, navigate]);
+
   if (!configured) {
     return <SetupNotice />;
   }
@@ -121,17 +128,19 @@ export function AdminShell({
   }
 
   if (!user) {
-    navigate({ to: "/admin/login", replace: true });
+    // Render nothing while the useEffect redirect fires
     return null;
   }
 
   return (
     <div className="flex min-h-screen w-full bg-background">
+      {/* Desktop sidebar */}
       <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-r border-sidebar-border bg-sidebar lg:block">
         <SidebarInner />
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
+        {/* Mobile header */}
         <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-background/85 px-4 py-3 backdrop-blur lg:hidden">
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
@@ -147,14 +156,18 @@ export function AdminShell({
           <NivasiLogo />
         </header>
 
-        <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+        <main className="flex-1 px-3 py-5 sm:px-6 lg:px-8 lg:py-8">
           <div className="mx-auto w-full max-w-7xl">
-            <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <h1 className="text-2xl font-bold sm:text-[28px]">{title}</h1>
-                {subtitle && <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>}
+            <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
+              <div className="min-w-0">
+                <h1 className="truncate text-xl font-bold sm:text-2xl lg:text-[28px]">{title}</h1>
+                {subtitle && <p className="mt-1 text-xs text-muted-foreground sm:text-sm">{subtitle}</p>}
               </div>
-              {action}
+              {action && (
+                <div className="flex flex-wrap gap-2">
+                  {action}
+                </div>
+              )}
             </div>
             {children}
           </div>

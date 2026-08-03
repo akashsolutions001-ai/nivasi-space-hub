@@ -1,6 +1,6 @@
 import { m as createFileRoute, p as lazyRouteComponent } from "../_libs/@tanstack/react-router+[...].mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/admin.admissions._admissionId.edit-DwtgoS9f.js
-var $$splitComponentImporter = () => import("./admin.admissions._admissionId.edit-Bbnlebrc.mjs");
+//#region node_modules/.nitro/vite/services/ssr/assets/admin.admissions._admissionId.edit-5Gh-lG4o.js
+var $$splitComponentImporter = () => import("./admin.admissions._admissionId.edit-DBiJ0TBW.mjs");
 var Route = createFileRoute("/admin/admissions/$admissionId/edit")({
 	head: () => ({ meta: [
 		{ title: "Edit Admission — NivasiSpace Admin" },

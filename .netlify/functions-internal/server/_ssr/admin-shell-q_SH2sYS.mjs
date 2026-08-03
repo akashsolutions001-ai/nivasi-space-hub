@@ -1,12 +1,12 @@
 import { o as __toESM } from "../_runtime.mjs";
 import { u as require_react } from "../_libs/@floating-ui/react-dom+[...].mjs";
 import { F as require_jsx_runtime, _ as DialogTrigger, d as DialogClose, f as DialogContent, g as DialogTitle, h as DialogPortal, j as Slot, m as DialogOverlay, p as DialogDescription, u as Dialog } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
-import { a as useAuth } from "./auth-Cs7xu7wX.mjs";
+import { a as useAuth } from "./auth-yKdBkDzp.mjs";
 import { _ as useNavigate, g as Link, l as useRouterState } from "../_libs/@tanstack/react-router+[...].mjs";
 import { _ as LogOut, d as Settings, g as Menu, h as Package, i as Users, t as X, u as ShieldAlert, y as LayoutDashboard } from "../_libs/lucide-react.mjs";
 import { n as clsx, t as cva } from "../_libs/class-variance-authority+clsx.mjs";
 import { t as twMerge } from "../_libs/tailwind-merge.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/admin-shell-BEyrPzKA.js
+//#region node_modules/.nitro/vite/services/ssr/assets/admin-shell-q_SH2sYS.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 function cn(...inputs) {
@@ -239,18 +239,23 @@ function AdminShell({ title, subtitle, action, children }) {
 	const { user, loading, configured } = useAuth();
 	const navigate = useNavigate();
 	const [open, setOpen] = (0, import_react.useState)(false);
+	(0, import_react.useEffect)(() => {
+		if (!loading && configured && !user) navigate({
+			to: "/admin/login",
+			replace: true
+		});
+	}, [
+		loading,
+		configured,
+		user,
+		navigate
+	]);
 	if (!configured) return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SetupNotice, {});
 	if (loading) return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 		className: "min-h-screen space-y-4 p-8",
 		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Skeleton, { className: "h-10 w-64" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Skeleton, { className: "h-64 w-full" })]
 	});
-	if (!user) {
-		navigate({
-			to: "/admin/login",
-			replace: true
-		});
-		return null;
-	}
+	if (!user) return null;
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 		className: "flex min-h-screen w-full bg-background",
 		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("aside", {
@@ -281,18 +286,24 @@ function AdminShell({ title, subtitle, action, children }) {
 					})]
 				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(NivasiLogo, {})]
 			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("main", {
-				className: "flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8",
+				className: "flex-1 px-3 py-5 sm:px-6 lg:px-8 lg:py-8",
 				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					className: "mx-auto w-full max-w-7xl",
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "mb-6 flex flex-wrap items-start justify-between gap-3",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
-							className: "text-2xl font-bold sm:text-[28px]",
-							children: title
-						}), subtitle && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-							className: "mt-1 text-sm text-muted-foreground",
-							children: subtitle
-						})] }), action]
+						className: "mb-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "min-w-0",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
+								className: "truncate text-xl font-bold sm:text-2xl lg:text-[28px]",
+								children: title
+							}), subtitle && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "mt-1 text-xs text-muted-foreground sm:text-sm",
+								children: subtitle
+							})]
+						}), action && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "flex flex-wrap gap-2",
+							children: action
+						})]
 					}), children]
 				})
 			})]

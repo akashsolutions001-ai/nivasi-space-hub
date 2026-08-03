@@ -1,7 +1,7 @@
-import { i as isFirebaseConfigured } from "./auth-Cs7xu7wX.mjs";
-import { c as fetchPackages, l as fetchProperties, o as fetchAdmissions, s as fetchColleges, u as fetchRooms } from "./db-CHlv9xOD.mjs";
+import { i as isFirebaseConfigured } from "./auth-yKdBkDzp.mjs";
+import { c as fetchPackages, l as fetchProperties, o as fetchAdmissions, s as fetchColleges, u as fetchRooms } from "./db-CtvUGKRP.mjs";
 import { t as useQuery } from "../_libs/tanstack__react-query.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/hooks-BIoUISqM.js
+//#region node_modules/.nitro/vite/services/ssr/assets/hooks-B1VfaGDB.js
 function useAdmissions() {
 	return useQuery({
 		queryKey: ["admissions"],

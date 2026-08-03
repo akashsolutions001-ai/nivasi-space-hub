@@ -1,16 +1,16 @@
 import { o as __toESM } from "../_runtime.mjs";
 import { u as require_react } from "../_libs/@floating-ui/react-dom+[...].mjs";
 import { F as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
-import { a as useAuth } from "./auth-Cs7xu7wX.mjs";
+import { a as useAuth } from "./auth-yKdBkDzp.mjs";
 import { E as Building2, l as Sparkles, p as Plus, v as LoaderCircle, x as GraduationCap } from "../_libs/lucide-react.mjs";
-import { a as Skeleton, n as Button, t as AdminShell } from "./admin-shell-BEyrPzKA.mjs";
-import { t as Input } from "./input-D5zZVfJK.mjs";
-import { g as setPropertyActive, m as setCollegeActive, n as addProperty, p as seedDefaults, t as addCollege } from "./db-CHlv9xOD.mjs";
+import { a as Skeleton, n as Button, t as AdminShell } from "./admin-shell-q_SH2sYS.mjs";
+import { t as Input } from "./input-D8rGBYdA.mjs";
+import { g as setPropertyActive, m as setCollegeActive, n as addProperty, p as seedDefaults, t as addCollege } from "./db-CtvUGKRP.mjs";
 import { r as useQueryClient } from "../_libs/tanstack__react-query.mjs";
-import { i as useColleges, o as useProperties } from "./hooks-BIoUISqM.mjs";
+import { i as useColleges, o as useProperties } from "./hooks-B1VfaGDB.mjs";
 import { n as toast } from "../_libs/sonner.mjs";
-import { t as Switch } from "./switch-D5qFC-Js.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/admin.settings-BrR45mjO.js
+import { t as Switch } from "./switch-DX3ASaes.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/admin.settings-DomdWmUv.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 function SettingsPage() {
