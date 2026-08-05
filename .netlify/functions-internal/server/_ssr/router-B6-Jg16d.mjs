@@ -8,7 +8,7 @@ import { t as QueryClient } from "../_libs/tanstack__query-core.mjs";
 import { n as QueryClientProvider } from "../_libs/tanstack__react-query.mjs";
 import { t as Toaster } from "../_libs/sonner.mjs";
 import { t as Route$9 } from "./admin.admissions._admissionId.index-CQklkSC1.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/router-_g73F8cs.js
+//#region node_modules/.nitro/vite/services/ssr/assets/router-B6-Jg16d.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var styles_default = "/assets/styles-DQtmQzJb.css";
@@ -274,7 +274,7 @@ var Route$2 = createFileRoute("/admin/settings")({
 	] }),
 	component: lazyRouteComponent($$splitComponentImporter$2, "component")
 });
-var $$splitComponentImporter$1 = () => import("./admin.admissions.index-C8xPkG9x.mjs");
+var $$splitComponentImporter$1 = () => import("./admin.admissions.index-lh2fqS3Q.mjs");
 var Route$1 = createFileRoute("/admin/admissions/")({
 	head: () => ({ meta: [
 		{ title: "Admissions — NivasiSpace Admin" },

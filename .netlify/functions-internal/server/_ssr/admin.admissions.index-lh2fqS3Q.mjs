@@ -10,7 +10,7 @@ import { r as useAdmissions } from "./hooks-DJqAfBwp.mjs";
 import { n as formatDate, r as formatINR } from "./format-Bg5w10xg.mjs";
 import { t as EmptyState } from "./stat-card-DjmB8MfY.mjs";
 import { i as StatusPill, n as PaymentBadge, r as ProfileAvatar, t as MattressBadge } from "./badges-BIwieoDo.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/admin.admissions.index-C8xPkG9x.js
+//#region node_modules/.nitro/vite/services/ssr/assets/admin.admissions.index-lh2fqS3Q.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 function AdmissionsListPage() {
@@ -141,8 +141,12 @@ function AdmissionsListPage() {
 							children: "Package"
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
-							className: "px-4 py-3",
-							children: "Payment"
+							className: "px-4 py-3 text-success",
+							children: "Paid"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
+							className: "px-4 py-3 text-destructive",
+							children: "Pending"
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
 							className: "px-4 py-3",
@@ -197,10 +201,26 @@ function AdmissionsListPage() {
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("td", {
 							className: "px-4 py-3",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(PaymentBadge, { status: a.paymentStatus }), a.balanceAmount > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
-								className: "mt-1 block text-[11px] text-muted-foreground",
-								children: ["Due ", formatINR(a.balanceAmount)]
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "block font-semibold text-success",
+								children: formatINR(a.amountPaid)
+							}), a.paymentStatus === "completed" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "mt-0.5 block text-[10px] font-medium text-success",
+								children: "✓ Paid"
 							})]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {
+							className: "px-4 py-3",
+							children: a.balanceAmount > 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "block font-semibold text-destructive",
+								children: formatINR(a.balanceAmount)
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "mt-0.5 block text-[10px] font-medium text-destructive",
+								children: "⚠ Due"
+							})] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "text-xs text-muted-foreground",
+								children: "—"
+							})
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {
 							className: "px-4 py-3",
@@ -259,10 +279,13 @@ function AdmissionsListPage() {
 								className: "text-right",
 								children: a.packageName || "No package"
 							}),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: formatDate(a.admissionDate) }),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+								className: "font-semibold text-success",
+								children: ["Paid: ", formatINR(a.amountPaid)]
+							}),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-								className: "text-right font-semibold text-foreground",
-								children: formatINR(a.packageAmount)
+								className: `text-right font-semibold ${a.balanceAmount > 0 ? "text-destructive" : "text-muted-foreground"}`,
+								children: a.balanceAmount > 0 ? `Due: ${formatINR(a.balanceAmount)}` : "✓ Cleared"
 							})
 						]
 					}),

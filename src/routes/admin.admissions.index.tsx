@@ -141,7 +141,8 @@ function AdmissionsListPage() {
                   <th className="px-4 py-3">Admission ID</th>
                   <th className="px-4 py-3">College</th>
                   <th className="px-4 py-3">Package</th>
-                  <th className="px-4 py-3">Payment</th>
+                  <th className="px-4 py-3 text-success">Paid</th>
+                  <th className="px-4 py-3 text-destructive">Pending</th>
                   <th className="px-4 py-3">Items</th>
                   <th className="px-4 py-3">Date</th>
                 </tr>
@@ -172,12 +173,30 @@ function AdmissionsListPage() {
                         {formatINR(a.packageAmount)}
                       </span>
                     </td>
+                    {/* Paid column */}
                     <td className="px-4 py-3">
-                      <PaymentBadge status={a.paymentStatus} />
-                      {a.balanceAmount > 0 && (
-                        <span className="mt-1 block text-[11px] text-muted-foreground">
-                          Due {formatINR(a.balanceAmount)}
+                      <span className="block font-semibold text-success">
+                        {formatINR(a.amountPaid)}
+                      </span>
+                      {a.paymentStatus === "completed" && (
+                        <span className="mt-0.5 block text-[10px] font-medium text-success">
+                          ✓ Paid
                         </span>
+                      )}
+                    </td>
+                    {/* Pending column */}
+                    <td className="px-4 py-3">
+                      {a.balanceAmount > 0 ? (
+                        <>
+                          <span className="block font-semibold text-destructive">
+                            {formatINR(a.balanceAmount)}
+                          </span>
+                          <span className="mt-0.5 block text-[10px] font-medium text-destructive">
+                            ⚠ Due
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
                       )}
                     </td>
                     <td className="px-4 py-3">
@@ -215,9 +234,11 @@ function AdmissionsListPage() {
                 <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
                   <span>{a.collegeName || "College not set"}</span>
                   <span className="text-right">{a.packageName || "No package"}</span>
-                  <span>{formatDate(a.admissionDate)}</span>
-                  <span className="text-right font-semibold text-foreground">
-                    {formatINR(a.packageAmount)}
+                  <span className="font-semibold text-success">
+                    Paid: {formatINR(a.amountPaid)}
+                  </span>
+                  <span className={`text-right font-semibold ${a.balanceAmount > 0 ? "text-destructive" : "text-muted-foreground"}`}>
+                    {a.balanceAmount > 0 ? `Due: ${formatINR(a.balanceAmount)}` : "✓ Cleared"}
                   </span>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-1.5">

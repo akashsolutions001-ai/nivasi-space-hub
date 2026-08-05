@@ -1,4 +1,4 @@
-//#region node_modules/.nitro/vite/services/ssr/assets/_tanstack-start-manifest_v-acm_zc0p.js
+//#region node_modules/.nitro/vite/services/ssr/assets/_tanstack-start-manifest_v-BPCFrpTx.js
 var tsrStartManifest = () => ({ routes: {
 	__root__: {
 		filePath: "D:/BUSINEES/Nivasi/Admission Mangement System/nivasi-space-hub-main/src/routes/__root.tsx",
@@ -14,7 +14,7 @@ var tsrStartManifest = () => ({ routes: {
 			"/admin/admissions/$admissionId/"
 		],
 		preloads: [
-			"/assets/index-DxVEQrW7.js",
+			"/assets/index-DmzYmLN-.js",
 			"/assets/rolldown-runtime-hePW80VL.js",
 			"/assets/auth-D1aDrMQs.js",
 			"/assets/lazyRouteComponent-DdwO_ZCl.js",
@@ -27,7 +27,7 @@ var tsrStartManifest = () => ({ routes: {
 		scripts: [{ attrs: {
 			type: "module",
 			async: !0,
-			src: "/assets/index-DxVEQrW7.js"
+			src: "/assets/index-DmzYmLN-.js"
 		} }]
 	},
 	"/": {
@@ -107,7 +107,7 @@ var tsrStartManifest = () => ({ routes: {
 		filePath: "D:/BUSINEES/Nivasi/Admission Mangement System/nivasi-space-hub-main/src/routes/admin.admissions.index.tsx",
 		children: void 0,
 		preloads: [
-			"/assets/admin.admissions.index-CMmuJM7J.js",
+			"/assets/admin.admissions.index-ERH4Lcmi.js",
 			"/assets/admin-shell-BVDr69kZ.js",
 			"/assets/badges-05qJuJPM.js",
 			"/assets/format-9QCKYuQU.js",
