@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Loader2, Package, Pencil, Plus } from "lucide-react";
+import { Lock, Loader2, Package, Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 import { AdminShell } from "@/components/nivasi/admin-shell";
@@ -18,9 +18,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { usePackages } from "@/lib/hooks";
+import { useIsGlobalAdmin } from "@/lib/auth";
 import { savePackage, setPackageActive } from "@/lib/db";
 import { formatINR } from "@/lib/format";
 import { SERVICE_OPTIONS, type PackagePlan } from "@/lib/types";
@@ -43,10 +43,15 @@ export const Route = createFileRoute("/admin/packages")({
 function PackagesPage() {
   const { data: packages = [], isLoading } = usePackages();
   const queryClient = useQueryClient();
+  const isGlobalAdmin = useIsGlobalAdmin();
   const [editing, setEditing] = useState<PackagePlan | null>(null);
   const [open, setOpen] = useState(false);
 
   async function toggle(pkg: PackagePlan, active: boolean) {
+    if (!isGlobalAdmin) {
+      toast.error("Only the Global Admin can modify packages.");
+      return;
+    }
     try {
       await setPackageActive(pkg.id, active);
       await queryClient.invalidateQueries({ queryKey: ["packages"] });
@@ -58,17 +63,28 @@ function PackagesPage() {
   return (
     <AdminShell
       title="Packages"
-      subtitle="Define the stay and service plans staff can assign to students."
+      subtitle={
+        isGlobalAdmin
+          ? "Define the stay and service plans staff can assign to students."
+          : "View available stay and service plans. Contact the Global Admin to make changes."
+      }
       action={
-        <Button
-          onClick={() => {
-            setEditing(null);
-            setOpen(true);
-          }}
-        >
-          <Plus className="size-4" />
-          New Package
-        </Button>
+        isGlobalAdmin ? (
+          <Button
+            onClick={() => {
+              setEditing(null);
+              setOpen(true);
+            }}
+          >
+            <Plus className="size-4" />
+            New Package
+          </Button>
+        ) : (
+          <div className="flex items-center gap-2 rounded-xl border border-border bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
+            <Lock className="size-3.5" />
+            Global Admin only
+          </div>
+        )
       }
     >
       {isLoading ? (
@@ -94,6 +110,7 @@ function PackagesPage() {
                   checked={pkg.active}
                   onCheckedChange={(v) => toggle(pkg, v)}
                   aria-label="Package active"
+                  disabled={!isGlobalAdmin}
                 />
               </div>
               <h2 className="mt-3 font-display text-base font-bold">{pkg.packageName}</h2>
@@ -104,24 +121,28 @@ function PackagesPage() {
                 {pkg.price > 0 ? formatINR(pkg.price) : "Custom pricing"}
               </p>
               <p className="text-xs text-muted-foreground">{pkg.duration} days</p>
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-4"
-                onClick={() => {
-                  setEditing(pkg);
-                  setOpen(true);
-                }}
-              >
-                <Pencil className="size-3.5" />
-                Edit
-              </Button>
+              {isGlobalAdmin && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-4"
+                  onClick={() => {
+                    setEditing(pkg);
+                    setOpen(true);
+                  }}
+                >
+                  <Pencil className="size-3.5" />
+                  Edit
+                </Button>
+              )}
             </article>
           ))}
         </div>
       )}
 
-      <PackageDialog open={open} onOpenChange={setOpen} editing={editing} />
+      {isGlobalAdmin && (
+        <PackageDialog open={open} onOpenChange={setOpen} editing={editing} />
+      )}
     </AdminShell>
   );
 }

@@ -67,6 +67,15 @@ export interface College {
   id: string;
   collegeId: string;
   collegeName: string;
+  collegeType?: "engineering" | "medical" | "other";
+  city?: string;
+  active: boolean;
+}
+
+export interface City {
+  id: string;
+  cityId: string;
+  cityName: string;
   active: boolean;
 }
 

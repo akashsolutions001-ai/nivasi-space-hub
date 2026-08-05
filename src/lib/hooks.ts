@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { fetchAdmissions, fetchColleges, fetchPackages, fetchProperties, fetchRooms } from "@/lib/db";
+import { fetchAdmissions, fetchCities, fetchColleges, fetchPackages, fetchProperties, fetchRooms } from "@/lib/db";
 import { isFirebaseConfigured } from "@/lib/firebase";
 import type { Admission } from "@/lib/types";
 
@@ -40,6 +40,14 @@ export function useRooms() {
   return useQuery({
     queryKey: ["rooms"],
     queryFn: fetchRooms,
+    enabled: isFirebaseConfigured,
+  });
+}
+
+export function useCities() {
+  return useQuery({
+    queryKey: ["cities"],
+    queryFn: fetchCities,
     enabled: isFirebaseConfigured,
   });
 }

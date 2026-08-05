@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAdmissions } from "@/lib/hooks";
+import { useIsGlobalAdmin, useAuth } from "@/lib/auth";
 import { formatDate, formatINR } from "@/lib/format";
 import type { Admission } from "@/lib/types";
 
@@ -90,14 +91,22 @@ export const Route = createFileRoute("/admin/admissions/")({
 
 function AdmissionsListPage() {
   const { data: admissions = [], isLoading } = useAdmissions();
+  const isGlobalAdmin = useIsGlobalAdmin();
+  const { collegeFilter } = useAuth();
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [payment, setPayment] = useState("all");
   const [items, setItems] = useState("all");
 
+  // Global admin: pre-filter to selected college before search/payment filters
+  const collegeAdmissions = useMemo(() => {
+    if (!isGlobalAdmin || !collegeFilter.college) return admissions;
+    return admissions.filter((a) => a.collegeName === collegeFilter.college);
+  }, [admissions, isGlobalAdmin, collegeFilter.college]);
+
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return admissions.filter((a) => {
+    return collegeAdmissions.filter((a) => {
       if (
         q &&
         !`${a.fullName} ${a.admissionId} ${a.phoneNumber} ${a.collegeName} ${a.roomNumber}`
@@ -116,7 +125,11 @@ function AdmissionsListPage() {
   return (
     <AdminShell
       title="Admissions"
-      subtitle={`${admissions.length} student${admissions.length === 1 ? "" : "s"} on record`}
+      subtitle={
+        isGlobalAdmin && collegeFilter.college
+          ? `${collegeAdmissions.length} student${collegeAdmissions.length === 1 ? "" : "s"} · ${collegeFilter.college}`
+          : `${admissions.length} student${admissions.length === 1 ? "" : "s"} on record`
+      }
       action={
         <div className="flex gap-2">
           <Button

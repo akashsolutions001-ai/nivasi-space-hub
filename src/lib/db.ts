@@ -19,7 +19,7 @@ import {
 } from "firebase/firestore";
 
 import { getDb } from "./firebase";
-import type { Admission, AdmissionInput, College, PackagePlan, Property } from "./types";
+import type { Admission, AdmissionInput, College, City, PackagePlan, Property } from "./types";
 
 function toDate(value: unknown): Date | null {
   if (!value) return null;
@@ -228,6 +228,8 @@ export async function fetchColleges(): Promise<College[]> {
           id: s.id,
           collegeId: d.collegeId ?? s.id,
           collegeName: d.collegeName ?? "",
+          collegeType: d.collegeType ?? "other",
+          city: d.city ?? "",
           active: d.active !== false,
         } satisfies College;
       })
@@ -238,11 +240,17 @@ export async function fetchColleges(): Promise<College[]> {
   }
 }
 
-export async function addCollege(collegeName: string): Promise<void> {
+export async function addCollege(
+  collegeName: string,
+  collegeType: "engineering" | "medical" | "other" = "other",
+  city: string = "",
+): Promise<void> {
   const ref = doc(collection(getDb(), "colleges"));
   await setDoc(ref, {
     collegeId: ref.id,
     collegeName,
+    collegeType,
+    city,
     active: true,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
@@ -251,6 +259,50 @@ export async function addCollege(collegeName: string): Promise<void> {
 
 export async function setCollegeActive(id: string, active: boolean): Promise<void> {
   await updateDoc(doc(getDb(), "colleges", id), { active, updatedAt: serverTimestamp() });
+}
+
+export async function updateCollege(
+  id: string,
+  patch: { collegeName?: string; collegeType?: "engineering" | "medical" | "other"; city?: string },
+): Promise<void> {
+  await updateDoc(doc(getDb(), "colleges", id), { ...patch, updatedAt: serverTimestamp() });
+}
+
+/* --------------------------------- Cities -------------------------------- */
+
+export async function fetchCities(): Promise<City[]> {
+  try {
+    const snap = await getDocs(collection(getDb(), "cities"));
+    return snap.docs
+      .map((s) => {
+        const d: any = s.data();
+        return {
+          id: s.id,
+          cityId: d.cityId ?? s.id,
+          cityName: d.cityName ?? "",
+          active: d.active !== false,
+        } satisfies City;
+      })
+      .sort((a, b) => a.cityName.localeCompare(b.cityName));
+  } catch (error) {
+    console.error("[firestore] fetchCities", error);
+    return [];
+  }
+}
+
+export async function addCity(cityName: string): Promise<void> {
+  const ref = doc(collection(getDb(), "cities"));
+  await setDoc(ref, {
+    cityId: ref.id,
+    cityName,
+    active: true,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export async function setCityActive(id: string, active: boolean): Promise<void> {
+  await updateDoc(doc(getDb(), "cities", id), { active, updatedAt: serverTimestamp() });
 }
 
 export async function fetchProperties(): Promise<Property[]> {
@@ -373,16 +425,34 @@ export async function seedDefaults(): Promise<void> {
 
   if (collegeSnap.empty) {
     await Promise.all(
-      ["DYP Engineering College", "DYP Medical College"].map((collegeName) => {
+      [
+        { collegeName: "Dr. D.Y.Patil Pratishthan's College of Engineering Salokhenagar Kolhapur", collegeType: "engineering" as const, city: "Kolhapur" },
+        { collegeName: "DYP Medical College", collegeType: "medical" as const, city: "Kolhapur" },
+      ].map(({ collegeName, collegeType, city }) => {
         const ref = doc(collection(db, "colleges"));
         return setDoc(ref, {
           collegeId: ref.id,
           collegeName,
+          collegeType,
+          city,
           active: true,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         });
       }),
     );
+  }
+
+  // Seed default city if cities collection is empty
+  const citySnap = await getDocs(collection(db, "cities"));
+  if (citySnap.empty) {
+    const ref = doc(collection(db, "cities"));
+    await setDoc(ref, {
+      cityId: ref.id,
+      cityName: "Kolhapur",
+      active: true,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
   }
 }

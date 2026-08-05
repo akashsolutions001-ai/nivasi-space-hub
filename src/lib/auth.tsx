@@ -16,12 +16,13 @@ const GLOBAL_ADMIN_EMAIL = "Globaladmin@nivasispace.com";
 const GLOBAL_ADMIN_PASSWORD = "16Dec@1980NivasiSpace";
 
 const LOCAL_AUTH_KEY = "nivasi_admin_authed";
+const COLLEGE_FILTER_KEY = "nivasi_college_filter";
 
 // Synthetic user object for the hardcoded admin
 const HARDCODED_ADMIN_USER = {
   uid: "hardcoded-admin",
   email: ADMIN_EMAIL,
-  displayName: "Admin",
+  displayName: "Dr. D.Y.Patil Pratishthan's College of Engineering Salokhenagar Kolhapur",
 } as unknown as User;
 
 const GLOBAL_ADMIN_USER = {
@@ -30,12 +31,25 @@ const GLOBAL_ADMIN_USER = {
   displayName: "Global Admin",
 } as unknown as User;
 
+export interface CollegeFilter {
+  type: "engineering" | "medical" | "";
+  city: string;
+  college: string; // collegeName
+}
+
+const EMPTY_FILTER: CollegeFilter = { type: "", city: "", college: "" };
+
 interface AuthState {
   user: User | null;
   loading: boolean;
   configured: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  /** Only set for Global Admin — the active college/type/city filter */
+  collegeFilter: CollegeFilter;
+  setCollegeFilter: (f: CollegeFilter) => void;
+  /** True when global admin has not yet chosen a college filter this session */
+  needsCollegeFilter: boolean;
 }
 
 const AuthContext = createContext<AuthState | null>(null);
@@ -50,6 +64,17 @@ const AUTH_ERRORS: Record<string, string> = {
   "auth/network-request-failed": "Please check your internet connection.",
 };
 
+function loadFilter(): CollegeFilter {
+  if (typeof window === "undefined") return EMPTY_FILTER;
+  try {
+    const raw = sessionStorage.getItem(COLLEGE_FILTER_KEY);
+    if (!raw) return EMPTY_FILTER;
+    return JSON.parse(raw) as CollegeFilter;
+  } catch {
+    return EMPTY_FILTER;
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(() => {
     if (typeof window !== "undefined") {
@@ -60,6 +85,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return null;
   });
   const [loading, setLoading] = useState(true);
+  const [collegeFilter, setCollegeFilterState] = useState<CollegeFilter>(loadFilter);
+
+  function setCollegeFilter(f: CollegeFilter) {
+    setCollegeFilterState(f);
+    sessionStorage.setItem(COLLEGE_FILTER_KEY, JSON.stringify(f));
+  }
 
   useEffect(() => {
     if (!isFirebaseConfigured) {
@@ -92,6 +123,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Global admin
     if (email.trim() === GLOBAL_ADMIN_EMAIL && password === GLOBAL_ADMIN_PASSWORD) {
       sessionStorage.setItem(LOCAL_AUTH_KEY, "global");
+      // Clear any stale filter so the popup shows fresh
+      sessionStorage.removeItem(COLLEGE_FILTER_KEY);
+      setCollegeFilterState(EMPTY_FILTER);
       setUser(GLOBAL_ADMIN_USER);
       return;
     }
@@ -108,7 +142,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function logout() {
     sessionStorage.removeItem(LOCAL_AUTH_KEY);
+    sessionStorage.removeItem(COLLEGE_FILTER_KEY);
     setUser(null);
+    setCollegeFilterState(EMPTY_FILTER);
     try {
       if (isFirebaseConfigured) await signOut(getFirebaseAuth());
     } catch {
@@ -122,9 +158,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user === HARDCODED_ADMIN_USER ||
     user === GLOBAL_ADMIN_USER;
 
+  const isGlobalAdminUser = user?.email?.toLowerCase() === GLOBAL_ADMIN_EMAIL.toLowerCase();
+  // Show the filter popup when global admin is logged in but hasn't picked a college yet
+  const needsCollegeFilter = isGlobalAdminUser && !collegeFilter.college;
+
   return (
     <AuthContext.Provider
-      value={{ user, loading, configured, login, logout }}
+      value={{ user, loading, configured, login, logout, collegeFilter, setCollegeFilter, needsCollegeFilter }}
     >
       {children}
     </AuthContext.Provider>

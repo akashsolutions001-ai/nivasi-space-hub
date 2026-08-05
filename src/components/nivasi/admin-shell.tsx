@@ -11,10 +11,11 @@ import {
 } from "lucide-react";
 
 import { NivasiLogo } from "./logo";
+import { CollegeFilterChip, CollegeFilterDialog } from "./college-filter-dialog";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAuth } from "@/lib/auth";
+import { useAuth, useIsGlobalAdmin } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -81,9 +82,12 @@ function AccountBlock({ onNavigate }: { onNavigate?: (() => void) | undefined })
 }
 
 function SidebarInner({ onNavigate }: { onNavigate?: (() => void) | undefined }) {
+  const isGlobalAdmin = useIsGlobalAdmin();
   return (
-    <div className="flex h-full flex-col gap-6 p-4">
+    <div className="flex h-full flex-col gap-4 p-4">
       <NivasiLogo className="px-1" />
+      {/* College filter chip — global admin only */}
+      {isGlobalAdmin && <CollegeFilterChip />}
       <div className="flex-1">
         <NavLinks onNavigate={onNavigate} />
       </div>
@@ -103,9 +107,18 @@ export function AdminShell({
   action?: ReactNode;
   children: ReactNode;
 }) {
-  const { user, loading, configured } = useAuth();
+  const { user, loading, configured, needsCollegeFilter } = useAuth();
+  const isGlobalAdmin = useIsGlobalAdmin();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const [filterOpen, setFilterOpen] = useState(false);
+
+  // Show the college filter popup as soon as global admin lands on any protected page
+  useEffect(() => {
+    if (isGlobalAdmin && needsCollegeFilter) {
+      setFilterOpen(true);
+    }
+  }, [isGlobalAdmin, needsCollegeFilter]);
 
   // Fix: move redirect into useEffect to avoid setState-during-render warning
   useEffect(() => {
@@ -173,6 +186,11 @@ export function AdminShell({
           </div>
         </main>
       </div>
+
+      {/* College filter dialog — global admin only */}
+      {isGlobalAdmin && (
+        <CollegeFilterDialog open={filterOpen} onOpenChange={setFilterOpen} />
+      )}
     </div>
   );
 }

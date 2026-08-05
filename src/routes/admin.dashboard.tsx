@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { computeStats, filterByPeriod, useAdmissions } from "@/lib/hooks";
-import { useIsGlobalAdmin } from "@/lib/auth";
+import { useIsGlobalAdmin, useAuth } from "@/lib/auth";
 import { formatDate, formatINR } from "@/lib/format";
 
 export const Route = createFileRoute("/admin/dashboard")({
@@ -49,18 +49,29 @@ const PERIODS = [
 function DashboardPage() {
   const { data: admissions = [], isLoading } = useAdmissions();
   const isGlobalAdmin = useIsGlobalAdmin();
+  const { collegeFilter } = useAuth();
   const [period, setPeriod] = useState("all");
   // Global admin gets an eye toggle; normal admin never sees the money section
   const [showMoney, setShowMoney] = useState(false);
 
-  const scoped  = useMemo(() => filterByPeriod(admissions, period), [admissions, period]);
+  // For global admin: filter data to the selected college only
+  const filteredAdmissions = useMemo(() => {
+    if (!isGlobalAdmin || !collegeFilter.college) return admissions;
+    return admissions.filter((a) => a.collegeName === collegeFilter.college);
+  }, [admissions, isGlobalAdmin, collegeFilter.college]);
+
+  const scoped  = useMemo(() => filterByPeriod(filteredAdmissions, period), [filteredAdmissions, period]);
   const stats   = useMemo(() => computeStats(scoped), [scoped]);
-  const recent  = useMemo(() => admissions.slice(0, 6), [admissions]);
+  const recent  = useMemo(() => filteredAdmissions.slice(0, 6), [filteredAdmissions]);
 
   return (
     <AdminShell
       title="Dashboard"
-      subtitle="A live view of admissions, payments and provided items."
+      subtitle={
+        isGlobalAdmin && collegeFilter.college
+          ? `Showing data for: ${collegeFilter.college}`
+          : "A live view of admissions, payments and provided items."
+      }
       action={
         <Button asChild>
           <Link to="/admin/admissions/new">
