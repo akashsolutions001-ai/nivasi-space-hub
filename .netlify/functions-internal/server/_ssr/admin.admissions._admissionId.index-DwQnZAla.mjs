@@ -12,9 +12,9 @@ import { r as useQueryClient, t as useQuery } from "../_libs/tanstack__react-que
 import { n as formatDate, r as formatINR } from "./format-Bg5w10xg.mjs";
 import { n as toast } from "../_libs/sonner.mjs";
 import { t as EmptyState } from "./stat-card-DjmB8MfY.mjs";
-import { t as Route } from "./admin.admissions._admissionId.index-Di72Kid3.mjs";
+import { t as Route } from "./admin.admissions._admissionId.index-CQklkSC1.mjs";
 import { i as StatusPill, n as PaymentBadge, r as ProfileAvatar, t as MattressBadge } from "./badges-BIwieoDo.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/admin.admissions._admissionId.index-6VF5YLzs.js
+//#region node_modules/.nitro/vite/services/ssr/assets/admin.admissions._admissionId.index-DwQnZAla.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var AlertDialog = Root2;
@@ -126,7 +126,7 @@ function ShareReceiptPopover({ admission }) {
 	const parentPhone = (admission.parentPhone ?? "").replace(/\D/g, "");
 	const parentName = admission.parentName ?? "";
 	function downloadPDF() {
-		import("./receipt-pdf-BbqChljv.mjs").then(({ downloadReceiptPDF }) => downloadReceiptPDF(admission));
+		import("./receipt-pdf-C7QXnUd6.mjs").then(({ downloadReceiptPDF }) => downloadReceiptPDF(admission));
 		setOpen(false);
 	}
 	function shareGeneric() {

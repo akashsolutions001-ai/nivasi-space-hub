@@ -1,5 +1,5 @@
 import { t as E } from "../_libs/jspdf.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/receipt-pdf-BbqChljv.js
+//#region node_modules/.nitro/vite/services/ssr/assets/receipt-pdf-C7QXnUd6.js
 /** Generates a styled fee receipt PDF and triggers browser download. */
 function downloadReceiptPDF(a) {
 	const doc = new E({
@@ -152,16 +152,16 @@ function downloadReceiptPDF(a) {
 	[
 		{
 			label: "Total Package",
-			value: `₹${total.toLocaleString("en-IN")}`
+			value: `Rs. ${total.toLocaleString("en-IN")}`
 		},
 		{
 			label: "Amount Paid",
-			value: `₹${paid.toLocaleString("en-IN")}`,
+			value: `Rs. ${paid.toLocaleString("en-IN")}`,
 			highlight: true
 		},
 		{
 			label: "Balance Due",
-			value: `₹${bal.toLocaleString("en-IN")}`,
+			value: `Rs. ${bal.toLocaleString("en-IN")}`,
 			warn: bal > 0
 		}
 	].forEach((cell, i) => {
@@ -180,44 +180,41 @@ function downloadReceiptPDF(a) {
 	y += 22;
 	doc.setTextColor(40, 40, 40);
 	y += 6;
-	hLine(y);
-	y += 6;
-	line("PROVIDED ITEMS", col, y, 8, "bold");
-	y += 5;
-	const items = [
+	const providedItems = [
 		{
-			label: "Bag",
-			ok: a.bagProvided
+			label: "Bag Provided",
+			show: a.bagProvided
 		},
 		{
-			label: "Tiffin",
-			ok: a.tiffinProvided
+			label: "Tiffin Provided",
+			show: a.tiffinProvided
 		},
 		{
-			label: "Mattress",
-			ok: a.mattressRequired
+			label: "Mattress Required",
+			show: a.mattressRequired
 		}
-	];
-	let ix = col;
-	items.forEach((item) => {
-		const chipColor = item.ok ? [
-			34,
-			197,
-			94
-		] : [
-			249,
-			115,
-			22
-		];
-		rect(ix, y - 4, 36, 7, chipColor);
-		doc.setTextColor(255, 255, 255);
-		doc.setFontSize(7.5);
-		doc.setFont("helvetica", "bold");
-		doc.text(`${item.ok ? "✔" : "✘"} ${item.label}`, ix + 3, y + .5);
-		doc.setTextColor(40, 40, 40);
-		ix += 40;
-	});
-	y += 10;
+	].filter((item) => item.show);
+	if (providedItems.length > 0) {
+		hLine(y);
+		y += 6;
+		line("PROVIDED ITEMS", col, y, 8, "bold");
+		y += 5;
+		let ix = col;
+		providedItems.forEach((item) => {
+			rect(ix, y - 4, 42, 7, [
+				34,
+				197,
+				94
+			]);
+			doc.setTextColor(255, 255, 255);
+			doc.setFontSize(7.5);
+			doc.setFont("helvetica", "bold");
+			doc.text(`+ ${item.label}`, ix + 3, y + .5);
+			doc.setTextColor(40, 40, 40);
+			ix += 46;
+		});
+		y += 10;
+	}
 	if (a.notes) {
 		hLine(y);
 		y += 5;

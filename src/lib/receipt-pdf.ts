@@ -149,9 +149,9 @@ export function downloadReceiptPDF(a: Admission): void {
   // Three columns
   const colW = (W - 2 * margin) / 3;
   const cells = [
-    { label: "Total Package", value: `₹${total.toLocaleString("en-IN")}` },
-    { label: "Amount Paid",   value: `₹${paid.toLocaleString("en-IN")}`, highlight: true },
-    { label: "Balance Due",   value: `₹${bal.toLocaleString("en-IN")}`,  warn: bal > 0 },
+    { label: "Total Package", value: `Rs. ${total.toLocaleString("en-IN")}` },
+    { label: "Amount Paid",   value: `Rs. ${paid.toLocaleString("en-IN")}`, highlight: true },
+    { label: "Balance Due",   value: `Rs. ${bal.toLocaleString("en-IN")}`,  warn: bal > 0 },
   ];
 
   cells.forEach((cell, i) => {
@@ -175,25 +175,27 @@ export function downloadReceiptPDF(a: Admission): void {
   y += 6;
 
   /* ── Items provided ── */
-  hLine(y); y += 6;
-  line("PROVIDED ITEMS", col, y, 8, "bold"); y += 5;
-  const items = [
-    { label: "Bag",      ok: a.bagProvided },
-    { label: "Tiffin",   ok: a.tiffinProvided },
-    { label: "Mattress", ok: a.mattressRequired },
-  ];
-  let ix = col;
-  items.forEach((item) => {
-    const chipColor = item.ok ? [34, 197, 94] : [249, 115, 22];
-    rect(ix, y - 4, 36, 7, chipColor);
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(7.5);
-    doc.setFont("helvetica", "bold");
-    doc.text(`${item.ok ? "✔" : "✘"} ${item.label}`, ix + 3, y + 0.5);
-    doc.setTextColor(40, 40, 40);
-    ix += 40;
-  });
-  y += 10;
+  const providedItems = [
+    { label: "Bag Provided",      show: a.bagProvided },
+    { label: "Tiffin Provided",   show: a.tiffinProvided },
+    { label: "Mattress Required", show: a.mattressRequired },
+  ].filter((item) => item.show);
+
+  if (providedItems.length > 0) {
+    hLine(y); y += 6;
+    line("PROVIDED ITEMS", col, y, 8, "bold"); y += 5;
+    let ix = col;
+    providedItems.forEach((item) => {
+      rect(ix, y - 4, 42, 7, [34, 197, 94]);
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(7.5);
+      doc.setFont("helvetica", "bold");
+      doc.text(`+ ${item.label}`, ix + 3, y + 0.5);
+      doc.setTextColor(40, 40, 40);
+      ix += 46;
+    });
+    y += 10;
+  }
 
   /* ── Notes ── */
   if (a.notes) {

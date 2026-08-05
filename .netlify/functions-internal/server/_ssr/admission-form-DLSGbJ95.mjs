@@ -15,7 +15,7 @@ import { a as usePackages, i as useColleges, o as useProperties, s as useRooms }
 import { a as isValidIndianMobile, o as todayISO, r as formatINR, t as addDays } from "./format-Bg5w10xg.mjs";
 import { n as toast } from "../_libs/sonner.mjs";
 import { t as _e } from "../_libs/cmdk.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/admission-form-PWrkcDcu.js
+//#region node_modules/.nitro/vite/services/ssr/assets/admission-form-DLSGbJ95.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var Textarea = import_react.forwardRef(({ className, ...props }, ref) => {
@@ -1037,7 +1037,7 @@ function ReceiptShareButtons({ admissionId, formData }) {
 	const text = buildReceiptText(admissionId, formData);
 	const encoded = encodeURIComponent(text);
 	function downloadPDF() {
-		import("./receipt-pdf-BbqChljv.mjs").then(({ downloadReceiptPDF }) => {
+		import("./receipt-pdf-C7QXnUd6.mjs").then(({ downloadReceiptPDF }) => {
 			const amount = Number(formData.packageAmount || 0);
 			const paid = Number(formData.amountPaid || 0);
 			const balance = Math.max(0, amount - paid);
