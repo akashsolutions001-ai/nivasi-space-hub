@@ -114,7 +114,7 @@ function PackagesPage() {
                 />
               </div>
               <h2 className="mt-3 font-display text-base font-bold">{pkg.packageName}</h2>
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="mt-1 text-base font-bold text-muted-foreground">
                 {pkg.services.join(" · ") || "No services listed"}
               </p>
               <p className="mt-3 font-display text-xl font-bold text-primary">
