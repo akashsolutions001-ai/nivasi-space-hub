@@ -2,7 +2,7 @@ import { o as __toESM } from "../_runtime.mjs";
 import { u as require_react } from "../_libs/@floating-ui/react-dom+[...].mjs";
 import { F as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
 import { a as useAuth } from "./auth-DEsgdPor.mjs";
-import { S as GraduationCap, k as Building2, l as Sparkles, m as Plus, y as LoaderCircle } from "../_libs/lucide-react.mjs";
+import { A as Building2, S as GraduationCap, l as Sparkles, m as Plus, y as LoaderCircle } from "../_libs/lucide-react.mjs";
 import { a as Skeleton, n as Button, t as AdminShell } from "./admin-shell-DP6Px5xO.mjs";
 import { t as Input } from "./input-BsluoI9p.mjs";
 import { g as setPropertyActive, m as setCollegeActive, n as addProperty, p as seedDefaults, t as addCollege } from "./db-jYdwf0ru.mjs";

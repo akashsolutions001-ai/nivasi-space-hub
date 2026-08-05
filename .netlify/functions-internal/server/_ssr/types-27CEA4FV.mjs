@@ -1,7 +1,7 @@
 import { o as __toESM } from "../_runtime.mjs";
 import { u as require_react } from "../_libs/@floating-ui/react-dom+[...].mjs";
 import { F as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
-import { O as Check } from "../_libs/lucide-react.mjs";
+import { k as Check } from "../_libs/lucide-react.mjs";
 import { s as cn } from "./admin-shell-DP6Px5xO.mjs";
 import { n as CheckboxIndicator, t as Checkbox$1 } from "../_libs/@radix-ui/react-checkbox+[...].mjs";
 //#region node_modules/.nitro/vite/services/ssr/assets/types-27CEA4FV.js

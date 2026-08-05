@@ -240,6 +240,26 @@ var ChevronsUpDown = createLucideIcon("chevrons-up-down", [["path", {
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var Download = createLucideIcon("download", [
+	["path", {
+		d: "M12 15V3",
+		key: "m9g1x1"
+	}],
+	["path", {
+		d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4",
+		key: "ih7n3h"
+	}],
+	["path", {
+		d: "m7 10 5 5 5-5",
+		key: "brsn70"
+	}]
+]);
+/**
+* @license lucide-react v0.575.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var EyeOff = createLucideIcon("eye-off", [
 	["path", {
 		d: "M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49",
@@ -730,4 +750,4 @@ var X = createLucideIcon("x", [["path", {
 	key: "d8bk6v"
 }]]);
 //#endregion
-export { Briefcase as A, Eye as C, ChevronDown as D, ChevronUp as E, ArrowLeft as M, Check as O, GraduationCap as S, ChevronsUpDown as T, Menu as _, User as a, LayoutDashboard as b, Trash2 as c, Share2 as d, Settings as f, Package as g, Pencil as h, Users as i, BedDouble as j, Building2 as k, Sparkles as l, Plus as m, Wallet as n, TriangleAlert as o, Search as p, UtensilsCrossed as r, TrendingUp as s, X as t, ShieldAlert as u, LogOut as v, EyeOff as w, IndianRupee as x, LoaderCircle as y };
+export { Building2 as A, Eye as C, ChevronUp as D, ChevronsUpDown as E, BedDouble as M, ArrowLeft as N, ChevronDown as O, GraduationCap as S, Download as T, Menu as _, User as a, LayoutDashboard as b, Trash2 as c, Share2 as d, Settings as f, Package as g, Pencil as h, Users as i, Briefcase as j, Check as k, Sparkles as l, Plus as m, Wallet as n, TriangleAlert as o, Search as p, UtensilsCrossed as r, TrendingUp as s, X as t, ShieldAlert as u, LogOut as v, EyeOff as w, IndianRupee as x, LoaderCircle as y };

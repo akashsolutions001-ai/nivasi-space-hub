@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Plus, Search } from "lucide-react";
+import { Download, Plus, Search } from "lucide-react";
 
 import { AdminShell } from "@/components/nivasi/admin-shell";
 import { EmptyState } from "@/components/nivasi/stat-card";
@@ -18,6 +18,60 @@ import {
 } from "@/components/ui/select";
 import { useAdmissions } from "@/lib/hooks";
 import { formatDate, formatINR } from "@/lib/format";
+import type { Admission } from "@/lib/types";
+
+// ---------------------------------------------------------------------------
+// Excel export — no external dependency needed.
+// Builds a UTF-8 CSV with a BOM so Excel auto-detects the encoding and opens
+// Indian names / characters correctly.
+// ---------------------------------------------------------------------------
+function exportToExcel(data: Admission[]) {
+  const headers = [
+    "Sr No",
+    "Student Name",
+    "Phone No",
+    "Email",
+    "Gender",
+    "Date of Birth",
+    "Year",
+    "Branch",
+    "College",
+  ];
+
+  const escape = (val: string | number | undefined | null) => {
+    const s = String(val ?? "");
+    // Wrap in quotes if the value contains a comma, quote, or newline
+    return s.includes(",") || s.includes('"') || s.includes("\n")
+      ? `"${s.replace(/"/g, '""')}"`
+      : s;
+  };
+
+  const rows = data.map((a, idx) => [
+    idx + 1,
+    a.fullName,
+    a.phoneNumber,
+    a.email ?? "",
+    a.gender ?? "",
+    a.dateOfBirth ? formatDate(a.dateOfBirth) : "",
+    a.year ?? "",
+    a.course ?? "",
+    a.collegeName ?? "",
+  ]);
+
+  const csv =
+    "\uFEFF" + // UTF-8 BOM — tells Excel to use UTF-8
+    [headers, ...rows]
+      .map((row) => row.map(escape).join(","))
+      .join("\r\n");
+
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `admissions_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 export const Route = createFileRoute("/admin/admissions/")({
   head: () => ({
@@ -64,12 +118,22 @@ function AdmissionsListPage() {
       title="Admissions"
       subtitle={`${admissions.length} student${admissions.length === 1 ? "" : "s"} on record`}
       action={
-        <Button asChild>
-          <Link to="/admin/admissions/new">
-            <Plus className="size-4" />
-            New Admission
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => exportToExcel(rows)}
+            disabled={rows.length === 0}
+          >
+            <Download className="size-4" />
+            Export Excel
+          </Button>
+          <Button asChild>
+            <Link to="/admin/admissions/new">
+              <Plus className="size-4" />
+              New Admission
+            </Link>
+          </Button>
+        </div>
       }
     >
       <div className="mb-5 flex flex-wrap gap-3">

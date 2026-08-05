@@ -2,17 +2,52 @@ import { o as __toESM } from "../_runtime.mjs";
 import { u as require_react } from "../_libs/@floating-ui/react-dom+[...].mjs";
 import { F as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
 import { _ as useNavigate, g as Link } from "../_libs/@tanstack/react-router+[...].mjs";
-import { m as Plus, p as Search } from "../_libs/lucide-react.mjs";
+import { T as Download, m as Plus, p as Search } from "../_libs/lucide-react.mjs";
 import { a as Skeleton, n as Button, t as AdminShell } from "./admin-shell-DP6Px5xO.mjs";
 import { t as Input } from "./input-BsluoI9p.mjs";
 import { a as SelectValue, i as SelectTrigger, n as SelectContent, r as SelectItem, t as Select } from "./select-C3DwCkLS.mjs";
 import { r as useAdmissions } from "./hooks-DJqAfBwp.mjs";
 import { n as formatDate, r as formatINR } from "./format-Bg5w10xg.mjs";
 import { t as EmptyState } from "./stat-card-DjmB8MfY.mjs";
-import { i as StatusPill, n as PaymentBadge, r as ProfileAvatar, t as MattressBadge } from "./badges-BIwieoDo.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/admin.admissions.index-lh2fqS3Q.js
+import { i as StatusPill, n as PaymentBadge, r as ProfileAvatar, t as MattressBadge } from "./badges-COhvM1yR.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/admin.admissions.index-BSndSXtZ.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
+function exportToExcel(data) {
+	const headers = [
+		"Sr No",
+		"Student Name",
+		"Phone No",
+		"Email",
+		"Gender",
+		"Date of Birth",
+		"Year",
+		"Branch",
+		"College"
+	];
+	const escape = (val) => {
+		const s = String(val ?? "");
+		return s.includes(",") || s.includes("\"") || s.includes("\n") ? `"${s.replace(/"/g, "\"\"")}"` : s;
+	};
+	const csv = "﻿" + [headers, ...data.map((a, idx) => [
+		idx + 1,
+		a.fullName,
+		a.phoneNumber,
+		a.email ?? "",
+		a.gender ?? "",
+		a.dateOfBirth ? formatDate(a.dateOfBirth) : "",
+		a.year ?? "",
+		a.course ?? "",
+		a.collegeName ?? ""
+	])].map((row) => row.map(escape).join(",")).join("\r\n");
+	const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+	const url = URL.createObjectURL(blob);
+	const a = document.createElement("a");
+	a.href = url;
+	a.download = `admissions_${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}.csv`;
+	a.click();
+	URL.revokeObjectURL(url);
+}
 function AdmissionsListPage() {
 	const { data: admissions = [], isLoading } = useAdmissions();
 	const navigate = useNavigate();
@@ -38,12 +73,20 @@ function AdmissionsListPage() {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(AdminShell, {
 		title: "Admissions",
 		subtitle: `${admissions.length} student${admissions.length === 1 ? "" : "s"} on record`,
-		action: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
-			asChild: true,
-			children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Link, {
-				to: "/admin/admissions/new",
-				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Plus, { className: "size-4" }), "New Admission"]
-			})
+		action: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "flex gap-2",
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
+				variant: "outline",
+				onClick: () => exportToExcel(rows),
+				disabled: rows.length === 0,
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Download, { className: "size-4" }), "Export Excel"]
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+				asChild: true,
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Link, {
+					to: "/admin/admissions/new",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Plus, { className: "size-4" }), "New Admission"]
+				})
+			})]
 		}),
 		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 			className: "mb-5 flex flex-wrap gap-3",

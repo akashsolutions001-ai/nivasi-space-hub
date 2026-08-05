@@ -163,8 +163,19 @@ export function AdmissionForm({ existing }: { existing?: Admission | null }) {
   const [saved, setSaved] = useState<string | null>(null);
   const [savedForm, setSavedForm] = useState<FormState | null>(null);
 
-  // Preview the photo from the public path entered by the user
-  const previewSrc = form.profileImagePath.trim() || null;
+  // Preview the photo from the public path entered by the user.
+  // Encode each path segment so names with spaces (e.g. "John Doe/profile.jpg")
+  // produce a valid URL the browser can load.
+  const previewSrc = (() => {
+    const raw = form.profileImagePath.trim();
+    if (!raw) return null;
+    if (raw.startsWith("http")) return raw;
+    // Encode each segment individually so "/" separators are preserved
+    return raw
+      .split("/")
+      .map((seg) => encodeURIComponent(seg))
+      .join("/");
+  })();
 
   const activePackages = useMemo(() => packages.filter((p) => p.active), [packages]);
   const selectedPackage = activePackages.find((p) => p.packageId === form.packageId);

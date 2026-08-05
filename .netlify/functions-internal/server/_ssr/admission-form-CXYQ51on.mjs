@@ -2,7 +2,7 @@ import { o as __toESM } from "../_runtime.mjs";
 import { u as require_react } from "../_libs/@floating-ui/react-dom+[...].mjs";
 import { F as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
 import { _ as useNavigate } from "../_libs/@tanstack/react-router+[...].mjs";
-import { O as Check, T as ChevronsUpDown, a as User, p as Search, y as LoaderCircle } from "../_libs/lucide-react.mjs";
+import { E as ChevronsUpDown, a as User, k as Check, p as Search, y as LoaderCircle } from "../_libs/lucide-react.mjs";
 import { n as Button, s as cn } from "./admin-shell-DP6Px5xO.mjs";
 import { t as Input } from "./input-BsluoI9p.mjs";
 import { t as Label } from "./label-BTiKZXOQ.mjs";
@@ -15,7 +15,7 @@ import { a as usePackages, i as useColleges, o as useProperties, s as useRooms }
 import { a as isValidIndianMobile, o as todayISO, r as formatINR, t as addDays } from "./format-Bg5w10xg.mjs";
 import { n as toast } from "../_libs/sonner.mjs";
 import { t as _e } from "../_libs/cmdk.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/admission-form-DLSGbJ95.js
+//#region node_modules/.nitro/vite/services/ssr/assets/admission-form-CXYQ51on.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var Textarea = import_react.forwardRef(({ className, ...props }, ref) => {
@@ -178,7 +178,12 @@ function AdmissionForm({ existing }) {
 	const [saving, setSaving] = (0, import_react.useState)(false);
 	const [saved, setSaved] = (0, import_react.useState)(null);
 	const [savedForm, setSavedForm] = (0, import_react.useState)(null);
-	const previewSrc = form.profileImagePath.trim() || null;
+	const previewSrc = (() => {
+		const raw = form.profileImagePath.trim();
+		if (!raw) return null;
+		if (raw.startsWith("http")) return raw;
+		return raw.split("/").map((seg) => encodeURIComponent(seg)).join("/");
+	})();
 	const activePackages = (0, import_react.useMemo)(() => packages.filter((p) => p.active), [packages]);
 	const selectedPackage = activePackages.find((p) => p.packageId === form.packageId);
 	const isCustom = (selectedPackage?.packageName ?? form.packageName).toLowerCase().includes("custom");

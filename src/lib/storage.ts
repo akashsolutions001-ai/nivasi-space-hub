@@ -58,14 +58,31 @@ export async function deleteProfileImage(urlOrPath: string): Promise<void> {
 
 /**
  * Resolves a stored value to a viewable URL.
- * Since we now store public URLs directly, this is a simple pass-through.
- * Kept for backward-compatibility with any stored paths.
+ *
+ * Priority:
+ *  1. Already a full http(s) URL  → return as-is
+ *  2. Starts with "/"             → public-folder path; encode spaces/special
+ *                                   chars and return so the browser can load it
+ *  3. Anything else               → legacy Firebase Storage path; resolve via
+ *                                   getDownloadURL (falls back to null on error)
  */
 export async function getProfileImageUrl(urlOrPath?: string | null): Promise<string | null> {
   if (!urlOrPath) return null;
-  // Already a public URL — return as-is
+
+  // Already a full public URL — return as-is
   if (urlOrPath.startsWith("http")) return urlOrPath;
-  // Legacy storage path — resolve to download URL
+
+  // Public-folder path (e.g. "/Bhushankumar Digvijay Pawar/profile.avif")
+  // Encode each path segment individually so spaces become %20 but slashes stay.
+  if (urlOrPath.startsWith("/")) {
+    const encoded = urlOrPath
+      .split("/")
+      .map((segment) => encodeURIComponent(segment))
+      .join("/");
+    return encoded;
+  }
+
+  // Legacy Firebase Storage path — resolve to download URL
   try {
     const storage = getFirebaseStorage();
     const storageRef = ref(storage, urlOrPath);
