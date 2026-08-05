@@ -5,7 +5,7 @@ import { a as getApp, o as getApps, s as initializeApp } from "../_libs/@firebas
 import { i as signOut, n as onAuthStateChanged, r as signInWithEmailAndPassword, t as getAuth } from "../_libs/firebase__auth.mjs";
 import "../_libs/firebase.mjs";
 import { L as getFirestore } from "../_libs/@firebase/firestore+[...].mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/auth-CoXP-0dY.js
+//#region node_modules/.nitro/vite/services/ssr/assets/auth-DEsgdPor.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 /**
@@ -41,11 +41,18 @@ function getDb() {
 }
 var ADMIN_EMAIL = "admin@nivasispace.com";
 var ADMIN_PASSWORD = "0147@May";
+var GLOBAL_ADMIN_EMAIL = "Globaladmin@nivasispace.com";
+var GLOBAL_ADMIN_PASSWORD = "16Dec@1980NivasiSpace";
 var LOCAL_AUTH_KEY = "nivasi_admin_authed";
 var HARDCODED_ADMIN_USER = {
 	uid: "hardcoded-admin",
 	email: ADMIN_EMAIL,
 	displayName: "Admin"
+};
+var GLOBAL_ADMIN_USER = {
+	uid: "global-admin",
+	email: GLOBAL_ADMIN_EMAIL,
+	displayName: "Global Admin"
 };
 var AuthContext = (0, import_react.createContext)(null);
 var AUTH_ERRORS = {
@@ -59,7 +66,11 @@ var AUTH_ERRORS = {
 };
 function AuthProvider({ children }) {
 	const [user, setUser] = (0, import_react.useState)(() => {
-		if (typeof window !== "undefined" && sessionStorage.getItem(LOCAL_AUTH_KEY) === "1") return HARDCODED_ADMIN_USER;
+		if (typeof window !== "undefined") {
+			const key = sessionStorage.getItem(LOCAL_AUTH_KEY);
+			if (key === "1") return HARDCODED_ADMIN_USER;
+			if (key === "global") return GLOBAL_ADMIN_USER;
+		}
 		return null;
 	});
 	const [loading, setLoading] = (0, import_react.useState)(true);
@@ -72,8 +83,12 @@ function AuthProvider({ children }) {
 			if (firebaseUser) {
 				sessionStorage.setItem(LOCAL_AUTH_KEY, "1");
 				setUser(firebaseUser);
-			} else if (sessionStorage.getItem(LOCAL_AUTH_KEY) === "1") setUser(HARDCODED_ADMIN_USER);
-			else setUser(null);
+			} else {
+				const key = sessionStorage.getItem(LOCAL_AUTH_KEY);
+				if (key === "1") setUser(HARDCODED_ADMIN_USER);
+				else if (key === "global") setUser(GLOBAL_ADMIN_USER);
+				else setUser(null);
+			}
 			setLoading(false);
 		});
 	}, []);
@@ -81,6 +96,11 @@ function AuthProvider({ children }) {
 		if (email.trim() === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
 			sessionStorage.setItem(LOCAL_AUTH_KEY, "1");
 			setUser(HARDCODED_ADMIN_USER);
+			return;
+		}
+		if (email.trim() === GLOBAL_ADMIN_EMAIL && password === GLOBAL_ADMIN_PASSWORD) {
+			sessionStorage.setItem(LOCAL_AUTH_KEY, "global");
+			setUser(GLOBAL_ADMIN_USER);
 			return;
 		}
 		try {
@@ -98,7 +118,7 @@ function AuthProvider({ children }) {
 			if (isFirebaseConfigured) await signOut(getFirebaseAuth());
 		} catch {}
 	}
-	const configured = isFirebaseConfigured || user === HARDCODED_ADMIN_USER;
+	const configured = isFirebaseConfigured || user === HARDCODED_ADMIN_USER || user === GLOBAL_ADMIN_USER;
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AuthContext.Provider, {
 		value: {
 			user,
@@ -115,5 +135,10 @@ function useAuth() {
 	if (!ctx) throw new Error("useAuth must be used inside AuthProvider");
 	return ctx;
 }
+/** Returns true only when the currently logged-in user is the Global Admin. */
+function useIsGlobalAdmin() {
+	const { user } = useAuth();
+	return user?.email?.toLowerCase() === GLOBAL_ADMIN_EMAIL.toLowerCase();
+}
 //#endregion
-export { useAuth as a, isFirebaseConfigured as i, getDb as n, getFirebaseApp as r, AuthProvider as t };
+export { useAuth as a, isFirebaseConfigured as i, getDb as n, useIsGlobalAdmin as o, getFirebaseApp as r, AuthProvider as t };

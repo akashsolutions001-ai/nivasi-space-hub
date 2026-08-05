@@ -62,6 +62,9 @@ function mapAdmission(snap: QueryDocumentSnapshot<DocumentData>): Admission {
     tiffinProvided: Boolean(d.tiffinProvided),
     mattressRequired: Boolean(d.mattressRequired),
     notes: d.notes ?? "",
+    parentName: d.parentName ?? "",
+    parentPhone: d.parentPhone ?? "",
+    parentRelation: d.parentRelation ?? "",
     createdAt: toDate(d.createdAt),
     updatedAt: toDate(d.updatedAt),
   };

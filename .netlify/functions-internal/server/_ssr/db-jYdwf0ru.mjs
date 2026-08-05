@@ -1,7 +1,7 @@
 import "../_libs/firebase.mjs";
 import { F as doc, P as collection, R as serverTimestamp, S as where, _ as orderBy, b as setDoc, d as addDoc, g as limit, h as getDocs, m as getDoc, v as query, x as updateDoc, y as runTransaction } from "../_libs/@firebase/firestore+[...].mjs";
-import { n as getDb } from "./auth-CoXP-0dY.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/db-B591BTQo.js
+import { n as getDb } from "./auth-DEsgdPor.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/db-jYdwf0ru.js
 function toDate(value) {
 	if (!value) return null;
 	const ts = value;
@@ -42,6 +42,9 @@ function mapAdmission(snap) {
 		tiffinProvided: Boolean(d.tiffinProvided),
 		mattressRequired: Boolean(d.mattressRequired),
 		notes: d.notes ?? "",
+		parentName: d.parentName ?? "",
+		parentPhone: d.parentPhone ?? "",
+		parentRelation: d.parentRelation ?? "",
 		createdAt: toDate(d.createdAt),
 		updatedAt: toDate(d.updatedAt)
 	};

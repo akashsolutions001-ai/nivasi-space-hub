@@ -1,15 +1,16 @@
 import { o as __toESM } from "../_runtime.mjs";
 import { u as require_react } from "../_libs/@floating-ui/react-dom+[...].mjs";
 import { F as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
+import { o as useIsGlobalAdmin } from "./auth-DEsgdPor.mjs";
 import { g as Link } from "../_libs/@tanstack/react-router+[...].mjs";
-import { D as Briefcase, O as BedDouble, b as IndianRupee, i as Users, n as Wallet, p as Plus, r as UtensilsCrossed, s as TrendingUp } from "../_libs/lucide-react.mjs";
-import { a as Skeleton, n as Button, s as cn, t as AdminShell } from "./admin-shell-CHBrYa7c.mjs";
-import { n as filterByPeriod, r as useAdmissions, t as computeStats } from "./hooks-CvIMf7dK.mjs";
+import { A as Briefcase, C as Eye, i as Users, j as BedDouble, m as Plus, n as Wallet, r as UtensilsCrossed, s as TrendingUp, w as EyeOff, x as IndianRupee } from "../_libs/lucide-react.mjs";
+import { a as Skeleton, n as Button, s as cn, t as AdminShell } from "./admin-shell-DP6Px5xO.mjs";
+import { n as filterByPeriod, r as useAdmissions, t as computeStats } from "./hooks-DJqAfBwp.mjs";
 import { n as formatDate, r as formatINR } from "./format-Bg5w10xg.mjs";
-import { n as StatCard, t as EmptyState } from "./stat-card-en3Sqr1s.mjs";
-import { n as PaymentBadge, r as ProfileAvatar } from "./badges-BDEpsa2z.mjs";
+import { n as StatCard, t as EmptyState } from "./stat-card-DjmB8MfY.mjs";
+import { n as PaymentBadge, r as ProfileAvatar } from "./badges-BIwieoDo.mjs";
 import { i as Trigger, n as List, r as Root2, t as Content } from "../_libs/radix-ui__react-tabs.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/admin.dashboard-B-NGXoW5.js
+//#region node_modules/.nitro/vite/services/ssr/assets/admin.dashboard-IHqS879k.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var Tabs = Root2;
@@ -51,7 +52,9 @@ var PERIODS = [
 ];
 function DashboardPage() {
 	const { data: admissions = [], isLoading } = useAdmissions();
+	const isGlobalAdmin = useIsGlobalAdmin();
 	const [period, setPeriod] = (0, import_react.useState)("all");
+	const [showMoney, setShowMoney] = (0, import_react.useState)(false);
 	const scoped = (0, import_react.useMemo)(() => filterByPeriod(admissions, period), [admissions, period]);
 	const stats = (0, import_react.useMemo)(() => computeStats(scoped), [scoped]);
 	const recent = (0, import_react.useMemo)(() => admissions.slice(0, 6), [admissions]);
@@ -120,7 +123,7 @@ function DashboardPage() {
 						value: stats.mattressRequired,
 						icon: BedDouble
 					}),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(StatCard, {
+					isGlobalAdmin && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(StatCard, {
 						label: "Outstanding Balance",
 						value: formatINR(stats.outstanding),
 						icon: IndianRupee,
@@ -128,23 +131,41 @@ function DashboardPage() {
 					})
 				]
 			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-				className: "mt-6 grid gap-4 lg:grid-cols-3",
-				children: [
-					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MoneyCard, {
-						label: "Total Package Value",
-						value: formatINR(stats.totalValue)
-					}),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MoneyCard, {
-						label: "Amount Collected",
-						value: formatINR(stats.collected),
-						accent: true
-					}),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MoneyCard, {
-						label: "Balance Outstanding",
-						value: formatINR(stats.outstanding)
-					})
-				]
+			isGlobalAdmin && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "mt-6",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "mb-3 flex items-center gap-2",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", {
+						className: "font-display text-base font-semibold",
+						children: "Financials"
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+						type: "button",
+						onClick: () => setShowMoney((v) => !v),
+						className: "ml-1 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+						"aria-label": showMoney ? "Hide financials" : "Show financials",
+						children: showMoney ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(EyeOff, { className: "size-4" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Eye, { className: "size-4" })
+					})]
+				}), showMoney ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "grid gap-4 lg:grid-cols-3",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MoneyCard, {
+							label: "Total Package Value",
+							value: formatINR(stats.totalValue)
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MoneyCard, {
+							label: "Amount Collected",
+							value: formatINR(stats.collected),
+							accent: true
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MoneyCard, {
+							label: "Balance Outstanding",
+							value: formatINR(stats.outstanding)
+						})
+					]
+				}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "rounded-2xl border border-dashed border-border bg-muted/30 px-5 py-4 text-sm text-muted-foreground",
+					children: "Financial data is hidden. Click the eye icon to reveal."
+				})]
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
 				className: "mt-8",

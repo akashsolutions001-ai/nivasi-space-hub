@@ -18,6 +18,10 @@ export interface Admission {
   email?: string;
   gender?: string;
   dateOfBirth?: string;
+  // Parent / Guardian info
+  parentName?: string;
+  parentPhone?: string;
+  parentRelation?: string;
   collegeId?: string;
   collegeName: string;
   course?: string;

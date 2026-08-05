@@ -38,6 +38,9 @@ interface FormState {
   email: string;
   gender: string;
   dateOfBirth: string;
+  parentName: string;
+  parentPhone: string;
+  parentRelation: string;
   collegeId: string;
   collegeName: string;
   course: string;
@@ -69,6 +72,9 @@ function toForm(a?: Admission | null): FormState {
     email: a?.email ?? "",
     gender: a?.gender ?? "",
     dateOfBirth: a?.dateOfBirth ?? "",
+    parentName: a?.parentName ?? "",
+    parentPhone: a?.parentPhone ?? "",
+    parentRelation: a?.parentRelation ?? "",
     collegeId: a?.collegeId ?? "",
     collegeName: a?.collegeName ?? "",
     course: a?.course ?? "",
@@ -155,6 +161,7 @@ export function AdmissionForm({ existing }: { existing?: Admission | null }) {
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState<string | null>(null);
+  const [savedForm, setSavedForm] = useState<FormState | null>(null);
 
   // Preview the photo from the public path entered by the user
   const previewSrc = form.profileImagePath.trim() || null;
@@ -287,6 +294,9 @@ export function AdmissionForm({ existing }: { existing?: Admission | null }) {
         email: form.email.trim(),
         gender: form.gender,
         dateOfBirth: form.dateOfBirth,
+        parentName: form.parentName.trim(),
+        parentPhone: form.parentPhone.replace(/\D/g, ""),
+        parentRelation: form.parentRelation,
         collegeId: form.collegeId,
         collegeName: form.collegeName,
         course: form.course.trim(),
@@ -322,6 +332,7 @@ export function AdmissionForm({ existing }: { existing?: Admission | null }) {
 
       await createAdmission(payload);
       await queryClient.invalidateQueries({ queryKey: ["admissions"] });
+      setSavedForm({ ...form });
       setSaved(admissionId);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Unable to save admission.");
@@ -334,9 +345,10 @@ export function AdmissionForm({ existing }: { existing?: Admission | null }) {
     setForm(toForm(null));
     setErrors({});
     setSaved(null);
+    setSavedForm(null);
   }
 
-  if (saved) {
+  if (saved && savedForm) {
     return (
       <div className="mx-auto max-w-lg rounded-2xl border border-success/30 bg-card p-8 text-center shadow-soft">
         <div className="mx-auto grid size-12 place-items-center rounded-full bg-success/12 text-success">
@@ -345,7 +357,14 @@ export function AdmissionForm({ existing }: { existing?: Admission | null }) {
         <h2 className="mt-4 font-display text-xl font-bold">Admission Saved Successfully</h2>
         <p className="mt-1 text-sm text-muted-foreground">Admission ID</p>
         <p className="mt-1 font-mono text-lg font-bold text-primary">{saved}</p>
-        <div className="mt-6 flex flex-wrap justify-center gap-2">
+
+        {/* Receipt share row */}
+        <div className="mt-5 rounded-xl border border-border bg-muted/40 p-4 text-left space-y-3">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Share Fee Receipt</p>
+          <ReceiptShareButtons admissionId={saved} formData={savedForm} />
+        </div>
+
+        <div className="mt-5 flex flex-wrap justify-center gap-2">
           <Button
             onClick={() =>
               navigate({ to: "/admin/admissions/$admissionId", params: { admissionId: saved } })
@@ -451,6 +470,41 @@ export function AdmissionForm({ existing }: { existing?: Admission | null }) {
               value={form.dateOfBirth}
               onChange={(v) => set("dateOfBirth", v)}
             />
+          </Field>
+        </div>
+      </Section>
+
+      <Section title="Parent / Guardian Details">
+        <div className={grid}>
+          <Field label="Parent / Guardian Name">
+            <Input
+              value={form.parentName}
+              onChange={(e) => set("parentName", e.target.value)}
+              placeholder="Ramesh Sharma"
+            />
+          </Field>
+          <Field label="Parent Phone Number">
+            <Input
+              value={form.parentPhone}
+              inputMode="numeric"
+              maxLength={10}
+              onChange={(e) => set("parentPhone", e.target.value.replace(/\D/g, ""))}
+              placeholder="9876543210"
+            />
+          </Field>
+          <Field label="Relation">
+            <Select value={form.parentRelation} onValueChange={(v) => set("parentRelation", v)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select relation" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Father">Father</SelectItem>
+                <SelectItem value="Mother">Mother</SelectItem>
+                <SelectItem value="Guardian">Guardian</SelectItem>
+                <SelectItem value="Sibling">Sibling</SelectItem>
+                <SelectItem value="Other">Other</SelectItem>
+              </SelectContent>
+            </Select>
           </Field>
         </div>
       </Section>
@@ -792,7 +846,184 @@ export function AdmissionForm({ existing }: { existing?: Admission | null }) {
   );
 }
 
-/* ----------------------------- DobPicker ----------------------------- */
+/* ─────────────────── Receipt Generator & Share ─────────────────── */
+
+function buildReceiptText(admissionId: string, f: FormState): string {
+  const paid    = Number(f.amountPaid  || 0);
+  const total   = Number(f.packageAmount || 0);
+  const balance = Math.max(0, total - paid);
+  const status  = total > 0 && balance <= 0 ? "PAID ✅" : "PENDING ⚠️";
+
+  return [
+    "━━━━━━━━━━━━━━━━━━━━━━━━",
+    "🏠 *NivasiSpace*",
+    "   Admission Fee Receipt",
+    "━━━━━━━━━━━━━━━━━━━━━━━━",
+    `📋 Admission ID : ${admissionId}`,
+    `📅 Date         : ${f.admissionDate}`,
+    "",
+    "👤 *Student Details*",
+    `   Name    : ${f.fullName}`,
+    `   Phone   : ${f.phoneNumber}`,
+    ...(f.email   ? [`   Email   : ${f.email}`]   : []),
+    ...(f.gender  ? [`   Gender  : ${f.gender}`]  : []),
+    "",
+    ...(f.parentName ? [
+      "👨‍👩‍👧 *Parent / Guardian*",
+      `   Name     : ${f.parentName}`,
+      `   Phone    : ${f.parentPhone || "—"}`,
+      ...(f.parentRelation ? [`   Relation : ${f.parentRelation}`] : []),
+      "",
+    ] : []),
+    "🎓 *College*",
+    `   ${f.collegeName}`,
+    ...(f.course ? [`   ${f.course}${f.year ? ` — ${f.year}` : ""}`] : []),
+    "",
+    "🏠 *Stay*",
+    `   Property : ${f.propertyName || "—"}`,
+    `   Room     : ${f.roomNumber  || "—"}`,
+    `   Bed      : ${f.bedNumber   || "—"}`,
+    ...(f.moveInDate ? [`   Move-in  : ${f.moveInDate}`] : []),
+    "",
+    "📦 *Package*",
+    `   ${f.packageName || "—"}`,
+    ...(f.packageServices.length ? [`   Services : ${f.packageServices.join(", ")}`] : []),
+    ...(f.packageStartDate ? [`   Period   : ${f.packageStartDate} → ${f.packageEndDate || "—"}`] : []),
+    "",
+    "💰 *Payment Summary*",
+    `   Total Amount  : ₹${total.toLocaleString("en-IN")}`,
+    `   Amount Paid   : ₹${paid.toLocaleString("en-IN")}`,
+    `   Balance Due   : ₹${balance.toLocaleString("en-IN")}`,
+    `   Status        : ${status}`,
+    "",
+    "━━━━━━━━━━━━━━━━━━━━━━━━",
+    "Thank you for choosing NivasiSpace! 🙏",
+    "━━━━━━━━━━━━━━━━━━━━━━━━",
+  ].join("\n");
+}
+
+
+function ReceiptShareButtons({
+  admissionId,
+  formData,
+}: {
+  admissionId: string;
+  formData: FormState;
+}) {
+  const text    = buildReceiptText(admissionId, formData);
+  const encoded = encodeURIComponent(text);
+
+  function downloadPDF() {
+    import("@/lib/receipt-pdf").then(({ downloadReceiptPDF }) => {
+      const amount  = Number(formData.packageAmount || 0);
+      const paid    = Number(formData.amountPaid    || 0);
+      const balance = Math.max(0, amount - paid);
+      downloadReceiptPDF({
+        id: admissionId,
+        admissionId,
+        fullName: formData.fullName,
+        phoneNumber: formData.phoneNumber,
+        email: formData.email,
+        gender: formData.gender,
+        dateOfBirth: formData.dateOfBirth,
+        parentName: formData.parentName,
+        parentPhone: formData.parentPhone,
+        parentRelation: formData.parentRelation,
+        collegeName: formData.collegeName,
+        course: formData.course,
+        year: formData.year,
+        propertyName: formData.propertyName,
+        roomNumber: formData.roomNumber,
+        bedNumber: formData.bedNumber,
+        admissionDate: formData.admissionDate,
+        moveInDate: formData.moveInDate,
+        packageName: formData.packageName,
+        packageServices: formData.packageServices,
+        packageAmount: amount,
+        packageStartDate: formData.packageStartDate,
+        packageEndDate: formData.packageEndDate,
+        amountPaid: paid,
+        balanceAmount: balance,
+        paymentStatus: balance <= 0 && amount > 0 ? "completed" : "pending",
+        bagProvided: formData.bagProvided,
+        tiffinProvided: formData.tiffinProvided,
+        mattressRequired: formData.mattressRequired,
+        notes: formData.notes,
+      } as any);
+    });
+  }
+
+  function shareViaWebShare() {
+    if (navigator.share) {
+      navigator.share({ title: `Fee Receipt — ${admissionId}`, text }).catch(() => {});
+    } else {
+      navigator.clipboard
+        .writeText(text)
+        .then(() => toast.success("Receipt copied to clipboard!"))
+        .catch(() => toast.error("Could not copy receipt."));
+    }
+  }
+
+  function openWhatsApp(phone: string) {
+    const clean = phone.replace(/\D/g, "");
+    const num   = clean.length === 10 ? `91${clean}` : clean;
+    window.open(`https://wa.me/${num}?text=${encoded}`, "_blank");
+  }
+
+  const studentPhone = formData.phoneNumber.replace(/\D/g, "");
+  const parentPhone  = formData.parentPhone.replace(/\D/g, "");
+
+  return (
+    <div className="space-y-2">
+      {/* PDF Download */}
+      <Button
+        type="button"
+        size="sm"
+        className="w-full justify-start gap-2"
+        onClick={downloadPDF}
+      >
+        <span>📄</span> Download Receipt PDF
+      </Button>
+
+      {/* Copy / Share */}
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="w-full justify-start gap-2"
+        onClick={shareViaWebShare}
+      >
+        <span>📋</span> Copy / Share Receipt
+      </Button>
+
+      {/* WhatsApp student */}
+      {studentPhone.length >= 10 && (
+        <Button
+          type="button"
+          size="sm"
+          className="w-full justify-start gap-2 bg-[#25D366] text-white hover:bg-[#1ebe57]"
+          onClick={() => openWhatsApp(studentPhone)}
+        >
+          <span>💬</span> WhatsApp Student ({formData.fullName.split(" ")[0]})
+        </Button>
+      )}
+
+      {/* WhatsApp parent */}
+      {parentPhone.length >= 10 && (
+        <Button
+          type="button"
+          size="sm"
+          className="w-full justify-start gap-2 bg-[#128C7E] text-white hover:bg-[#0f7a6d]"
+          onClick={() => openWhatsApp(parentPhone)}
+        >
+          <span>💬</span> WhatsApp Parent ({formData.parentName || "Guardian"})
+        </Button>
+      )}
+    </div>
+  );
+}
+
+/* ─────────────────── DobPicker ─────────────────── */
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
@@ -800,45 +1031,30 @@ const MONTHS = [
 ];
 
 function DobPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  // Internal state — unpadded strings, independent of each other
   const [day,   setDay]   = useState<string>(() => value ? String(Number(value.split("-")[2] ?? "")) : "");
   const [month, setMonth] = useState<string>(() => value ? String(Number(value.split("-")[1] ?? "")) : "");
   const [year,  setYear]  = useState<string>(() => value ? (value.split("-")[0] ?? "") : "");
 
-  // When all three are set, notify parent; otherwise clear
   function notify(y: string, m: string, d: string) {
-    if (y && m && d) {
-      onChange(`${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`);
-    }
+    if (y && m && d) onChange(`${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`);
   }
 
-  function handleDay(v: string) {
-    setDay(v);
-    notify(year, month, v);
-  }
+  function handleDay(v: string) { setDay(v); notify(year, month, v); }
   function handleMonth(v: string) {
     setMonth(v);
-    // If selected month has fewer days than current day, reset day
     const maxDays = year ? new Date(Number(year), Number(v), 0).getDate() : 31;
     const safeDay = Number(day) > maxDays ? "" : day;
     if (Number(day) > maxDays) setDay("");
     notify(year, v, safeDay);
   }
-  function handleYear(v: string) {
-    setYear(v);
-    notify(v, month, day);
-  }
+  function handleYear(v: string) { setYear(v); notify(v, month, day); }
 
-  const daysInMonth = year && month
-    ? new Date(Number(year), Number(month), 0).getDate()
-    : 31;
-
+  const daysInMonth = year && month ? new Date(Number(year), Number(month), 0).getDate() : 31;
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 55 }, (_, i) => currentYear - 5 - i);
 
   return (
     <div className="grid grid-cols-3 gap-2">
-      {/* Day */}
       <Select value={day} onValueChange={handleDay}>
         <SelectTrigger><SelectValue placeholder="Day" /></SelectTrigger>
         <SelectContent>
@@ -848,7 +1064,6 @@ function DobPicker({ value, onChange }: { value: string; onChange: (v: string) =
         </SelectContent>
       </Select>
 
-      {/* Month */}
       <Select value={month} onValueChange={handleMonth}>
         <SelectTrigger><SelectValue placeholder="Month" /></SelectTrigger>
         <SelectContent>
@@ -858,7 +1073,6 @@ function DobPicker({ value, onChange }: { value: string; onChange: (v: string) =
         </SelectContent>
       </Select>
 
-      {/* Year */}
       <Select value={year} onValueChange={handleYear}>
         <SelectTrigger><SelectValue placeholder="Year" /></SelectTrigger>
         <SelectContent>

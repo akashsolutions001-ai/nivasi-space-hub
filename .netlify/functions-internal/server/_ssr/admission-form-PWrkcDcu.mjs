@@ -2,20 +2,20 @@ import { o as __toESM } from "../_runtime.mjs";
 import { u as require_react } from "../_libs/@floating-ui/react-dom+[...].mjs";
 import { F as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
 import { _ as useNavigate } from "../_libs/@tanstack/react-router+[...].mjs";
-import { S as ChevronsUpDown, T as Check, a as User, f as Search, v as LoaderCircle } from "../_libs/lucide-react.mjs";
-import { n as Button, s as cn } from "./admin-shell-CHBrYa7c.mjs";
-import { t as Input } from "./input-D7CPUA3X.mjs";
-import { t as Label } from "./label-DWHDGQ93.mjs";
-import { n as SERVICE_OPTIONS, t as Checkbox } from "./types-MVXNia4e.mjs";
+import { O as Check, T as ChevronsUpDown, a as User, p as Search, y as LoaderCircle } from "../_libs/lucide-react.mjs";
+import { n as Button, s as cn } from "./admin-shell-DP6Px5xO.mjs";
+import { t as Input } from "./input-BsluoI9p.mjs";
+import { t as Label } from "./label-BTiKZXOQ.mjs";
+import { n as SERVICE_OPTIONS, t as Checkbox } from "./types-27CEA4FV.mjs";
 import { i as Trigger, n as Portal, r as Root2, t as Content2 } from "../_libs/@radix-ui/react-popover+[...].mjs";
-import { a as SelectValue, i as SelectTrigger, n as SelectContent, r as SelectItem, t as Select } from "./select-C_v9RN57.mjs";
-import { _ as updateAdmission, d as generateAdmissionId, r as createAdmission } from "./db-B591BTQo.mjs";
+import { a as SelectValue, i as SelectTrigger, n as SelectContent, r as SelectItem, t as Select } from "./select-C3DwCkLS.mjs";
+import { _ as updateAdmission, d as generateAdmissionId, r as createAdmission } from "./db-jYdwf0ru.mjs";
 import { r as useQueryClient } from "../_libs/tanstack__react-query.mjs";
-import { a as usePackages, i as useColleges, o as useProperties, s as useRooms } from "./hooks-CvIMf7dK.mjs";
+import { a as usePackages, i as useColleges, o as useProperties, s as useRooms } from "./hooks-DJqAfBwp.mjs";
 import { a as isValidIndianMobile, o as todayISO, r as formatINR, t as addDays } from "./format-Bg5w10xg.mjs";
 import { n as toast } from "../_libs/sonner.mjs";
 import { t as _e } from "../_libs/cmdk.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/admission-form-CGL2NHRl.js
+//#region node_modules/.nitro/vite/services/ssr/assets/admission-form-PWrkcDcu.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var Textarea = import_react.forwardRef(({ className, ...props }, ref) => {
@@ -97,6 +97,9 @@ function toForm(a) {
 		email: a?.email ?? "",
 		gender: a?.gender ?? "",
 		dateOfBirth: a?.dateOfBirth ?? "",
+		parentName: a?.parentName ?? "",
+		parentPhone: a?.parentPhone ?? "",
+		parentRelation: a?.parentRelation ?? "",
 		collegeId: a?.collegeId ?? "",
 		collegeName: a?.collegeName ?? "",
 		course: a?.course ?? "",
@@ -174,6 +177,7 @@ function AdmissionForm({ existing }) {
 	const [errors, setErrors] = (0, import_react.useState)({});
 	const [saving, setSaving] = (0, import_react.useState)(false);
 	const [saved, setSaved] = (0, import_react.useState)(null);
+	const [savedForm, setSavedForm] = (0, import_react.useState)(null);
 	const previewSrc = form.profileImagePath.trim() || null;
 	const activePackages = (0, import_react.useMemo)(() => packages.filter((p) => p.active), [packages]);
 	const selectedPackage = activePackages.find((p) => p.packageId === form.packageId);
@@ -281,6 +285,9 @@ function AdmissionForm({ existing }) {
 				email: form.email.trim(),
 				gender: form.gender,
 				dateOfBirth: form.dateOfBirth,
+				parentName: form.parentName.trim(),
+				parentPhone: form.parentPhone.replace(/\D/g, ""),
+				parentRelation: form.parentRelation,
 				collegeId: form.collegeId,
 				collegeName: form.collegeName,
 				course: form.course.trim(),
@@ -317,6 +324,7 @@ function AdmissionForm({ existing }) {
 			}
 			await createAdmission(payload);
 			await queryClient.invalidateQueries({ queryKey: ["admissions"] });
+			setSavedForm({ ...form });
 			setSaved(admissionId);
 		} catch (error) {
 			toast.error(error instanceof Error ? error.message : "Unable to save admission.");
@@ -328,8 +336,9 @@ function AdmissionForm({ existing }) {
 		setForm(toForm(null));
 		setErrors({});
 		setSaved(null);
+		setSavedForm(null);
 	}
-	if (saved) return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+	if (saved && savedForm) return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 		className: "mx-auto max-w-lg rounded-2xl border border-success/30 bg-card p-8 text-center shadow-soft",
 		children: [
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
@@ -349,7 +358,17 @@ function AdmissionForm({ existing }) {
 				children: saved
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-				className: "mt-6 flex flex-wrap justify-center gap-2",
+				className: "mt-5 rounded-xl border border-border bg-muted/40 p-4 text-left space-y-3",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+					className: "text-xs font-semibold text-muted-foreground uppercase tracking-wide",
+					children: "Share Fee Receipt"
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ReceiptShareButtons, {
+					admissionId: saved,
+					formData: savedForm
+				})]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "mt-5 flex flex-wrap justify-center gap-2",
 				children: [
 					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
 						onClick: () => navigate({
@@ -489,6 +508,61 @@ function AdmissionForm({ existing }) {
 							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(DobPicker, {
 								value: form.dateOfBirth,
 								onChange: (v) => set("dateOfBirth", v)
+							})
+						})
+					]
+				})
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Section, {
+				title: "Parent / Guardian Details",
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: grid,
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Field, {
+							label: "Parent / Guardian Name",
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Input, {
+								value: form.parentName,
+								onChange: (e) => set("parentName", e.target.value),
+								placeholder: "Ramesh Sharma"
+							})
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Field, {
+							label: "Parent Phone Number",
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Input, {
+								value: form.parentPhone,
+								inputMode: "numeric",
+								maxLength: 10,
+								onChange: (e) => set("parentPhone", e.target.value.replace(/\D/g, "")),
+								placeholder: "9876543210"
+							})
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Field, {
+							label: "Relation",
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Select, {
+								value: form.parentRelation,
+								onValueChange: (v) => set("parentRelation", v),
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectTrigger, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectValue, { placeholder: "Select relation" }) }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(SelectContent, { children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectItem, {
+										value: "Father",
+										children: "Father"
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectItem, {
+										value: "Mother",
+										children: "Mother"
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectItem, {
+										value: "Guardian",
+										children: "Guardian"
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectItem, {
+										value: "Sibling",
+										children: "Sibling"
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectItem, {
+										value: "Other",
+										children: "Other"
+									})
+								] })]
 							})
 						})
 					]
@@ -903,6 +977,159 @@ function AdmissionForm({ existing }) {
 					className: "min-w-52",
 					children: saving ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(LoaderCircle, { className: "size-4 animate-spin" }), "Saving Admission…"] }) : existing ? "Save Changes →" : "Save Admission →"
 				})]
+			})
+		]
+	});
+}
+function buildReceiptText(admissionId, f) {
+	const paid = Number(f.amountPaid || 0);
+	const total = Number(f.packageAmount || 0);
+	const balance = Math.max(0, total - paid);
+	const status = total > 0 && balance <= 0 ? "PAID ✅" : "PENDING ⚠️";
+	return [
+		"━━━━━━━━━━━━━━━━━━━━━━━━",
+		"🏠 *NivasiSpace*",
+		"   Admission Fee Receipt",
+		"━━━━━━━━━━━━━━━━━━━━━━━━",
+		`📋 Admission ID : ${admissionId}`,
+		`📅 Date         : ${f.admissionDate}`,
+		"",
+		"👤 *Student Details*",
+		`   Name    : ${f.fullName}`,
+		`   Phone   : ${f.phoneNumber}`,
+		...f.email ? [`   Email   : ${f.email}`] : [],
+		...f.gender ? [`   Gender  : ${f.gender}`] : [],
+		"",
+		...f.parentName ? [
+			"👨‍👩‍👧 *Parent / Guardian*",
+			`   Name     : ${f.parentName}`,
+			`   Phone    : ${f.parentPhone || "—"}`,
+			...f.parentRelation ? [`   Relation : ${f.parentRelation}`] : [],
+			""
+		] : [],
+		"🎓 *College*",
+		`   ${f.collegeName}`,
+		...f.course ? [`   ${f.course}${f.year ? ` — ${f.year}` : ""}`] : [],
+		"",
+		"🏠 *Stay*",
+		`   Property : ${f.propertyName || "—"}`,
+		`   Room     : ${f.roomNumber || "—"}`,
+		`   Bed      : ${f.bedNumber || "—"}`,
+		...f.moveInDate ? [`   Move-in  : ${f.moveInDate}`] : [],
+		"",
+		"📦 *Package*",
+		`   ${f.packageName || "—"}`,
+		...f.packageServices.length ? [`   Services : ${f.packageServices.join(", ")}`] : [],
+		...f.packageStartDate ? [`   Period   : ${f.packageStartDate} → ${f.packageEndDate || "—"}`] : [],
+		"",
+		"💰 *Payment Summary*",
+		`   Total Amount  : ₹${total.toLocaleString("en-IN")}`,
+		`   Amount Paid   : ₹${paid.toLocaleString("en-IN")}`,
+		`   Balance Due   : ₹${balance.toLocaleString("en-IN")}`,
+		`   Status        : ${status}`,
+		"",
+		"━━━━━━━━━━━━━━━━━━━━━━━━",
+		"Thank you for choosing NivasiSpace! 🙏",
+		"━━━━━━━━━━━━━━━━━━━━━━━━"
+	].join("\n");
+}
+function ReceiptShareButtons({ admissionId, formData }) {
+	const text = buildReceiptText(admissionId, formData);
+	const encoded = encodeURIComponent(text);
+	function downloadPDF() {
+		import("./receipt-pdf-BbqChljv.mjs").then(({ downloadReceiptPDF }) => {
+			const amount = Number(formData.packageAmount || 0);
+			const paid = Number(formData.amountPaid || 0);
+			const balance = Math.max(0, amount - paid);
+			downloadReceiptPDF({
+				id: admissionId,
+				admissionId,
+				fullName: formData.fullName,
+				phoneNumber: formData.phoneNumber,
+				email: formData.email,
+				gender: formData.gender,
+				dateOfBirth: formData.dateOfBirth,
+				parentName: formData.parentName,
+				parentPhone: formData.parentPhone,
+				parentRelation: formData.parentRelation,
+				collegeName: formData.collegeName,
+				course: formData.course,
+				year: formData.year,
+				propertyName: formData.propertyName,
+				roomNumber: formData.roomNumber,
+				bedNumber: formData.bedNumber,
+				admissionDate: formData.admissionDate,
+				moveInDate: formData.moveInDate,
+				packageName: formData.packageName,
+				packageServices: formData.packageServices,
+				packageAmount: amount,
+				packageStartDate: formData.packageStartDate,
+				packageEndDate: formData.packageEndDate,
+				amountPaid: paid,
+				balanceAmount: balance,
+				paymentStatus: balance <= 0 && amount > 0 ? "completed" : "pending",
+				bagProvided: formData.bagProvided,
+				tiffinProvided: formData.tiffinProvided,
+				mattressRequired: formData.mattressRequired,
+				notes: formData.notes
+			});
+		});
+	}
+	function shareViaWebShare() {
+		if (navigator.share) navigator.share({
+			title: `Fee Receipt — ${admissionId}`,
+			text
+		}).catch(() => {});
+		else navigator.clipboard.writeText(text).then(() => toast.success("Receipt copied to clipboard!")).catch(() => toast.error("Could not copy receipt."));
+	}
+	function openWhatsApp(phone) {
+		const clean = phone.replace(/\D/g, "");
+		const num = clean.length === 10 ? `91${clean}` : clean;
+		window.open(`https://wa.me/${num}?text=${encoded}`, "_blank");
+	}
+	const studentPhone = formData.phoneNumber.replace(/\D/g, "");
+	const parentPhone = formData.parentPhone.replace(/\D/g, "");
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "space-y-2",
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
+				type: "button",
+				size: "sm",
+				className: "w-full justify-start gap-2",
+				onClick: downloadPDF,
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "📄" }), " Download Receipt PDF"]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
+				type: "button",
+				variant: "outline",
+				size: "sm",
+				className: "w-full justify-start gap-2",
+				onClick: shareViaWebShare,
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "📋" }), " Copy / Share Receipt"]
+			}),
+			studentPhone.length >= 10 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
+				type: "button",
+				size: "sm",
+				className: "w-full justify-start gap-2 bg-[#25D366] text-white hover:bg-[#1ebe57]",
+				onClick: () => openWhatsApp(studentPhone),
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "💬" }),
+					" WhatsApp Student (",
+					formData.fullName.split(" ")[0],
+					")"
+				]
+			}),
+			parentPhone.length >= 10 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
+				type: "button",
+				size: "sm",
+				className: "w-full justify-start gap-2 bg-[#128C7E] text-white hover:bg-[#0f7a6d]",
+				onClick: () => openWhatsApp(parentPhone),
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "💬" }),
+					" WhatsApp Parent (",
+					formData.parentName || "Guardian",
+					")"
+				]
 			})
 		]
 	});
