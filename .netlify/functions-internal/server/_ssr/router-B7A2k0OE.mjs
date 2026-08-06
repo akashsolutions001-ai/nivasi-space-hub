@@ -1,17 +1,17 @@
 import { o as __toESM } from "../_runtime.mjs";
 import { u as require_react } from "../_libs/@floating-ui/react-dom+[...].mjs";
 import { F as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
-import { t as AuthProvider } from "./auth-DEsgdPor.mjs";
+import { t as AuthProvider } from "./auth-DtLQDrss.mjs";
 import { A as redirect, c as HeadContent, d as createRouter, f as Outlet, g as Link, h as createRootRouteWithContext, m as createFileRoute, p as lazyRouteComponent, s as Scripts, v as useRouter } from "../_libs/@tanstack/react-router+[...].mjs";
-import { t as Route$8 } from "./admin.admissions._admissionId.edit-CARCTTGK.mjs";
+import { t as Route$8 } from "./admin.admissions._admissionId.edit-C48XS9Az.mjs";
 import { t as QueryClient } from "../_libs/tanstack__query-core.mjs";
 import { n as QueryClientProvider } from "../_libs/tanstack__react-query.mjs";
 import { t as Toaster } from "../_libs/sonner.mjs";
-import { t as Route$9 } from "./admin.admissions._admissionId.index-DfPsLpqy.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/router-CYkMPmpQ.js
+import { t as Route$9 } from "./admin.admissions._admissionId.index-BppureqL.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/router-B7A2k0OE.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
-var styles_default = "/assets/styles-DQtmQzJb.css";
+var styles_default = "/assets/styles-CRJTTrv7.css";
 function reportLovableError(error, context = {}) {
 	if (typeof window === "undefined") return;
 	window.__lovableEvents?.captureException?.(error, {
@@ -198,7 +198,7 @@ var Route$6 = createFileRoute("/")({
 	},
 	component: lazyRouteComponent($$splitComponentImporter$6, "component")
 });
-var $$splitComponentImporter$5 = () => import("./admin.dashboard-WEefr-y-.mjs");
+var $$splitComponentImporter$5 = () => import("./admin.dashboard-BY1qhTl3.mjs");
 var Route$5 = createFileRoute("/admin/dashboard")({
 	head: () => ({ meta: [
 		{ title: "Dashboard — NivasiSpace Admin" },
@@ -217,7 +217,7 @@ var Route$5 = createFileRoute("/admin/dashboard")({
 	] }),
 	component: lazyRouteComponent($$splitComponentImporter$5, "component")
 });
-var $$splitComponentImporter$4 = () => import("./admin.login-cLuAeJu_.mjs");
+var $$splitComponentImporter$4 = () => import("./admin.login-Ckt0533d.mjs");
 var Route$4 = createFileRoute("/admin/login")({
 	head: () => ({ meta: [
 		{ title: "Staff Login — NivasiSpace Admin" },
@@ -236,7 +236,7 @@ var Route$4 = createFileRoute("/admin/login")({
 	] }),
 	component: lazyRouteComponent($$splitComponentImporter$4, "component")
 });
-var $$splitComponentImporter$3 = () => import("./admin.packages-D7nRue_K.mjs");
+var $$splitComponentImporter$3 = () => import("./admin.packages-BhYLbBn5.mjs");
 var Route$3 = createFileRoute("/admin/packages")({
 	head: () => ({ meta: [
 		{ title: "Packages — NivasiSpace Admin" },
@@ -255,7 +255,7 @@ var Route$3 = createFileRoute("/admin/packages")({
 	] }),
 	component: lazyRouteComponent($$splitComponentImporter$3, "component")
 });
-var $$splitComponentImporter$2 = () => import("./admin.settings-BN9tEjqp.mjs");
+var $$splitComponentImporter$2 = () => import("./admin.settings-_XM0d_VR.mjs");
 var Route$2 = createFileRoute("/admin/settings")({
 	head: () => ({ meta: [
 		{ title: "Settings — NivasiSpace Admin" },
@@ -274,7 +274,7 @@ var Route$2 = createFileRoute("/admin/settings")({
 	] }),
 	component: lazyRouteComponent($$splitComponentImporter$2, "component")
 });
-var $$splitComponentImporter$1 = () => import("./admin.admissions.index-BSndSXtZ.mjs");
+var $$splitComponentImporter$1 = () => import("./admin.admissions.index-Ou9z1w_Z.mjs");
 var Route$1 = createFileRoute("/admin/admissions/")({
 	head: () => ({ meta: [
 		{ title: "Admissions — NivasiSpace Admin" },
@@ -293,7 +293,7 @@ var Route$1 = createFileRoute("/admin/admissions/")({
 	] }),
 	component: lazyRouteComponent($$splitComponentImporter$1, "component")
 });
-var $$splitComponentImporter = () => import("./admin.admissions.new-BMDzaJdG.mjs");
+var $$splitComponentImporter = () => import("./admin.admissions.new-WDoy-sAg.mjs");
 var Route = createFileRoute("/admin/admissions/new")({
 	head: () => ({ meta: [
 		{ title: "New Admission — NivasiSpace Admin" },

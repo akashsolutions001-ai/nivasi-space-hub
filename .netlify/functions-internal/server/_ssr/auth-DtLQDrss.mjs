@@ -5,7 +5,7 @@ import { a as getApp, o as getApps, s as initializeApp } from "../_libs/@firebas
 import { i as signOut, n as onAuthStateChanged, r as signInWithEmailAndPassword, t as getAuth } from "../_libs/firebase__auth.mjs";
 import "../_libs/firebase.mjs";
 import { L as getFirestore } from "../_libs/@firebase/firestore+[...].mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/auth-DEsgdPor.js
+//#region node_modules/.nitro/vite/services/ssr/assets/auth-DtLQDrss.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 /**
@@ -44,15 +44,21 @@ var ADMIN_PASSWORD = "0147@May";
 var GLOBAL_ADMIN_EMAIL = "Globaladmin@nivasispace.com";
 var GLOBAL_ADMIN_PASSWORD = "16Dec@1980NivasiSpace";
 var LOCAL_AUTH_KEY = "nivasi_admin_authed";
+var COLLEGE_FILTER_KEY = "nivasi_college_filter";
 var HARDCODED_ADMIN_USER = {
 	uid: "hardcoded-admin",
 	email: ADMIN_EMAIL,
-	displayName: "Admin"
+	displayName: "Dr. D.Y.Patil Pratishthan's College of Engineering Salokhenagar Kolhapur"
 };
 var GLOBAL_ADMIN_USER = {
 	uid: "global-admin",
 	email: GLOBAL_ADMIN_EMAIL,
 	displayName: "Global Admin"
+};
+var EMPTY_FILTER = {
+	type: "",
+	city: "",
+	college: ""
 };
 var AuthContext = (0, import_react.createContext)(null);
 var AUTH_ERRORS = {
@@ -64,6 +70,16 @@ var AUTH_ERRORS = {
 	"auth/too-many-requests": "Too many attempts. Please wait a moment and try again.",
 	"auth/network-request-failed": "Please check your internet connection."
 };
+function loadFilter() {
+	if (typeof window === "undefined") return EMPTY_FILTER;
+	try {
+		const raw = sessionStorage.getItem(COLLEGE_FILTER_KEY);
+		if (!raw) return EMPTY_FILTER;
+		return JSON.parse(raw);
+	} catch {
+		return EMPTY_FILTER;
+	}
+}
 function AuthProvider({ children }) {
 	const [user, setUser] = (0, import_react.useState)(() => {
 		if (typeof window !== "undefined") {
@@ -74,6 +90,11 @@ function AuthProvider({ children }) {
 		return null;
 	});
 	const [loading, setLoading] = (0, import_react.useState)(true);
+	const [collegeFilter, setCollegeFilterState] = (0, import_react.useState)(loadFilter);
+	function setCollegeFilter(f) {
+		setCollegeFilterState(f);
+		sessionStorage.setItem(COLLEGE_FILTER_KEY, JSON.stringify(f));
+	}
 	(0, import_react.useEffect)(() => {
 		if (!isFirebaseConfigured) {
 			setLoading(false);
@@ -100,6 +121,8 @@ function AuthProvider({ children }) {
 		}
 		if (email.trim() === GLOBAL_ADMIN_EMAIL && password === GLOBAL_ADMIN_PASSWORD) {
 			sessionStorage.setItem(LOCAL_AUTH_KEY, "global");
+			sessionStorage.removeItem(COLLEGE_FILTER_KEY);
+			setCollegeFilterState(EMPTY_FILTER);
 			setUser(GLOBAL_ADMIN_USER);
 			return;
 		}
@@ -113,19 +136,25 @@ function AuthProvider({ children }) {
 	}
 	async function logout() {
 		sessionStorage.removeItem(LOCAL_AUTH_KEY);
+		sessionStorage.removeItem(COLLEGE_FILTER_KEY);
 		setUser(null);
+		setCollegeFilterState(EMPTY_FILTER);
 		try {
 			if (isFirebaseConfigured) await signOut(getFirebaseAuth());
 		} catch {}
 	}
 	const configured = isFirebaseConfigured || user === HARDCODED_ADMIN_USER || user === GLOBAL_ADMIN_USER;
+	const needsCollegeFilter = user?.email?.toLowerCase() === GLOBAL_ADMIN_EMAIL.toLowerCase() && !collegeFilter.college;
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AuthContext.Provider, {
 		value: {
 			user,
 			loading,
 			configured,
 			login,
-			logout
+			logout,
+			collegeFilter,
+			setCollegeFilter,
+			needsCollegeFilter
 		},
 		children
 	});

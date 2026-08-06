@@ -1,16 +1,15 @@
 import { o as __toESM } from "../_runtime.mjs";
 import { u as require_react } from "../_libs/@floating-ui/react-dom+[...].mjs";
 import { F as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
+import { a as useAuth, o as useIsGlobalAdmin } from "./auth-DtLQDrss.mjs";
 import { _ as useNavigate, g as Link } from "../_libs/@tanstack/react-router+[...].mjs";
-import { T as Download, m as Plus, p as Search } from "../_libs/lucide-react.mjs";
-import { a as Skeleton, n as Button, t as AdminShell } from "./admin-shell-DP6Px5xO.mjs";
-import { t as Input } from "./input-BsluoI9p.mjs";
-import { a as SelectValue, i as SelectTrigger, n as SelectContent, r as SelectItem, t as Select } from "./select-C3DwCkLS.mjs";
-import { r as useAdmissions } from "./hooks-DJqAfBwp.mjs";
+import { A as Download, _ as Plus, h as Search } from "../_libs/lucide-react.mjs";
+import { F as useAdmissions, d as SelectItem, f as SelectTrigger, h as Skeleton, l as Select, n as Button, p as SelectValue, t as AdminShell, u as SelectContent } from "./admin-shell-7z6qK9qe.mjs";
+import { t as Input } from "./input-Cg8moHv0.mjs";
 import { n as formatDate, r as formatINR } from "./format-Bg5w10xg.mjs";
-import { t as EmptyState } from "./stat-card-DjmB8MfY.mjs";
-import { i as StatusPill, n as PaymentBadge, r as ProfileAvatar, t as MattressBadge } from "./badges-COhvM1yR.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/admin.admissions.index-BSndSXtZ.js
+import { t as EmptyState } from "./stat-card-SA_CMkic.mjs";
+import { i as StatusPill, n as PaymentBadge, r as ProfileAvatar, t as MattressBadge } from "./badges-D-4slldt.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/admin.admissions.index-Ou9z1w_Z.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 function exportToExcel(data) {
@@ -50,13 +49,23 @@ function exportToExcel(data) {
 }
 function AdmissionsListPage() {
 	const { data: admissions = [], isLoading } = useAdmissions();
+	const isGlobalAdmin = useIsGlobalAdmin();
+	const { collegeFilter } = useAuth();
 	const navigate = useNavigate();
 	const [query, setQuery] = (0, import_react.useState)("");
 	const [payment, setPayment] = (0, import_react.useState)("all");
 	const [items, setItems] = (0, import_react.useState)("all");
+	const collegeAdmissions = (0, import_react.useMemo)(() => {
+		if (!isGlobalAdmin || !collegeFilter.college) return admissions;
+		return admissions.filter((a) => a.collegeName === collegeFilter.college);
+	}, [
+		admissions,
+		isGlobalAdmin,
+		collegeFilter.college
+	]);
 	const rows = (0, import_react.useMemo)(() => {
 		const q = query.trim().toLowerCase();
-		return admissions.filter((a) => {
+		return collegeAdmissions.filter((a) => {
 			if (q && !`${a.fullName} ${a.admissionId} ${a.phoneNumber} ${a.collegeName} ${a.roomNumber}`.toLowerCase().includes(q)) return false;
 			if (payment !== "all" && a.paymentStatus !== payment) return false;
 			if (items === "bag-pending" && a.bagProvided) return false;
@@ -72,7 +81,7 @@ function AdmissionsListPage() {
 	]);
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(AdminShell, {
 		title: "Admissions",
-		subtitle: `${admissions.length} student${admissions.length === 1 ? "" : "s"} on record`,
+		subtitle: isGlobalAdmin && collegeFilter.college ? `${collegeAdmissions.length} student${collegeAdmissions.length === 1 ? "" : "s"} · ${collegeFilter.college}` : `${admissions.length} student${admissions.length === 1 ? "" : "s"} on record`,
 		action: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 			className: "flex gap-2",
 			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {

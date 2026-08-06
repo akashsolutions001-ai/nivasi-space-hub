@@ -1,0 +1,134 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function paymentKeys() {
+      return [
+        'paymentStatus',
+        'subscriptionStatus',
+        'subscriptionStart',
+        'subscriptionEnd',
+        'paymentOrderId',
+        'paymentMethod',
+        'isPublished'
+      ];
+    }
+
+    function touchingPaymentFields() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasAny(paymentKeys());
+    }
+
+    function isCashActivation() {
+      return request.resource.data.get('paymentMethod', '')      == 'cash'
+          && request.resource.data.get('paymentStatus', '')      == 'paid'
+          && request.resource.data.get('subscriptionStatus', '') == 'active';
+    }
+
+    function isExpiryMark() {
+      return request.resource.data.get('paymentStatus', '')      == 'expired'
+          && request.resource.data.get('subscriptionStatus', '') == 'expired'
+          && request.resource.data.get('isPublished', true)      == false;
+    }
+
+    function validPendingCreate() {
+      return request.resource.data.get('paymentStatus', 'pending')      == 'pending'
+          && request.resource.data.get('subscriptionStatus', 'pending') == 'pending';
+    }
+
+    // ── /admissions/{admissionId} ─────────────────────────────────────────────
+
+    match /admissions/{admissionId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // ── /bookings/{bookingId} ─────────────────────────────────────────────────
+
+    match /bookings/{bookingId} {
+      allow read:           if isSignedIn();
+      allow create:         if isSignedIn()
+                            && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isSignedIn();
+    }
+
+    // ── /cities/{cityId} ──────────────────────────────────────────────────────
+
+    match /cities/{cityId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // ── /colleges/{collegeId} ─────────────────────────────────────────────────
+
+    match /colleges/{collegeId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // ── /counters/{counterId} ─────────────────────────────────────────────────
+
+    match /counters/{counterId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // ── /packages/{packageId} ────────────────────────────────────────────────
+
+    match /packages/{packageId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // ── /properties/{propertyId} ─────────────────────────────────────────────
+
+    match /properties/{propertyId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // ── /users/{userId} ───────────────────────────────────────────────────────
+
+    match /users/{userId} {
+      allow read: if isSignedIn()
+                  && (userId == request.auth.uid
+                      || resource.data.uid == request.auth.uid);
+      allow create: if isSignedIn()
+                    && (userId == request.auth.uid
+                        || request.resource.data.uid == request.auth.uid);
+      allow update: if isSignedIn()
+                    && (userId == request.auth.uid
+                        || resource.data.uid == request.auth.uid);
+      allow delete: if false;
+    }
+
+    // ── /rooms/{roomId} ───────────────────────────────────────────────────────
+
+    match /rooms/{roomId} {
+      allow read:   if isSignedIn();
+      allow create: if isSignedIn()
+                    && validPendingCreate()
+                    && (!('ownerId' in request.resource.data)
+                        || request.resource.data.ownerId == null
+                        || request.resource.data.ownerId == request.auth.uid);
+      allow update: if isSignedIn()
+                    && (!touchingPaymentFields()
+                        || isCashActivation()
+                        || isExpiryMark());
+      allow delete: if isSignedIn();
+    }
+
+    // ── /payments/{orderId} ───────────────────────────────────────────────────
+    // Locked on the client — use Cloud Functions for payment operations.
+
+    match /payments/{orderId} {
+      allow read, write: if false;
+    }
+
+    // ── Catch-all: deny everything else ──────────────────────────────────────
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

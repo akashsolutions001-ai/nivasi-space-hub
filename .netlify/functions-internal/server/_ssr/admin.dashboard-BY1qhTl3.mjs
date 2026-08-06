@@ -1,16 +1,15 @@
 import { o as __toESM } from "../_runtime.mjs";
 import { u as require_react } from "../_libs/@floating-ui/react-dom+[...].mjs";
 import { F as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
-import { o as useIsGlobalAdmin } from "./auth-DEsgdPor.mjs";
+import { a as useAuth, o as useIsGlobalAdmin } from "./auth-DtLQDrss.mjs";
 import { g as Link } from "../_libs/@tanstack/react-router+[...].mjs";
-import { C as Eye, M as BedDouble, i as Users, j as Briefcase, m as Plus, n as Wallet, r as UtensilsCrossed, s as TrendingUp, w as EyeOff, x as IndianRupee } from "../_libs/lucide-react.mjs";
-import { a as Skeleton, n as Button, s as cn, t as AdminShell } from "./admin-shell-DP6Px5xO.mjs";
-import { n as filterByPeriod, r as useAdmissions, t as computeStats } from "./hooks-DJqAfBwp.mjs";
+import { E as IndianRupee, I as Briefcase, L as BedDouble, O as Eye, _ as Plus, a as Users, c as TrendingUp, i as UtensilsCrossed, k as EyeOff, r as Wallet } from "../_libs/lucide-react.mjs";
+import { F as useAdmissions, T as filterByPeriod, b as cn, h as Skeleton, n as Button, t as AdminShell, x as computeStats } from "./admin-shell-7z6qK9qe.mjs";
 import { n as formatDate, r as formatINR } from "./format-Bg5w10xg.mjs";
-import { n as StatCard, t as EmptyState } from "./stat-card-DjmB8MfY.mjs";
-import { n as PaymentBadge, r as ProfileAvatar } from "./badges-COhvM1yR.mjs";
+import { n as StatCard, t as EmptyState } from "./stat-card-SA_CMkic.mjs";
+import { n as PaymentBadge, r as ProfileAvatar } from "./badges-D-4slldt.mjs";
 import { i as Trigger, n as List, r as Root2, t as Content } from "../_libs/radix-ui__react-tabs.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/admin.dashboard-WEefr-y-.js
+//#region node_modules/.nitro/vite/services/ssr/assets/admin.dashboard-BY1qhTl3.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var Tabs = Root2;
@@ -53,14 +52,23 @@ var PERIODS = [
 function DashboardPage() {
 	const { data: admissions = [], isLoading } = useAdmissions();
 	const isGlobalAdmin = useIsGlobalAdmin();
+	const { collegeFilter } = useAuth();
 	const [period, setPeriod] = (0, import_react.useState)("all");
 	const [showMoney, setShowMoney] = (0, import_react.useState)(false);
-	const scoped = (0, import_react.useMemo)(() => filterByPeriod(admissions, period), [admissions, period]);
+	const filteredAdmissions = (0, import_react.useMemo)(() => {
+		if (!isGlobalAdmin || !collegeFilter.college) return admissions;
+		return admissions.filter((a) => a.collegeName === collegeFilter.college);
+	}, [
+		admissions,
+		isGlobalAdmin,
+		collegeFilter.college
+	]);
+	const scoped = (0, import_react.useMemo)(() => filterByPeriod(filteredAdmissions, period), [filteredAdmissions, period]);
 	const stats = (0, import_react.useMemo)(() => computeStats(scoped), [scoped]);
-	const recent = (0, import_react.useMemo)(() => admissions.slice(0, 6), [admissions]);
+	const recent = (0, import_react.useMemo)(() => filteredAdmissions.slice(0, 6), [filteredAdmissions]);
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(AdminShell, {
 		title: "Dashboard",
-		subtitle: "A live view of admissions, payments and provided items.",
+		subtitle: isGlobalAdmin && collegeFilter.college ? `Showing data for: ${collegeFilter.college}` : "A live view of admissions, payments and provided items.",
 		action: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
 			asChild: true,
 			children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Link, {

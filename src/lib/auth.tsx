@@ -8,28 +8,11 @@ import {
 
 import { getFirebaseAuth, isFirebaseConfigured } from "./firebase";
 
-// Hardcoded admin credentials — bypasses Firebase Auth
+// Admin email addresses (passwords live only in Firebase Auth, not in code)
 const ADMIN_EMAIL = "admin@nivasispace.com";
-const ADMIN_PASSWORD = "0147@May";
+const GLOBAL_ADMIN_EMAIL = "globaladmin@nivasispace.com";
 
-const GLOBAL_ADMIN_EMAIL = "Globaladmin@nivasispace.com";
-const GLOBAL_ADMIN_PASSWORD = "16Dec@1980NivasiSpace";
-
-const LOCAL_AUTH_KEY = "nivasi_admin_authed";
 const COLLEGE_FILTER_KEY = "nivasi_college_filter";
-
-// Synthetic user object for the hardcoded admin
-const HARDCODED_ADMIN_USER = {
-  uid: "hardcoded-admin",
-  email: ADMIN_EMAIL,
-  displayName: "Dr. D.Y.Patil Pratishthan's College of Engineering Salokhenagar Kolhapur",
-} as unknown as User;
-
-const GLOBAL_ADMIN_USER = {
-  uid: "global-admin",
-  email: GLOBAL_ADMIN_EMAIL,
-  displayName: "Global Admin",
-} as unknown as User;
 
 export interface CollegeFilter {
   type: "engineering" | "medical" | "";
@@ -76,14 +59,7 @@ function loadFilter(): CollegeFilter {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(() => {
-    if (typeof window !== "undefined") {
-      const key = sessionStorage.getItem(LOCAL_AUTH_KEY);
-      if (key === "1") return HARDCODED_ADMIN_USER;
-      if (key === "global") return GLOBAL_ADMIN_USER;
-    }
-    return null;
-  });
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [collegeFilter, setCollegeFilterState] = useState<CollegeFilter>(loadFilter);
 
@@ -98,41 +74,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
     const unsubscribe = onAuthStateChanged(getFirebaseAuth(), (firebaseUser) => {
-      if (firebaseUser) {
-        sessionStorage.setItem(LOCAL_AUTH_KEY, "1");
-        setUser(firebaseUser);
-      } else {
-        const key = sessionStorage.getItem(LOCAL_AUTH_KEY);
-        if (key === "1") setUser(HARDCODED_ADMIN_USER);
-        else if (key === "global") setUser(GLOBAL_ADMIN_USER);
-        else setUser(null);
-      }
+      setUser(firebaseUser);
       setLoading(false);
     });
     return unsubscribe;
   }, []);
 
   async function login(email: string, password: string) {
-    // Check hardcoded admin credentials first — no Firebase call to avoid 400 errors
-    if (email.trim() === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-      sessionStorage.setItem(LOCAL_AUTH_KEY, "1");
-      setUser(HARDCODED_ADMIN_USER);
-      return;
-    }
-
-    // Global admin
-    if (email.trim() === GLOBAL_ADMIN_EMAIL && password === GLOBAL_ADMIN_PASSWORD) {
-      sessionStorage.setItem(LOCAL_AUTH_KEY, "global");
-      // Clear any stale filter so the popup shows fresh
-      sessionStorage.removeItem(COLLEGE_FILTER_KEY);
-      setCollegeFilterState(EMPTY_FILTER);
-      setUser(GLOBAL_ADMIN_USER);
-      return;
-    }
-
-    // Fall back to Firebase Auth for any other credentials
     try {
-      await signInWithEmailAndPassword(getFirebaseAuth(), email.trim(), password);
+      const credential = await signInWithEmailAndPassword(
+        getFirebaseAuth(),
+        email.trim(),
+        password,
+      );
+      // Clear stale college filter when global admin logs in
+      if (credential.user.email?.toLowerCase() === GLOBAL_ADMIN_EMAIL) {
+        sessionStorage.removeItem(COLLEGE_FILTER_KEY);
+        setCollegeFilterState(EMPTY_FILTER);
+      }
     } catch (error) {
       const code = (error as { code?: string })?.code ?? "";
       console.error("[auth] login failed", error);
@@ -141,9 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function logout() {
-    sessionStorage.removeItem(LOCAL_AUTH_KEY);
     sessionStorage.removeItem(COLLEGE_FILTER_KEY);
-    setUser(null);
     setCollegeFilterState(EMPTY_FILTER);
     try {
       if (isFirebaseConfigured) await signOut(getFirebaseAuth());
@@ -152,13 +109,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  // App is "configured" for any hardcoded admin or when Firebase is set up
-  const configured =
-    isFirebaseConfigured ||
-    user === HARDCODED_ADMIN_USER ||
-    user === GLOBAL_ADMIN_USER;
+  const configured = isFirebaseConfigured;
 
-  const isGlobalAdminUser = user?.email?.toLowerCase() === GLOBAL_ADMIN_EMAIL.toLowerCase();
+  const isGlobalAdminUser = user?.email?.toLowerCase() === GLOBAL_ADMIN_EMAIL;
   // Show the filter popup when global admin is logged in but hasn't picked a college yet
   const needsCollegeFilter = isGlobalAdminUser && !collegeFilter.college;
 

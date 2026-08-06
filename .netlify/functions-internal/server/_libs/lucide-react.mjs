@@ -397,6 +397,24 @@ var LoaderCircle = createLucideIcon("loader-circle", [["path", {
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var Lock = createLucideIcon("lock", [["rect", {
+	width: "18",
+	height: "11",
+	x: "3",
+	y: "11",
+	rx: "2",
+	ry: "2",
+	key: "1w4ew1"
+}], ["path", {
+	d: "M7 11V7a5 5 0 0 1 10 0v4",
+	key: "fwvmzm"
+}]]);
+/**
+* @license lucide-react v0.575.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var LogOut = createLucideIcon("log-out", [
 	["path", {
 		d: "m16 17 5-5-5-5",
@@ -411,6 +429,21 @@ var LogOut = createLucideIcon("log-out", [
 		key: "1uf3rs"
 	}]
 ]);
+/**
+* @license lucide-react v0.575.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var MapPin = createLucideIcon("map-pin", [["path", {
+	d: "M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0",
+	key: "1r0f0z"
+}], ["circle", {
+	cx: "12",
+	cy: "10",
+	r: "3",
+	key: "ilqhr7"
+}]]);
 /**
 * @license lucide-react v0.575.0 - ISC
 *
@@ -481,6 +514,30 @@ var Plus = createLucideIcon("plus", [["path", {
 	d: "M12 5v14",
 	key: "s699le"
 }]]);
+/**
+* @license lucide-react v0.575.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var RefreshCw = createLucideIcon("refresh-cw", [
+	["path", {
+		d: "M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8",
+		key: "v9h5vc"
+	}],
+	["path", {
+		d: "M21 3v5h-5",
+		key: "1q7to0"
+	}],
+	["path", {
+		d: "M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16",
+		key: "3uifl3"
+	}],
+	["path", {
+		d: "M8 16H3v5",
+		key: "1cv678"
+	}]
+]);
 /**
 * @license lucide-react v0.575.0 - ISC
 *
@@ -595,6 +652,36 @@ var Sparkles = createLucideIcon("sparkles", [
 		cy: "20",
 		r: "2",
 		key: "6kqj1y"
+	}]
+]);
+/**
+* @license lucide-react v0.575.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var Stethoscope = createLucideIcon("stethoscope", [
+	["path", {
+		d: "M11 2v2",
+		key: "1539x4"
+	}],
+	["path", {
+		d: "M5 2v2",
+		key: "1yf1q8"
+	}],
+	["path", {
+		d: "M5 3H4a2 2 0 0 0-2 2v4a6 6 0 0 0 12 0V5a2 2 0 0 0-2-2h-1",
+		key: "rb5t3r"
+	}],
+	["path", {
+		d: "M8 15a6 6 0 0 0 12 0v-3",
+		key: "x18d4x"
+	}],
+	["circle", {
+		cx: "20",
+		cy: "10",
+		r: "2",
+		key: "ts1r5v"
 	}]
 ]);
 /**
@@ -742,6 +829,16 @@ var Wallet = createLucideIcon("wallet", [["path", {
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var Wrench = createLucideIcon("wrench", [["path", {
+	d: "M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z",
+	key: "1ngwbx"
+}]]);
+/**
+* @license lucide-react v0.575.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var X = createLucideIcon("x", [["path", {
 	d: "M18 6 6 18",
 	key: "1bl5f8"
@@ -750,4 +847,4 @@ var X = createLucideIcon("x", [["path", {
 	key: "d8bk6v"
 }]]);
 //#endregion
-export { Building2 as A, Eye as C, ChevronUp as D, ChevronsUpDown as E, BedDouble as M, ArrowLeft as N, ChevronDown as O, GraduationCap as S, Download as T, Menu as _, User as a, LayoutDashboard as b, Trash2 as c, Share2 as d, Settings as f, Package as g, Pencil as h, Users as i, Briefcase as j, Check as k, Sparkles as l, Plus as m, Wallet as n, TriangleAlert as o, Search as p, UtensilsCrossed as r, TrendingUp as s, X as t, ShieldAlert as u, LogOut as v, EyeOff as w, IndianRupee as x, LoaderCircle as y };
+export { Download as A, Lock as C, GraduationCap as D, IndianRupee as E, Building2 as F, Briefcase as I, BedDouble as L, ChevronUp as M, ChevronDown as N, Eye as O, Check as P, ArrowLeft as R, LogOut as S, LayoutDashboard as T, Plus as _, Users as a, Menu as b, TrendingUp as c, Sparkles as d, ShieldAlert as f, RefreshCw as g, Search as h, UtensilsCrossed as i, ChevronsUpDown as j, EyeOff as k, Trash2 as l, Settings as m, Wrench as n, User as o, Share2 as p, Wallet as r, TriangleAlert as s, X as t, Stethoscope as u, Pencil as v, LoaderCircle as w, MapPin as x, Package as y };
