@@ -1,12 +1,12 @@
 import { F as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
-import { i as isFirebaseConfigured } from "./auth-DtLQDrss.mjs";
+import { a as isFirebaseConfigured } from "./auth-DbpSDgTm.mjs";
 import { g as Link } from "../_libs/@tanstack/react-router+[...].mjs";
-import { t as Route } from "./admin.admissions._admissionId.edit-C48XS9Az.mjs";
+import { t as Route } from "./admin.admissions._admissionId.edit--PG56bPR.mjs";
 import { t as useQuery } from "../_libs/tanstack__react-query.mjs";
-import { h as Skeleton, n as Button, t as AdminShell, w as fetchAdmission } from "./admin-shell-7z6qK9qe.mjs";
-import { t as AdmissionForm } from "./admission-form-bYvAppf2.mjs";
-import { t as EmptyState } from "./stat-card-SA_CMkic.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/admin.admissions._admissionId.edit-DiMM6O5d.js
+import { h as Skeleton, n as Button, t as AdminShell, w as fetchAdmission } from "./admin-shell-DbLl1eJ-.mjs";
+import { t as AdmissionForm } from "./admission-form-DQnNlL6O.mjs";
+import { t as EmptyState } from "./stat-card-DO4KCARC.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/admin.admissions._admissionId.edit-DUISYfgQ.js
 var import_jsx_runtime = require_jsx_runtime();
 function EditAdmissionPage() {
 	const { admissionId } = Route.useParams();

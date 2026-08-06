@@ -2,10 +2,10 @@ import { o as __toESM } from "../_runtime.mjs";
 import { u as require_react } from "../_libs/@floating-ui/react-dom+[...].mjs";
 import { F as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
 import { a as getApp, o as getApps, s as initializeApp } from "../_libs/@firebase/app+[...].mjs";
-import { i as signOut, n as onAuthStateChanged, r as signInWithEmailAndPassword, t as getAuth } from "../_libs/firebase__auth.mjs";
+import { a as signOut, i as signInWithEmailAndPassword, n as getAuth, r as onAuthStateChanged } from "../_libs/firebase__auth.mjs";
 import "../_libs/firebase.mjs";
 import { L as getFirestore } from "../_libs/@firebase/firestore+[...].mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/auth-DtLQDrss.js
+//#region node_modules/.nitro/vite/services/ssr/assets/auth-DbpSDgTm.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 /**
@@ -39,22 +39,8 @@ function getFirebaseAuth() {
 function getDb() {
 	return getFirestore(getFirebaseApp());
 }
-var ADMIN_EMAIL = "admin@nivasispace.com";
-var ADMIN_PASSWORD = "0147@May";
-var GLOBAL_ADMIN_EMAIL = "Globaladmin@nivasispace.com";
-var GLOBAL_ADMIN_PASSWORD = "16Dec@1980NivasiSpace";
-var LOCAL_AUTH_KEY = "nivasi_admin_authed";
+var GLOBAL_ADMIN_EMAIL = "globaladmin@nivasispace.com";
 var COLLEGE_FILTER_KEY = "nivasi_college_filter";
-var HARDCODED_ADMIN_USER = {
-	uid: "hardcoded-admin",
-	email: ADMIN_EMAIL,
-	displayName: "Dr. D.Y.Patil Pratishthan's College of Engineering Salokhenagar Kolhapur"
-};
-var GLOBAL_ADMIN_USER = {
-	uid: "global-admin",
-	email: GLOBAL_ADMIN_EMAIL,
-	displayName: "Global Admin"
-};
 var EMPTY_FILTER = {
 	type: "",
 	city: "",
@@ -81,14 +67,7 @@ function loadFilter() {
 	}
 }
 function AuthProvider({ children }) {
-	const [user, setUser] = (0, import_react.useState)(() => {
-		if (typeof window !== "undefined") {
-			const key = sessionStorage.getItem(LOCAL_AUTH_KEY);
-			if (key === "1") return HARDCODED_ADMIN_USER;
-			if (key === "global") return GLOBAL_ADMIN_USER;
-		}
-		return null;
-	});
+	const [user, setUser] = (0, import_react.useState)(null);
 	const [loading, setLoading] = (0, import_react.useState)(true);
 	const [collegeFilter, setCollegeFilterState] = (0, import_react.useState)(loadFilter);
 	function setCollegeFilter(f) {
@@ -101,33 +80,16 @@ function AuthProvider({ children }) {
 			return;
 		}
 		return onAuthStateChanged(getFirebaseAuth(), (firebaseUser) => {
-			if (firebaseUser) {
-				sessionStorage.setItem(LOCAL_AUTH_KEY, "1");
-				setUser(firebaseUser);
-			} else {
-				const key = sessionStorage.getItem(LOCAL_AUTH_KEY);
-				if (key === "1") setUser(HARDCODED_ADMIN_USER);
-				else if (key === "global") setUser(GLOBAL_ADMIN_USER);
-				else setUser(null);
-			}
+			setUser(firebaseUser);
 			setLoading(false);
 		});
 	}, []);
 	async function login(email, password) {
-		if (email.trim() === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-			sessionStorage.setItem(LOCAL_AUTH_KEY, "1");
-			setUser(HARDCODED_ADMIN_USER);
-			return;
-		}
-		if (email.trim() === GLOBAL_ADMIN_EMAIL && password === GLOBAL_ADMIN_PASSWORD) {
-			sessionStorage.setItem(LOCAL_AUTH_KEY, "global");
-			sessionStorage.removeItem(COLLEGE_FILTER_KEY);
-			setCollegeFilterState(EMPTY_FILTER);
-			setUser(GLOBAL_ADMIN_USER);
-			return;
-		}
 		try {
-			await signInWithEmailAndPassword(getFirebaseAuth(), email.trim(), password);
+			if ((await signInWithEmailAndPassword(getFirebaseAuth(), email.trim(), password)).user.email?.toLowerCase() === GLOBAL_ADMIN_EMAIL) {
+				sessionStorage.removeItem(COLLEGE_FILTER_KEY);
+				setCollegeFilterState(EMPTY_FILTER);
+			}
 		} catch (error) {
 			const code = error?.code ?? "";
 			console.error("[auth] login failed", error);
@@ -135,16 +97,14 @@ function AuthProvider({ children }) {
 		}
 	}
 	async function logout() {
-		sessionStorage.removeItem(LOCAL_AUTH_KEY);
 		sessionStorage.removeItem(COLLEGE_FILTER_KEY);
-		setUser(null);
 		setCollegeFilterState(EMPTY_FILTER);
 		try {
 			if (isFirebaseConfigured) await signOut(getFirebaseAuth());
 		} catch {}
 	}
-	const configured = isFirebaseConfigured || user === HARDCODED_ADMIN_USER || user === GLOBAL_ADMIN_USER;
-	const needsCollegeFilter = user?.email?.toLowerCase() === GLOBAL_ADMIN_EMAIL.toLowerCase() && !collegeFilter.college;
+	const configured = isFirebaseConfigured;
+	const needsCollegeFilter = user?.email?.toLowerCase() === GLOBAL_ADMIN_EMAIL && !collegeFilter.college;
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AuthContext.Provider, {
 		value: {
 			user,
@@ -170,4 +130,4 @@ function useIsGlobalAdmin() {
 	return user?.email?.toLowerCase() === GLOBAL_ADMIN_EMAIL.toLowerCase();
 }
 //#endregion
-export { useAuth as a, isFirebaseConfigured as i, getDb as n, useIsGlobalAdmin as o, getFirebaseApp as r, AuthProvider as t };
+export { isFirebaseConfigured as a, getFirebaseAuth as i, getDb as n, useAuth as o, getFirebaseApp as r, useIsGlobalAdmin as s, AuthProvider as t };

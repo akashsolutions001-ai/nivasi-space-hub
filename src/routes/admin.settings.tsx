@@ -2,14 +2,13 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import {
-  Building2,
   GraduationCap,
   Loader2,
   Lock,
   MapPin,
   Plus,
-  Sparkles,
   Stethoscope,
+  UserPlus,
   Wrench,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -27,15 +26,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAuth, useIsGlobalAdmin } from "@/lib/auth";
-import { useColleges, useCities, useProperties } from "@/lib/hooks";
+import { useColleges, useCities } from "@/lib/hooks";
 import {
   addCollege,
   addCity,
-  addProperty,
-  seedDefaults,
+  createAdminUser,
   setCollegeActive,
   setCityActive,
-  setPropertyActive,
   updateCollege,
 } from "@/lib/db";
 
@@ -43,11 +40,11 @@ export const Route = createFileRoute("/admin/settings")({
   head: () => ({
     meta: [
       { title: "Settings — NivasiSpace Admin" },
-      { name: "description", content: "Manage colleges, properties and workspace defaults." },
+      { name: "description", content: "Manage colleges, admins and workspace defaults." },
       { property: "og:title", content: "Settings — NivasiSpace Admin" },
       {
         property: "og:description",
-        content: "Manage colleges, properties and workspace defaults.",
+        content: "Manage colleges, admins and workspace defaults.",
       },
     ],
   }),
@@ -58,20 +55,6 @@ function SettingsPage() {
   const { user } = useAuth();
   const isGlobalAdmin = useIsGlobalAdmin();
   const queryClient = useQueryClient();
-  const [seeding, setSeeding] = useState(false);
-
-  async function runSeed() {
-    setSeeding(true);
-    try {
-      await seedDefaults();
-      await queryClient.invalidateQueries();
-      toast.success("Default colleges and packages are ready.");
-    } catch {
-      toast.error("Could not load the default data.");
-    } finally {
-      setSeeding(false);
-    }
-  }
 
   return (
     <AdminShell title="Settings" subtitle="Workspace configuration for the NivasiSpace team.">
@@ -98,20 +81,7 @@ function SettingsPage() {
           </section>
         )}
 
-        {/* Starter data — global admin only */}
-        {isGlobalAdmin && (
-          <section className="rounded-2xl border border-primary/25 bg-brand-soft/60 p-5 shadow-soft lg:col-span-2">
-            <h2 className="font-display text-base font-bold">Starter Data</h2>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Load the default NivasiSpace packages and a starter college list. Existing records are
-              never overwritten.
-            </p>
-            <Button className="mt-4" onClick={runSeed} disabled={seeding}>
-              {seeding ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
-              Load Default Packages & Colleges
-            </Button>
-          </section>
-        )}
+
 
         {/* Cities — global admin only */}
         {isGlobalAdmin && <CitiesCard />}
@@ -122,18 +92,18 @@ function SettingsPage() {
         {/* Medical Colleges — global admin only */}
         {isGlobalAdmin && <MedicalCollegesCard />}
 
-        {/* All Colleges (read-only view for regular admins; full management for global admin) */}
+        {/* All Colleges */}
         <CollegesCard isGlobalAdmin={isGlobalAdmin} />
 
-        {/* Properties — visible to all, managed by global admin */}
-        <PropertiesCard isGlobalAdmin={isGlobalAdmin} />
+        {/* Add Admin for College — global admin only */}
+        {isGlobalAdmin && <AdminUsersCard />}
       </div>
     </AdminShell>
   );
 }
 
 /* ------------------------------------------------------------------ */
-/*  Cities card (global admin only)                                    */
+/*  Cities card                                                        */
 /* ------------------------------------------------------------------ */
 function CitiesCard() {
   const { data: cities = [], isLoading } = useCities();
@@ -198,7 +168,140 @@ function CitiesCard() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Engineering colleges card (global admin only)                      */
+/*  Add Admin for College card                                         */
+/* ------------------------------------------------------------------ */
+function AdminUsersCard() {
+  const { data: colleges = [] } = useColleges();
+  const { data: cities = [] } = useCities();
+  const [displayName, setDisplayName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [cityFilter, setCityFilter] = useState("");
+  const [collegeId, setCollegeId] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const activeCities = cities.filter((c) => c.active);
+  // Filter colleges by selected city; if no city selected show all active
+  const filteredColleges = colleges.filter(
+    (c) => c.active && (cityFilter === "" || c.city === cityFilter),
+  );
+  const selectedCollege = colleges.find((c) => c.id === collegeId);
+
+  // When city changes, reset college if it no longer belongs to the new city
+  function handleCityChange(val: string) {
+    setCityFilter(val);
+    const still = colleges.find(
+      (c) => c.id === collegeId && (val === "" || c.city === val),
+    );
+    if (!still) setCollegeId("");
+  }
+
+  async function add(e: React.FormEvent) {
+    e.preventDefault();
+    if (!displayName.trim() || !email.trim() || !password || !collegeId) {
+      toast.error("Please fill in all fields and select a college.");
+      return;
+    }
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters.");
+      return;
+    }
+    setSaving(true);
+    try {
+      await createAdminUser({
+        email: email.trim(),
+        password,
+        displayName: displayName.trim(),
+        collegeId,
+        collegeName: selectedCollege?.collegeName ?? "",
+      });
+      setDisplayName("");
+      setEmail("");
+      setPassword("");
+      setCityFilter("");
+      setCollegeId("");
+      toast.success(`Admin account created for ${displayName.trim()}`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not create admin account.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <section className="rounded-2xl border border-border bg-card p-5 shadow-soft">
+      <h2 className="flex items-center gap-2 font-display text-base font-bold">
+        <UserPlus className="size-4 text-primary" />
+        Add Admin for College
+      </h2>
+      <p className="mt-1 text-xs text-muted-foreground">
+        Creates a Firebase Auth account and saves the admin to the users collection.
+      </p>
+      <form onSubmit={add} className="mt-3 space-y-2">
+        <Input
+          value={displayName}
+          onChange={(e) => setDisplayName(e.target.value)}
+          placeholder="Display name"
+          autoComplete="off"
+        />
+        <Input
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Email address"
+          type="email"
+          autoComplete="off"
+        />
+        <Input
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Password (min 6 characters)"
+          type="password"
+          autoComplete="new-password"
+        />
+        {/* City filter — narrows college list */}
+        <Select value={cityFilter} onValueChange={handleCityChange}>
+          <SelectTrigger>
+            <SelectValue placeholder="Filter by city (optional)" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">All cities</SelectItem>
+            {activeCities.map((c) => (
+              <SelectItem key={c.id} value={c.cityName}>
+                {c.cityName}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {/* College selector — filtered by city */}
+        <div className="flex gap-2">
+          <Select value={collegeId} onValueChange={setCollegeId}>
+            <SelectTrigger className="flex-1">
+              <SelectValue placeholder={filteredColleges.length === 0 ? "No colleges for this city" : "Select college"} />
+            </SelectTrigger>
+            <SelectContent>
+              {filteredColleges.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  <span className="flex flex-col">
+                    <span>{c.collegeName}</span>
+                    {c.city && (
+                      <span className="text-[11px] text-muted-foreground">{c.city}</span>
+                    )}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button type="submit" size="icon" disabled={saving} aria-label="Create admin">
+            {saving ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
+          </Button>
+        </div>
+      </form>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Engineering colleges card                                          */
 /* ------------------------------------------------------------------ */
 function EngineeringCollegesCard() {
   const { data: allColleges = [], isLoading } = useColleges();
@@ -283,7 +386,7 @@ function EngineeringCollegesCard() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Medical colleges card (global admin only)                          */
+/*  Medical colleges card                                              */
 /* ------------------------------------------------------------------ */
 function MedicalCollegesCard() {
   const { data: allColleges = [], isLoading } = useColleges();
@@ -368,7 +471,7 @@ function MedicalCollegesCard() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  All colleges card (read-only for regular admin)                    */
+/*  All colleges card                                                  */
 /* ------------------------------------------------------------------ */
 function CollegesCard({ isGlobalAdmin }: { isGlobalAdmin: boolean }) {
   const { data: colleges = [], isLoading } = useColleges();
@@ -378,7 +481,6 @@ function CollegesCard({ isGlobalAdmin }: { isGlobalAdmin: boolean }) {
   const [city, setCity] = useState("");
   const [collegeType, setCollegeType] = useState<"engineering" | "medical" | "other">("other");
   const [saving, setSaving] = useState(false);
-  // Track which college row is being edited inline
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editType, setEditType] = useState<"engineering" | "medical" | "other">("other");
   const [editCity, setEditCity] = useState("");
@@ -468,19 +570,12 @@ function CollegesCard({ isGlobalAdmin }: { isGlobalAdmin: boolean }) {
           <p className="text-xs text-muted-foreground">No colleges yet.</p>
         ) : (
           colleges.map((c) => (
-            <div
-              key={c.id}
-              className="rounded-xl border border-border px-3 py-2"
-            >
+            <div key={c.id} className="rounded-xl border border-border px-3 py-2">
               {editingId === c.id ? (
-                /* ── Inline edit mode ── */
                 <div className="space-y-2">
                   <p className="truncate text-sm font-semibold">{c.collegeName}</p>
                   <div className="flex flex-wrap gap-2">
-                    <Select
-                      value={editType}
-                      onValueChange={(v) => setEditType(v as typeof editType)}
-                    >
+                    <Select value={editType} onValueChange={(v) => setEditType(v as typeof editType)}>
                       <SelectTrigger className="w-36">
                         <SelectValue />
                       </SelectTrigger>
@@ -502,21 +597,11 @@ function CollegesCard({ isGlobalAdmin }: { isGlobalAdmin: boolean }) {
                     </Select>
                   </div>
                   <div className="flex gap-2">
-                    <Button size="sm" className="h-7 text-xs" onClick={() => saveEdit(c.id)}>
-                      Save
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-7 text-xs"
-                      onClick={() => setEditingId(null)}
-                    >
-                      Cancel
-                    </Button>
+                    <Button size="sm" className="h-7 text-xs" onClick={() => saveEdit(c.id)}>Save</Button>
+                    <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setEditingId(null)}>Cancel</Button>
                   </div>
                 </div>
               ) : (
-                /* ── Read mode ── */
                 <div className="flex items-center justify-between gap-2">
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm">{c.collegeName}</span>
@@ -552,79 +637,6 @@ function CollegesCard({ isGlobalAdmin }: { isGlobalAdmin: boolean }) {
                     )}
                   </div>
                 </div>
-              )}
-            </div>
-          ))
-        )}
-      </div>
-    </section>
-  );
-}
-/* ------------------------------------------------------------------ */
-/*  Properties card                                                    */
-/* ------------------------------------------------------------------ */
-function PropertiesCard({ isGlobalAdmin }: { isGlobalAdmin: boolean }) {
-  const { data: properties = [], isLoading } = useProperties();
-  const queryClient = useQueryClient();
-  const [name, setName] = useState("");
-  const [saving, setSaving] = useState(false);
-
-  async function add(e: React.FormEvent) {
-    e.preventDefault();
-    if (!name.trim()) return;
-    setSaving(true);
-    try {
-      await addProperty(name.trim());
-      await queryClient.invalidateQueries({ queryKey: ["properties"] });
-      setName("");
-      toast.success("Property added");
-    } catch {
-      toast.error("Could not add the property.");
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  return (
-    <section className="rounded-2xl border border-border bg-card p-5 shadow-soft">
-      <h2 className="flex items-center gap-2 font-display text-base font-bold">
-        <Building2 className="size-4 text-primary" />
-        Properties
-        {!isGlobalAdmin && <Lock className="size-3 text-muted-foreground" />}
-      </h2>
-      {isGlobalAdmin && (
-        <form onSubmit={add} className="mt-3 flex gap-2">
-          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Add a property" />
-          <Button type="submit" size="icon" disabled={saving} aria-label="Add property">
-            <Plus className="size-4" />
-          </Button>
-        </form>
-      )}
-      <div className="mt-4 space-y-2">
-        {isLoading ? (
-          <Skeleton className="h-24 rounded-xl" />
-        ) : properties.length === 0 ? (
-          <p className="text-xs text-muted-foreground">No properties yet.</p>
-        ) : (
-          properties.map((p) => (
-            <div
-              key={p.id}
-              className="flex items-center justify-between gap-3 rounded-xl border border-border px-3 py-2"
-            >
-              <span className="truncate text-sm">{p.propertyName}</span>
-              {isGlobalAdmin ? (
-                <Switch
-                  checked={p.active}
-                  aria-label="Property active"
-                  onCheckedChange={async (v) => {
-                    await setPropertyActive(p.id, v);
-                    await queryClient.invalidateQueries({ queryKey: ["properties"] });
-                  }}
-                />
-              ) : (
-                <span className={`text-[11px] font-medium ${p.active ? "text-green-600" : "text-muted-foreground"}`}>
-                  {p.active ? "Active" : "Inactive"}
-                </span>
               )}
             </div>
           ))

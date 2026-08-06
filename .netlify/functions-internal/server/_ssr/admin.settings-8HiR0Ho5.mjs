@@ -1,33 +1,20 @@
 import { o as __toESM } from "../_runtime.mjs";
 import { u as require_react } from "../_libs/@floating-ui/react-dom+[...].mjs";
 import { F as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
-import { a as useAuth, o as useIsGlobalAdmin } from "./auth-DtLQDrss.mjs";
+import { o as useAuth, s as useIsGlobalAdmin } from "./auth-DbpSDgTm.mjs";
 import { r as useQueryClient } from "../_libs/tanstack__react-query.mjs";
-import { C as Lock, D as GraduationCap, F as Building2, _ as Plus, d as Sparkles, n as Wrench, u as Stethoscope, w as LoaderCircle, x as MapPin } from "../_libs/lucide-react.mjs";
-import { A as setCollegeActive, I as useCities, L as useColleges, M as setPropertyActive, O as seedDefaults, P as updateCollege, _ as addCollege, d as SelectItem, f as SelectTrigger, g as addCity, h as Skeleton, k as setCityActive, l as Select, n as Button, p as SelectValue, t as AdminShell, u as SelectContent, v as addProperty, z as useProperties } from "./admin-shell-7z6qK9qe.mjs";
-import { t as Input } from "./input-Cg8moHv0.mjs";
+import { C as Lock, D as GraduationCap, _ as Plus, d as Stethoscope, n as Wrench, s as UserPlus, w as LoaderCircle, x as MapPin } from "../_libs/lucide-react.mjs";
+import { F as useColleges, M as updateCollege, O as setCityActive, P as useCities, _ as addCollege, d as SelectItem, f as SelectTrigger, g as addCity, h as Skeleton, k as setCollegeActive, l as Select, n as Button, p as SelectValue, t as AdminShell, u as SelectContent, x as createAdminUser } from "./admin-shell-DbLl1eJ-.mjs";
+import { t as Input } from "./input-BRq9ZYTb.mjs";
 import { n as toast } from "../_libs/sonner.mjs";
-import { t as Switch } from "./switch-aWKnekv4.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/admin.settings-_XM0d_VR.js
+import { t as Switch } from "./switch-Aj459Xsd.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/admin.settings-8HiR0Ho5.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 function SettingsPage() {
 	const { user } = useAuth();
 	const isGlobalAdmin = useIsGlobalAdmin();
-	const queryClient = useQueryClient();
-	const [seeding, setSeeding] = (0, import_react.useState)(false);
-	async function runSeed() {
-		setSeeding(true);
-		try {
-			await seedDefaults();
-			await queryClient.invalidateQueries();
-			toast.success("Default colleges and packages are ready.");
-		} catch {
-			toast.error("Could not load the default data.");
-		} finally {
-			setSeeding(false);
-		}
-	}
+	useQueryClient();
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AdminShell, {
 		title: "Settings",
 		subtitle: "Workspace configuration for the NivasiSpace team.",
@@ -62,30 +49,11 @@ function SettingsPage() {
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lock, { className: "size-4" }), "Some settings below are managed by the Global Admin only."]
 					})
 				}),
-				isGlobalAdmin && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
-					className: "rounded-2xl border border-primary/25 bg-brand-soft/60 p-5 shadow-soft lg:col-span-2",
-					children: [
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", {
-							className: "font-display text-base font-bold",
-							children: "Starter Data"
-						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-							className: "mt-1 text-xs text-muted-foreground",
-							children: "Load the default NivasiSpace packages and a starter college list. Existing records are never overwritten."
-						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
-							className: "mt-4",
-							onClick: runSeed,
-							disabled: seeding,
-							children: [seeding ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(LoaderCircle, { className: "size-4 animate-spin" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, { className: "size-4" }), "Load Default Packages & Colleges"]
-						})
-					]
-				}),
 				isGlobalAdmin && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CitiesCard, {}),
 				isGlobalAdmin && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(EngineeringCollegesCard, {}),
 				isGlobalAdmin && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(MedicalCollegesCard, {}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CollegesCard, { isGlobalAdmin }),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(PropertiesCard, { isGlobalAdmin })
+				isGlobalAdmin && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AdminUsersCard, {})
 			]
 		})
 	});
@@ -151,6 +119,130 @@ function CitiesCard() {
 						}
 					})]
 				}, c.id))
+			})
+		]
+	});
+}
+function AdminUsersCard() {
+	const { data: colleges = [] } = useColleges();
+	const { data: cities = [] } = useCities();
+	const [displayName, setDisplayName] = (0, import_react.useState)("");
+	const [email, setEmail] = (0, import_react.useState)("");
+	const [password, setPassword] = (0, import_react.useState)("");
+	const [cityFilter, setCityFilter] = (0, import_react.useState)("");
+	const [collegeId, setCollegeId] = (0, import_react.useState)("");
+	const [saving, setSaving] = (0, import_react.useState)(false);
+	const activeCities = cities.filter((c) => c.active);
+	const filteredColleges = colleges.filter((c) => c.active && (cityFilter === "" || c.city === cityFilter));
+	const selectedCollege = colleges.find((c) => c.id === collegeId);
+	function handleCityChange(val) {
+		setCityFilter(val);
+		if (!colleges.find((c) => c.id === collegeId && (val === "" || c.city === val))) setCollegeId("");
+	}
+	async function add(e) {
+		e.preventDefault();
+		if (!displayName.trim() || !email.trim() || !password || !collegeId) {
+			toast.error("Please fill in all fields and select a college.");
+			return;
+		}
+		if (password.length < 6) {
+			toast.error("Password must be at least 6 characters.");
+			return;
+		}
+		setSaving(true);
+		try {
+			await createAdminUser({
+				email: email.trim(),
+				password,
+				displayName: displayName.trim(),
+				collegeId,
+				collegeName: selectedCollege?.collegeName ?? ""
+			});
+			setDisplayName("");
+			setEmail("");
+			setPassword("");
+			setCityFilter("");
+			setCollegeId("");
+			toast.success(`Admin account created for ${displayName.trim()}`);
+		} catch (err) {
+			toast.error(err instanceof Error ? err.message : "Could not create admin account.");
+		} finally {
+			setSaving(false);
+		}
+	}
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
+		className: "rounded-2xl border border-border bg-card p-5 shadow-soft",
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h2", {
+				className: "flex items-center gap-2 font-display text-base font-bold",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(UserPlus, { className: "size-4 text-primary" }), "Add Admin for College"]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "mt-1 text-xs text-muted-foreground",
+				children: "Creates a Firebase Auth account and saves the admin to the users collection."
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("form", {
+				onSubmit: add,
+				className: "mt-3 space-y-2",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Input, {
+						value: displayName,
+						onChange: (e) => setDisplayName(e.target.value),
+						placeholder: "Display name",
+						autoComplete: "off"
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Input, {
+						value: email,
+						onChange: (e) => setEmail(e.target.value),
+						placeholder: "Email address",
+						type: "email",
+						autoComplete: "off"
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Input, {
+						value: password,
+						onChange: (e) => setPassword(e.target.value),
+						placeholder: "Password (min 6 characters)",
+						type: "password",
+						autoComplete: "new-password"
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Select, {
+						value: cityFilter,
+						onValueChange: handleCityChange,
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectTrigger, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectValue, { placeholder: "Filter by city (optional)" }) }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(SelectContent, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectItem, {
+							value: "",
+							children: "All cities"
+						}), activeCities.map((c) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectItem, {
+							value: c.cityName,
+							children: c.cityName
+						}, c.id))] })]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex gap-2",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Select, {
+							value: collegeId,
+							onValueChange: setCollegeId,
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectTrigger, {
+								className: "flex-1",
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectValue, { placeholder: filteredColleges.length === 0 ? "No colleges for this city" : "Select college" })
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectContent, { children: filteredColleges.map((c) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectItem, {
+								value: c.id,
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+									className: "flex flex-col",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: c.collegeName }), c.city && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "text-[11px] text-muted-foreground",
+										children: c.city
+									})]
+								})
+							}, c.id)) })]
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+							type: "submit",
+							size: "icon",
+							disabled: saving,
+							"aria-label": "Create admin",
+							children: saving ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(LoaderCircle, { className: "size-4 animate-spin" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Plus, { className: "size-4" })
+						})]
+					})
+				]
 			})
 		]
 	});
@@ -540,78 +632,6 @@ function CollegesCard({ isGlobalAdmin }) {
 						})]
 					})
 				}, c.id))
-			})
-		]
-	});
-}
-function PropertiesCard({ isGlobalAdmin }) {
-	const { data: properties = [], isLoading } = useProperties();
-	const queryClient = useQueryClient();
-	const [name, setName] = (0, import_react.useState)("");
-	const [saving, setSaving] = (0, import_react.useState)(false);
-	async function add(e) {
-		e.preventDefault();
-		if (!name.trim()) return;
-		setSaving(true);
-		try {
-			await addProperty(name.trim());
-			await queryClient.invalidateQueries({ queryKey: ["properties"] });
-			setName("");
-			toast.success("Property added");
-		} catch {
-			toast.error("Could not add the property.");
-		} finally {
-			setSaving(false);
-		}
-	}
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
-		className: "rounded-2xl border border-border bg-card p-5 shadow-soft",
-		children: [
-			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h2", {
-				className: "flex items-center gap-2 font-display text-base font-bold",
-				children: [
-					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Building2, { className: "size-4 text-primary" }),
-					"Properties",
-					!isGlobalAdmin && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lock, { className: "size-3 text-muted-foreground" })
-				]
-			}),
-			isGlobalAdmin && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("form", {
-				onSubmit: add,
-				className: "mt-3 flex gap-2",
-				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Input, {
-					value: name,
-					onChange: (e) => setName(e.target.value),
-					placeholder: "Add a property"
-				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
-					type: "submit",
-					size: "icon",
-					disabled: saving,
-					"aria-label": "Add property",
-					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Plus, { className: "size-4" })
-				})]
-			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-				className: "mt-4 space-y-2",
-				children: isLoading ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Skeleton, { className: "h-24 rounded-xl" }) : properties.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-					className: "text-xs text-muted-foreground",
-					children: "No properties yet."
-				}) : properties.map((p) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "flex items-center justify-between gap-3 rounded-xl border border-border px-3 py-2",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-						className: "truncate text-sm",
-						children: p.propertyName
-					}), isGlobalAdmin ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Switch, {
-						checked: p.active,
-						"aria-label": "Property active",
-						onCheckedChange: async (v) => {
-							await setPropertyActive(p.id, v);
-							await queryClient.invalidateQueries({ queryKey: ["properties"] });
-						}
-					}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-						className: `text-[11px] font-medium ${p.active ? "text-green-600" : "text-muted-foreground"}`,
-						children: p.active ? "Active" : "Inactive"
-					})]
-				}, p.id))
 			})
 		]
 	});

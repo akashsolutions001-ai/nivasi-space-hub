@@ -17,8 +17,12 @@ import {
   type QueryDocumentSnapshot,
   type Timestamp,
 } from "firebase/firestore";
+import {
+  createUserWithEmailAndPassword,
+  updateProfile,
+} from "firebase/auth";
 
-import { getDb } from "./firebase";
+import { getDb, getFirebaseAuth } from "./firebase";
 import type { Admission, AdmissionInput, College, City, PackagePlan, Property } from "./types";
 
 function toDate(value: unknown): Date | null {
@@ -376,6 +380,57 @@ export async function addProperty(propertyName: string, city?: string): Promise<
 
 export async function setPropertyActive(id: string, active: boolean): Promise<void> {
   await updateDoc(doc(getDb(), "properties", id), { active, updatedAt: serverTimestamp() });
+}
+
+/* --------------------------------- Admin Users ---------------------------- */
+
+export interface AdminUserInput {
+  email: string;
+  password: string;
+  displayName: string;
+  collegeId: string;
+  collegeName: string;
+}
+
+/**
+ * Creates a new admin user in Firebase Auth and saves their profile to
+ * the /users collection so they appear in the admin panel.
+ */
+export async function createAdminUser(input: AdminUserInput): Promise<string> {
+  try {
+    // 1. Create the Firebase Auth account
+    const credential = await createUserWithEmailAndPassword(
+      getFirebaseAuth(),
+      input.email.trim(),
+      input.password,
+    );
+    const { user } = credential;
+
+    // 2. Set the display name on the auth profile
+    await updateProfile(user, { displayName: input.displayName });
+
+    // 3. Write to /users collection
+    const userRef = doc(getDb(), "users", user.uid);
+    await setDoc(userRef, {
+      uid: user.uid,
+      email: input.email.trim(),
+      displayName: input.displayName,
+      role: "admin",
+      collegeId: input.collegeId,
+      collegeName: input.collegeName,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+
+    return user.uid;
+  } catch (error) {
+    console.error("[firestore] createAdminUser", error);
+    const code = (error as { code?: string })?.code ?? "";
+    if (code === "auth/email-already-in-use") throw new Error("An account with this email already exists.");
+    if (code === "auth/weak-password") throw new Error("Password must be at least 6 characters.");
+    if (code === "auth/invalid-email") throw new Error("Please enter a valid email address.");
+    throw new Error("Could not create the admin account. Please try again.");
+  }
 }
 
 /* --------------------------------- Seed ---------------------------------- */

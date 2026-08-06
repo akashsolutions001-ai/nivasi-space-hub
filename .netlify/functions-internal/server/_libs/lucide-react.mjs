@@ -169,34 +169,6 @@ var Briefcase = createLucideIcon("briefcase", [["path", {
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
-var Building2 = createLucideIcon("building-2", [
-	["path", {
-		d: "M10 12h4",
-		key: "a56b0p"
-	}],
-	["path", {
-		d: "M10 8h4",
-		key: "1sr2af"
-	}],
-	["path", {
-		d: "M14 21v-3a2 2 0 0 0-4 0v3",
-		key: "1rgiei"
-	}],
-	["path", {
-		d: "M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2",
-		key: "secmi2"
-	}],
-	["path", {
-		d: "M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16",
-		key: "16ra0t"
-	}]
-]);
-/**
-* @license lucide-react v0.575.0 - ISC
-*
-* This source code is licensed under the ISC license.
-* See the LICENSE file in the root directory of this source tree.
-*/
 var Check = createLucideIcon("check", [["path", {
 	d: "M20 6 9 17l-5-5",
 	key: "1gmf2c"
@@ -634,32 +606,6 @@ var ShieldAlert = createLucideIcon("shield-alert", [
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
-var Sparkles = createLucideIcon("sparkles", [
-	["path", {
-		d: "M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z",
-		key: "1s2grr"
-	}],
-	["path", {
-		d: "M20 2v4",
-		key: "1rf3ol"
-	}],
-	["path", {
-		d: "M22 4h-4",
-		key: "gwowj6"
-	}],
-	["circle", {
-		cx: "4",
-		cy: "20",
-		r: "2",
-		key: "6kqj1y"
-	}]
-]);
-/**
-* @license lucide-react v0.575.0 - ISC
-*
-* This source code is licensed under the ISC license.
-* See the LICENSE file in the root directory of this source tree.
-*/
 var Stethoscope = createLucideIcon("stethoscope", [
 	["path", {
 		d: "M11 2v2",
@@ -743,6 +689,38 @@ var TriangleAlert = createLucideIcon("triangle-alert", [
 	["path", {
 		d: "M12 17h.01",
 		key: "p32p05"
+	}]
+]);
+/**
+* @license lucide-react v0.575.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var UserPlus = createLucideIcon("user-plus", [
+	["path", {
+		d: "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2",
+		key: "1yyitq"
+	}],
+	["circle", {
+		cx: "9",
+		cy: "7",
+		r: "4",
+		key: "nufk8"
+	}],
+	["line", {
+		x1: "19",
+		x2: "19",
+		y1: "8",
+		y2: "14",
+		key: "1bvyxn"
+	}],
+	["line", {
+		x1: "22",
+		x2: "16",
+		y1: "11",
+		y2: "11",
+		key: "1shjgl"
 	}]
 ]);
 /**
@@ -847,4 +825,4 @@ var X = createLucideIcon("x", [["path", {
 	key: "d8bk6v"
 }]]);
 //#endregion
-export { Download as A, Lock as C, GraduationCap as D, IndianRupee as E, Building2 as F, Briefcase as I, BedDouble as L, ChevronUp as M, ChevronDown as N, Eye as O, Check as P, ArrowLeft as R, LogOut as S, LayoutDashboard as T, Plus as _, Users as a, Menu as b, TrendingUp as c, Sparkles as d, ShieldAlert as f, RefreshCw as g, Search as h, UtensilsCrossed as i, ChevronsUpDown as j, EyeOff as k, Trash2 as l, Settings as m, Wrench as n, User as o, Share2 as p, Wallet as r, TriangleAlert as s, X as t, Stethoscope as u, Pencil as v, LoaderCircle as w, MapPin as x, Package as y };
+export { Download as A, Lock as C, GraduationCap as D, IndianRupee as E, Briefcase as F, BedDouble as I, ArrowLeft as L, ChevronUp as M, ChevronDown as N, Eye as O, Check as P, LogOut as S, LayoutDashboard as T, Plus as _, Users as a, Menu as b, TriangleAlert as c, Stethoscope as d, ShieldAlert as f, RefreshCw as g, Search as h, UtensilsCrossed as i, ChevronsUpDown as j, EyeOff as k, TrendingUp as l, Settings as m, Wrench as n, User as o, Share2 as p, Wallet as r, UserPlus as s, X as t, Trash2 as u, Pencil as v, LoaderCircle as w, MapPin as x, Package as y };

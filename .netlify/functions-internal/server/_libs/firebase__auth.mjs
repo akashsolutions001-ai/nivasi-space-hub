@@ -3609,6 +3609,9 @@ TwitterAuthProvider.PROVIDER_ID = "twitter.com";
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+async function signUp(auth, request) {
+	return _performSignInRequest(auth, "POST", "/v1/accounts:signUp", _addTidIfNecessary(auth, request));
+}
 /**
 * @license
 * Copyright 2020 Google LLC
@@ -3900,6 +3903,42 @@ async function recachePasswordPolicy(auth) {
 	if (authInternal._getPasswordPolicyInternal()) await authInternal._updatePasswordPolicy();
 }
 /**
+* Creates a new user account associated with the specified email address and password.
+*
+* @remarks
+* On successful creation of the user account, this user will also be signed in to your application.
+*
+* User account creation can fail if the account already exists or the password is invalid.
+*
+* This method is not supported on {@link Auth} instances created with a
+* {@link @firebase/app#FirebaseServerApp}.
+*
+* Note: The email address acts as a unique identifier for the user and enables an email-based
+* password reset. This function will create a new user account and set the initial user password.
+*
+* @param auth - The {@link Auth} instance.
+* @param email - The user's email address.
+* @param password - The user's chosen password.
+*
+* @public
+*/
+async function createUserWithEmailAndPassword(auth, email, password) {
+	if (_isFirebaseServerApp(auth.app)) return Promise.reject(_serverAppCurrentUserOperationNotSupportedError(auth));
+	const authInternal = _castAuth(auth);
+	const response = await handleRecaptchaFlow(authInternal, {
+		returnSecureToken: true,
+		email,
+		password,
+		clientType: "CLIENT_TYPE_WEB"
+	}, "signUpPassword", signUp).catch((error) => {
+		if (error.code === `auth/password-does-not-meet-requirements`) recachePasswordPolicy(auth);
+		throw error;
+	});
+	const userCredential = await UserCredentialImpl._fromIdTokenResponse(authInternal, "signIn", response);
+	await authInternal._updateCurrentUser(userCredential.user);
+	return userCredential;
+}
+/**
 * Asynchronously signs in using an email and password.
 *
 * @remarks
@@ -3993,6 +4032,9 @@ function signInWithEmailAndPassword(auth, email, password) {
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+async function updateProfile$1(auth, request) {
+	return _performApiRequest(auth, "POST", "/v1/accounts:update", request);
+}
 /**
 * @license
 * Copyright 2020 Google LLC
@@ -4009,6 +4051,33 @@ function signInWithEmailAndPassword(auth, email, password) {
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+/**
+* Updates a user's profile data.
+*
+* @param user - The user.
+* @param profile - The profile's `displayName` and `photoURL` to update.
+*
+* @public
+*/
+async function updateProfile(user, { displayName, photoURL: photoUrl }) {
+	if (displayName === void 0 && photoUrl === void 0) return;
+	const userInternal = getModularInstance(user);
+	const profileRequest = {
+		idToken: await userInternal.getIdToken(),
+		displayName,
+		photoUrl,
+		returnSecureToken: true
+	};
+	const response = await _logoutIfInvalidated(userInternal, updateProfile$1(userInternal.auth, profileRequest));
+	userInternal.displayName = response.displayName || null;
+	userInternal.photoURL = response.photoUrl || null;
+	const passwordProvider = userInternal.providerData.find(({ providerId }) => providerId === "password");
+	if (passwordProvider) {
+		passwordProvider.displayName = userInternal.displayName;
+		passwordProvider.photoURL = userInternal.photoURL;
+	}
+	await userInternal._updateTokensIfNecessary(response);
+}
 /**
 * @license
 * Copyright 2019 Google LLC
@@ -4440,4 +4509,4 @@ function _isEmptyString(input) {
 	return typeof input === "undefined" || input?.length === 0;
 }
 //#endregion
-export { signOut as i, onAuthStateChanged as n, signInWithEmailAndPassword as r, getAuth as t };
+export { signOut as a, signInWithEmailAndPassword as i, getAuth as n, updateProfile as o, onAuthStateChanged as r, createUserWithEmailAndPassword as t };

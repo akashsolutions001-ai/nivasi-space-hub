@@ -205,7 +205,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-/** Payment section with eye toggle — global admin can hide/show amounts */
+/** Payment section — all admins see full payment details */
 function PaymentSection({
   data,
   isGlobalAdmin,
@@ -213,7 +213,7 @@ function PaymentSection({
   data: { packageAmount: number; amountPaid: number; balanceAmount: number; paymentStatus: "completed" | "pending" };
   isGlobalAdmin: boolean;
 }) {
-  const [show, setShow] = useState(false);
+  const [show, setShow] = useState(true);
 
   return (
     <section className="rounded-2xl border border-border bg-card p-5 shadow-soft">
@@ -231,27 +231,22 @@ function PaymentSection({
         )}
       </div>
 
-      {isGlobalAdmin ? (
-        show ? (
-          <>
-            <Row label="Total Package Amount" value={formatINR(data.packageAmount)} />
-            <Row label="Amount Paid"          value={formatINR(data.amountPaid)} />
-            <Row
-              label="Balance Due"
-              value={
-                <span className={data.balanceAmount > 0 ? "text-destructive font-bold" : "text-success font-bold"}>
-                  {formatINR(data.balanceAmount)}
-                </span>
-              }
-            />
-            <Row label="Payment Status" value={<PaymentBadge status={data.paymentStatus} />} />
-          </>
-        ) : (
-          <p className="text-sm text-muted-foreground py-2">Amounts hidden. Click 👁 to reveal.</p>
-        )
+      {show ? (
+        <>
+          <Row label="Total Package Amount" value={formatINR(data.packageAmount)} />
+          <Row label="Amount Paid"          value={formatINR(data.amountPaid)} />
+          <Row
+            label="Balance Due"
+            value={
+              <span className={data.balanceAmount > 0 ? "text-destructive font-bold" : "text-success font-bold"}>
+                {formatINR(data.balanceAmount)}
+              </span>
+            }
+          />
+          <Row label="Payment Status" value={<PaymentBadge status={data.paymentStatus} />} />
+        </>
       ) : (
-        // Normal admin — show status only, no amounts
-        <Row label="Payment Status" value={<PaymentBadge status={data.paymentStatus} />} />
+        <p className="text-sm text-muted-foreground py-2">Amounts hidden. Click 👁 to reveal.</p>
       )}
     </section>
   );

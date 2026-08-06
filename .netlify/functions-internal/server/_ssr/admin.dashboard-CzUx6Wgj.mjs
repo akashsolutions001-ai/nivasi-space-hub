@@ -1,15 +1,15 @@
 import { o as __toESM } from "../_runtime.mjs";
 import { u as require_react } from "../_libs/@floating-ui/react-dom+[...].mjs";
 import { F as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
-import { a as useAuth, o as useIsGlobalAdmin } from "./auth-DtLQDrss.mjs";
+import { o as useAuth, s as useIsGlobalAdmin } from "./auth-DbpSDgTm.mjs";
 import { g as Link } from "../_libs/@tanstack/react-router+[...].mjs";
-import { E as IndianRupee, I as Briefcase, L as BedDouble, O as Eye, _ as Plus, a as Users, c as TrendingUp, i as UtensilsCrossed, k as EyeOff, r as Wallet } from "../_libs/lucide-react.mjs";
-import { F as useAdmissions, T as filterByPeriod, b as cn, h as Skeleton, n as Button, t as AdminShell, x as computeStats } from "./admin-shell-7z6qK9qe.mjs";
+import { E as IndianRupee, F as Briefcase, I as BedDouble, O as Eye, _ as Plus, a as Users, i as UtensilsCrossed, k as EyeOff, l as TrendingUp, r as Wallet } from "../_libs/lucide-react.mjs";
+import { N as useAdmissions, T as filterByPeriod, b as computeStats, h as Skeleton, n as Button, t as AdminShell, y as cn } from "./admin-shell-DbLl1eJ-.mjs";
 import { n as formatDate, r as formatINR } from "./format-Bg5w10xg.mjs";
-import { n as StatCard, t as EmptyState } from "./stat-card-SA_CMkic.mjs";
-import { n as PaymentBadge, r as ProfileAvatar } from "./badges-D-4slldt.mjs";
+import { n as StatCard, t as EmptyState } from "./stat-card-DO4KCARC.mjs";
+import { n as PaymentBadge, r as ProfileAvatar } from "./badges-DujbgiUt.mjs";
 import { i as Trigger, n as List, r as Root2, t as Content } from "../_libs/radix-ui__react-tabs.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/admin.dashboard-BY1qhTl3.js
+//#region node_modules/.nitro/vite/services/ssr/assets/admin.dashboard-CzUx6Wgj.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var Tabs = Root2;

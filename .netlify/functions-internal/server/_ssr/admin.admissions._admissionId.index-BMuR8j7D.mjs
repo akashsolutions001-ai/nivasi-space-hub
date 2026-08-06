@@ -1,19 +1,19 @@
 import { o as __toESM } from "../_runtime.mjs";
 import { u as require_react } from "../_libs/@floating-ui/react-dom+[...].mjs";
 import { F as require_jsx_runtime, a as Overlay2, c as Title2, i as Description2, l as Trigger2, n as Cancel, o as Portal2, r as Content2, s as Root2, t as Action } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
-import { i as isFirebaseConfigured, o as useIsGlobalAdmin } from "./auth-DtLQDrss.mjs";
+import { a as isFirebaseConfigured, s as useIsGlobalAdmin } from "./auth-DbpSDgTm.mjs";
 import { _ as useNavigate, g as Link } from "../_libs/@tanstack/react-router+[...].mjs";
 import { r as useQueryClient, t as useQuery } from "../_libs/tanstack__react-query.mjs";
-import { O as Eye, R as ArrowLeft, f as ShieldAlert, k as EyeOff, l as Trash2, p as Share2, v as Pencil } from "../_libs/lucide-react.mjs";
-import { C as deleteAdmission, b as cn, h as Skeleton, n as Button, t as AdminShell, w as fetchAdmission, y as buttonVariants } from "./admin-shell-7z6qK9qe.mjs";
-import { t as Input } from "./input-Cg8moHv0.mjs";
-import { t as Label } from "./label-BWBRqDN7.mjs";
+import { L as ArrowLeft, O as Eye, f as ShieldAlert, k as EyeOff, p as Share2, u as Trash2, v as Pencil } from "../_libs/lucide-react.mjs";
+import { C as deleteAdmission, h as Skeleton, n as Button, t as AdminShell, v as buttonVariants, w as fetchAdmission, y as cn } from "./admin-shell-DbLl1eJ-.mjs";
+import { t as Input } from "./input-BRq9ZYTb.mjs";
+import { t as Label } from "./label-CwHe0bR-.mjs";
 import { n as formatDate, r as formatINR } from "./format-Bg5w10xg.mjs";
 import { n as toast } from "../_libs/sonner.mjs";
-import { t as EmptyState } from "./stat-card-SA_CMkic.mjs";
-import { t as Route } from "./admin.admissions._admissionId.index-BppureqL.mjs";
-import { i as StatusPill, n as PaymentBadge, r as ProfileAvatar, t as MattressBadge } from "./badges-D-4slldt.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/admin.admissions._admissionId.index-C3RmmIPQ.js
+import { t as EmptyState } from "./stat-card-DO4KCARC.mjs";
+import { t as Route } from "./admin.admissions._admissionId.index-DQCF2gmy.mjs";
+import { i as StatusPill, n as PaymentBadge, r as ProfileAvatar, t as MattressBadge } from "./badges-DujbgiUt.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/admin.admissions._admissionId.index-BMuR8j7D.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var AlertDialog = Root2;
@@ -207,9 +207,9 @@ function Section({ title, children }) {
 		}), children]
 	});
 }
-/** Payment section with eye toggle — global admin can hide/show amounts */
+/** Payment section — all admins see full payment details */
 function PaymentSection({ data, isGlobalAdmin }) {
-	const [show, setShow] = (0, import_react.useState)(false);
+	const [show, setShow] = (0, import_react.useState)(true);
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
 		className: "rounded-2xl border border-border bg-card p-5 shadow-soft",
 		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
@@ -224,7 +224,7 @@ function PaymentSection({ data, isGlobalAdmin }) {
 				"aria-label": show ? "Hide amounts" : "Show amounts",
 				children: show ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(EyeOff, { className: "size-4" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Eye, { className: "size-4" })
 			})]
-		}), isGlobalAdmin ? show ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+		}), show ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Row, {
 				label: "Total Package Amount",
 				value: formatINR(data.packageAmount)
@@ -247,9 +247,6 @@ function PaymentSection({ data, isGlobalAdmin }) {
 		] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 			className: "text-sm text-muted-foreground py-2",
 			children: "Amounts hidden. Click 👁 to reveal."
-		}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Row, {
-			label: "Payment Status",
-			value: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PaymentBadge, { status: data.paymentStatus })
 		})]
 	});
 }

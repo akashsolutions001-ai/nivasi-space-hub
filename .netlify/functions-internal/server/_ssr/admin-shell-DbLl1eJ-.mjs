@@ -1,16 +1,17 @@
 import { o as __toESM } from "../_runtime.mjs";
 import { u as require_react } from "../_libs/@floating-ui/react-dom+[...].mjs";
 import { D as Slot, F as require_jsx_runtime, _ as DialogTrigger, d as DialogClose, f as DialogContent$1, g as DialogTitle$1, h as DialogPortal$1, m as DialogOverlay$1, p as DialogDescription$1, u as Dialog$1 } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
+import { o as updateProfile, t as createUserWithEmailAndPassword } from "../_libs/firebase__auth.mjs";
 import "../_libs/firebase.mjs";
 import { F as doc, P as collection, R as serverTimestamp, S as where, _ as orderBy, b as setDoc, d as addDoc, g as limit, h as getDocs, m as getDoc, v as query, x as updateDoc, y as runTransaction } from "../_libs/@firebase/firestore+[...].mjs";
-import { a as useAuth, i as isFirebaseConfigured, n as getDb, o as useIsGlobalAdmin } from "./auth-DtLQDrss.mjs";
+import { a as isFirebaseConfigured, i as getFirebaseAuth, n as getDb, o as useAuth, s as useIsGlobalAdmin } from "./auth-DbpSDgTm.mjs";
 import { _ as useNavigate, g as Link, l as useRouterState } from "../_libs/@tanstack/react-router+[...].mjs";
 import { t as useQuery } from "../_libs/tanstack__react-query.mjs";
-import { D as GraduationCap, M as ChevronUp, N as ChevronDown, P as Check, S as LogOut, T as LayoutDashboard, a as Users, b as Menu, f as ShieldAlert, g as RefreshCw, m as Settings, n as Wrench, t as X, u as Stethoscope, y as Package } from "../_libs/lucide-react.mjs";
+import { D as GraduationCap, M as ChevronUp, N as ChevronDown, P as Check, S as LogOut, T as LayoutDashboard, a as Users, b as Menu, d as Stethoscope, f as ShieldAlert, g as RefreshCw, m as Settings, n as Wrench, t as X, y as Package } from "../_libs/lucide-react.mjs";
 import { n as clsx, t as cva } from "../_libs/class-variance-authority+clsx.mjs";
 import { t as twMerge } from "../_libs/tailwind-merge.mjs";
 import { a as SelectItemIndicator, c as SelectPortal, d as SelectSeparator$1, f as SelectTrigger$1, i as SelectItem$1, l as SelectScrollDownButton$1, m as SelectViewport, n as SelectContent$1, o as SelectItemText, p as SelectValue$1, r as SelectIcon, s as SelectLabel$1, t as Select$1, u as SelectScrollUpButton$1 } from "../_libs/@radix-ui/react-select+[...].mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/admin-shell-7z6qK9qe.js
+//#region node_modules/.nitro/vite/services/ssr/assets/admin-shell-DbLl1eJ-.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 function cn(...inputs) {
@@ -479,117 +480,33 @@ async function fetchRooms() {
 		return [];
 	}
 }
-async function addProperty(propertyName, city) {
-	const ref = doc(collection(getDb(), "properties"));
-	await setDoc(ref, {
-		propertyId: ref.id,
-		propertyName,
-		city: city ?? "",
-		address: "",
-		active: true,
-		createdAt: serverTimestamp(),
-		updatedAt: serverTimestamp()
-	});
-}
-async function setPropertyActive(id, active) {
-	await updateDoc(doc(getDb(), "properties", id), {
-		active,
-		updatedAt: serverTimestamp()
-	});
-}
-var DEFAULT_PACKAGES = [
-	{
-		packageName: "Room Only",
-		services: ["Room"],
-		price: 6e3,
-		duration: 30
-	},
-	{
-		packageName: "Room + Mess",
-		services: ["Room", "Mess"],
-		price: 9e3,
-		duration: 30
-	},
-	{
-		packageName: "Room + Laundry",
-		services: ["Room", "Laundry"],
-		price: 7500,
-		duration: 30
-	},
-	{
-		packageName: "Room + Ironing",
-		services: ["Room", "Ironing"],
-		price: 7e3,
-		duration: 30
-	},
-	{
-		packageName: "Room + House Cleaning",
-		services: ["Room", "House Cleaning"],
-		price: 7500,
-		duration: 30
-	},
-	{
-		packageName: "Complete Package",
-		services: [
-			"Room",
-			"Mess",
-			"Laundry",
-			"Ironing",
-			"House Cleaning"
-		],
-		price: 15e3,
-		duration: 30
-	},
-	{
-		packageName: "Custom Package",
-		services: ["Room"],
-		price: 0,
-		duration: 30
-	}
-];
-/** Creates starter packages and colleges the first time the app is used. */
-async function seedDefaults() {
-	const db = getDb();
-	const [pkgSnap, collegeSnap] = await Promise.all([getDocs(collection(db, "packages")), getDocs(collection(db, "colleges"))]);
-	if (pkgSnap.empty) await Promise.all(DEFAULT_PACKAGES.map((p) => {
-		const ref = doc(collection(db, "packages"));
-		return setDoc(ref, {
-			...p,
-			packageId: ref.id,
-			active: true,
+/**
+* Creates a new admin user in Firebase Auth and saves their profile to
+* the /users collection so they appear in the admin panel.
+*/
+async function createAdminUser(input) {
+	try {
+		const { user } = await createUserWithEmailAndPassword(getFirebaseAuth(), input.email.trim(), input.password);
+		await updateProfile(user, { displayName: input.displayName });
+		const userRef = doc(getDb(), "users", user.uid);
+		await setDoc(userRef, {
+			uid: user.uid,
+			email: input.email.trim(),
+			displayName: input.displayName,
+			role: "admin",
+			collegeId: input.collegeId,
+			collegeName: input.collegeName,
 			createdAt: serverTimestamp(),
 			updatedAt: serverTimestamp()
 		});
-	}));
-	if (collegeSnap.empty) await Promise.all([{
-		collegeName: "Dr. D.Y.Patil Pratishthan's College of Engineering Salokhenagar Kolhapur",
-		collegeType: "engineering",
-		city: "Kolhapur"
-	}, {
-		collegeName: "DYP Medical College",
-		collegeType: "medical",
-		city: "Kolhapur"
-	}].map(({ collegeName, collegeType, city }) => {
-		const ref = doc(collection(db, "colleges"));
-		return setDoc(ref, {
-			collegeId: ref.id,
-			collegeName,
-			collegeType,
-			city,
-			active: true,
-			createdAt: serverTimestamp(),
-			updatedAt: serverTimestamp()
-		});
-	}));
-	if ((await getDocs(collection(db, "cities"))).empty) {
-		const ref = doc(collection(db, "cities"));
-		await setDoc(ref, {
-			cityId: ref.id,
-			cityName: "Kolhapur",
-			active: true,
-			createdAt: serverTimestamp(),
-			updatedAt: serverTimestamp()
-		});
+		return user.uid;
+	} catch (error) {
+		console.error("[firestore] createAdminUser", error);
+		const code = error?.code ?? "";
+		if (code === "auth/email-already-in-use") throw new Error("An account with this email already exists.");
+		if (code === "auth/weak-password") throw new Error("Password must be at least 6 characters.");
+		if (code === "auth/invalid-email") throw new Error("Please enter a valid email address.");
+		throw new Error("Could not create the admin account. Please try again.");
 	}
 }
 function useAdmissions() {
@@ -1117,4 +1034,4 @@ function SetupNotice() {
 	});
 }
 //#endregion
-export { setCollegeActive as A, useRooms as B, deleteAdmission as C, savePackage as D, generateAdmissionId as E, useAdmissions as F, useCities as I, useColleges as L, setPropertyActive as M, updateAdmission as N, seedDefaults as O, updateCollege as P, usePackages as R, createAdmission as S, filterByPeriod as T, addCollege as _, DialogFooter as a, cn as b, NivasiLogo as c, SelectItem as d, SelectTrigger as f, addCity as g, Skeleton as h, DialogContent as i, setPackageActive as j, setCityActive as k, Select as l, SetupNotice as m, Button as n, DialogHeader as o, SelectValue as p, Dialog as r, DialogTitle as s, AdminShell as t, SelectContent as u, addProperty as v, fetchAdmission as w, computeStats as x, buttonVariants as y, useProperties as z };
+export { setPackageActive as A, deleteAdmission as C, savePackage as D, generateAdmissionId as E, useColleges as F, usePackages as I, useProperties as L, updateCollege as M, useAdmissions as N, setCityActive as O, useCities as P, useRooms as R, createAdmission as S, filterByPeriod as T, addCollege as _, DialogFooter as a, computeStats as b, NivasiLogo as c, SelectItem as d, SelectTrigger as f, addCity as g, Skeleton as h, DialogContent as i, updateAdmission as j, setCollegeActive as k, Select as l, SetupNotice as m, Button as n, DialogHeader as o, SelectValue as p, Dialog as r, DialogTitle as s, AdminShell as t, SelectContent as u, buttonVariants as v, fetchAdmission as w, createAdminUser as x, cn as y };

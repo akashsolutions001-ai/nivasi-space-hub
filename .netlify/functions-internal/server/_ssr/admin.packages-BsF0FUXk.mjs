@@ -1,18 +1,18 @@
 import { o as __toESM } from "../_runtime.mjs";
 import { u as require_react } from "../_libs/@floating-ui/react-dom+[...].mjs";
 import { F as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
-import { o as useIsGlobalAdmin } from "./auth-DtLQDrss.mjs";
+import { s as useIsGlobalAdmin } from "./auth-DbpSDgTm.mjs";
 import { r as useQueryClient } from "../_libs/tanstack__react-query.mjs";
 import { C as Lock, _ as Plus, v as Pencil, w as LoaderCircle, y as Package } from "../_libs/lucide-react.mjs";
-import { D as savePackage, R as usePackages, a as DialogFooter, h as Skeleton, i as DialogContent, j as setPackageActive, n as Button, o as DialogHeader, r as Dialog, s as DialogTitle, t as AdminShell } from "./admin-shell-7z6qK9qe.mjs";
-import { t as Input } from "./input-Cg8moHv0.mjs";
-import { t as Label } from "./label-BWBRqDN7.mjs";
-import { n as SERVICE_OPTIONS, t as Checkbox } from "./types-KRx1nXMN.mjs";
+import { A as setPackageActive, D as savePackage, I as usePackages, a as DialogFooter, h as Skeleton, i as DialogContent, n as Button, o as DialogHeader, r as Dialog, s as DialogTitle, t as AdminShell } from "./admin-shell-DbLl1eJ-.mjs";
+import { t as Input } from "./input-BRq9ZYTb.mjs";
+import { t as Label } from "./label-CwHe0bR-.mjs";
+import { n as SERVICE_OPTIONS, t as Checkbox } from "./types-B2AqjYmj.mjs";
 import { r as formatINR } from "./format-Bg5w10xg.mjs";
 import { n as toast } from "../_libs/sonner.mjs";
-import { t as EmptyState } from "./stat-card-SA_CMkic.mjs";
-import { t as Switch } from "./switch-aWKnekv4.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/admin.packages-BhYLbBn5.js
+import { t as EmptyState } from "./stat-card-DO4KCARC.mjs";
+import { t as Switch } from "./switch-Aj459Xsd.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/admin.packages-BsF0FUXk.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 function PackagesPage() {
