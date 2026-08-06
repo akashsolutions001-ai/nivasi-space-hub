@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { fetchAdmissions, fetchCities, fetchColleges, fetchPackages, fetchProperties, fetchRooms } from "@/lib/db";
+import { fetchAdmissions, fetchCities, fetchColleges, fetchPackages, fetchProperties, fetchRooms, fetchUserProfile } from "@/lib/db";
 import { isFirebaseConfigured } from "@/lib/firebase";
+import { useAuth } from "@/lib/auth";
 import type { Admission } from "@/lib/types";
 
 export function useAdmissions() {
@@ -49,6 +50,15 @@ export function useCities() {
     queryKey: ["cities"],
     queryFn: fetchCities,
     enabled: isFirebaseConfigured,
+  });
+}
+
+export function useUserProfile() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ["userProfile", user?.uid],
+    queryFn: () => fetchUserProfile(user!.uid),
+    enabled: isFirebaseConfigured && !!user?.uid,
   });
 }
 

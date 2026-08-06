@@ -5,11 +5,11 @@ import { o as useAuth, s as useIsGlobalAdmin } from "./auth-DbpSDgTm.mjs";
 import { g as Link } from "../_libs/@tanstack/react-router+[...].mjs";
 import { F as ChevronDown, L as Building2, P as ChevronUp, S as MapPin, j as ExternalLink, o as User, v as Phone, z as BedDouble } from "../_libs/lucide-react.mjs";
 import { t as cva } from "../_libs/class-variance-authority+clsx.mjs";
-import { N as useAdmissions, R as useRooms, h as Skeleton, t as AdminShell, y as cn } from "./admin-shell-C6yF8tTs.mjs";
-import { t as Input } from "./input-DzEdIhBa.mjs";
+import { N as useAdmissions, R as useRooms, h as Skeleton, t as AdminShell, y as cn, z as useUserProfile } from "./admin-shell-PYWfz-cc.mjs";
+import { t as Input } from "./input-DFS5fhWB.mjs";
 import { n as formatDate } from "./format-Bg5w10xg.mjs";
-import { n as PaymentBadge, r as ProfileAvatar } from "./badges-BBZdxcC1.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/admin.properties-Dqoy-oct.js
+import { n as PaymentBadge, r as ProfileAvatar } from "./badges-DciROGo9.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/admin.properties-cPuCH29L.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var badgeVariants = cva("inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2", {
@@ -70,29 +70,29 @@ function PropertyCard({ room }) {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 		className: "rounded-2xl border border-border bg-card shadow-soft overflow-hidden",
 		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-			className: "p-4",
+			className: "p-6",
 			children: [
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "flex items-center gap-3 min-w-0",
+					className: "flex items-center gap-4 min-w-0",
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-						className: "flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary",
-						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Building2, { className: "size-4" })
+						className: "flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary",
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Building2, { className: "size-6" })
 					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 						className: "min-w-0",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
-							className: "font-display font-bold leading-tight",
+							className: "font-display text-xl font-bold leading-tight",
 							children: room.title
 						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-							className: "flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1",
+							className: "flex flex-wrap items-center gap-x-2 gap-y-1 mt-1.5",
 							children: [
 								room.roomType && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Badge, {
 									variant: "secondary",
-									className: "text-[10px] h-5",
+									className: "text-xs h-6 px-2",
 									children: room.roomType
 								}),
 								gl && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Badge, {
 									variant: "outline",
-									className: `text-[10px] h-5 font-semibold
+									className: `text-xs h-6 px-2 font-semibold
                     ${gl === "Boys" ? "border-blue-300 text-blue-700 bg-blue-50" : ""}
                     ${gl === "Girls" ? "border-pink-300 text-pink-700 bg-pink-50" : ""}
                     ${gl === "Co-ed" ? "border-purple-300 text-purple-700 bg-purple-50" : ""}`,
@@ -103,7 +103,7 @@ function PropertyCard({ room }) {
 									]
 								}),
 								room.rent ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
-									className: "text-[11px] font-medium text-primary",
+									className: "text-sm font-semibold text-primary",
 									children: [
 										"₹",
 										room.rent.toLocaleString("en-IN"),
@@ -119,40 +119,40 @@ function PropertyCard({ room }) {
 					const available = capacity !== null ? Math.max(0, capacity - occupied) : null;
 					const full = capacity !== null && occupied >= capacity;
 					return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "mt-3 grid grid-cols-3 gap-3",
+						className: "mt-4 grid grid-cols-3 gap-4",
 						children: [
 							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-								className: "rounded-xl border border-amber-200 bg-amber-50 py-3 text-center",
+								className: "rounded-2xl border border-amber-200 bg-amber-50 py-4 text-center",
 								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-									className: "text-3xl font-black text-amber-600 leading-none",
+									className: "text-4xl font-black text-amber-600 leading-none",
 									children: occupied
 								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-									className: "mt-1 text-[11px] font-semibold text-amber-700/80 uppercase tracking-wide",
+									className: "mt-1.5 text-xs font-bold text-amber-700/80 uppercase tracking-wider",
 									children: "Filled"
 								})]
 							}),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-								className: `rounded-xl border py-3 text-center
+								className: `rounded-2xl border py-4 text-center
                 ${capacity === null ? "border-border bg-muted/40" : full ? "border-destructive/30 bg-destructive/10" : "border-emerald-200 bg-emerald-50"}`,
 								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-									className: `text-3xl font-black leading-none
+									className: `text-4xl font-black leading-none
                   ${capacity === null ? "text-muted-foreground" : full ? "text-destructive" : "text-emerald-600"}`,
 									children: capacity !== null ? available : "—"
 								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-									className: `mt-1 text-[11px] font-semibold uppercase tracking-wide
+									className: `mt-1.5 text-xs font-bold uppercase tracking-wider
                   ${capacity === null ? "text-muted-foreground" : full ? "text-destructive/70" : "text-emerald-700/80"}`,
 									children: full ? "Full" : "Vacant"
 								})]
 							}),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-								className: `rounded-xl border py-3 text-center
+								className: `rounded-2xl border py-4 text-center
                 ${needed === null ? "border-border bg-muted/40" : needed === 0 ? "border-destructive/30 bg-destructive/10" : "border-blue-200 bg-blue-50"}`,
 								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-									className: `text-3xl font-black leading-none
+									className: `text-4xl font-black leading-none
                   ${needed === null ? "text-muted-foreground" : needed === 0 ? "text-destructive" : "text-blue-600"}`,
 									children: needed ?? "—"
 								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-									className: `mt-1 text-[11px] font-semibold uppercase tracking-wide
+									className: `mt-1.5 text-xs font-bold uppercase tracking-wider
                   ${needed === null ? "text-muted-foreground" : needed === 0 ? "text-destructive/70" : "text-blue-700/80"}`,
 									children: "Need More"
 								})]
@@ -161,27 +161,23 @@ function PropertyCard({ room }) {
 					});
 				})(),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "mt-3 grid gap-1",
+					className: "mt-4 grid gap-2",
 					children: [
 						(room.address || room.city) && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-							className: "flex items-start gap-1.5 text-xs text-muted-foreground",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MapPin, { className: "size-3.5 mt-0.5 shrink-0 text-primary" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: [room.address, room.city].filter(Boolean).join(", ") })]
+							className: "flex items-start gap-2 text-base font-semibold text-foreground",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MapPin, { className: "size-5 mt-0.5 shrink-0 text-primary" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: [room.address, room.city].filter(Boolean).join(", ") })]
 						}),
 						room.location && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-							className: "flex items-start gap-1.5 text-xs text-muted-foreground",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MapPin, { className: "size-3.5 mt-0.5 shrink-0" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: room.location })]
+							className: "flex items-start gap-2 text-base font-semibold text-foreground",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MapPin, { className: "size-5 mt-0.5 shrink-0" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: room.location })]
 						}),
 						room.contact && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-							className: "flex items-center gap-1.5 text-xs text-muted-foreground",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Phone, { className: "size-3.5 shrink-0 text-primary" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", {
+							className: "flex items-center gap-2 text-base font-semibold text-foreground",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Phone, { className: "size-5 shrink-0 text-primary" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", {
 								href: `tel:${room.contact}`,
-								className: "hover:underline",
+								className: "hover:underline text-primary",
 								children: room.contact
 							})]
-						}),
-						room.college && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-							className: "flex items-start gap-1.5 text-xs text-muted-foreground",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(User, { className: "size-3.5 mt-0.5 shrink-0" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: room.college })]
 						})
 					]
 				}),
@@ -189,32 +185,21 @@ function PropertyCard({ room }) {
 					href: room.mapLink,
 					target: "_blank",
 					rel: "noopener noreferrer",
-					className: "mt-2 inline-flex items-center gap-1.5 rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20 transition-colors",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ExternalLink, { className: "size-3" }), "View on Google Maps"]
-				}),
-				room.features && room.features.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-					className: "mt-3 flex flex-wrap gap-1.5",
-					children: room.features.map((f) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-						className: "rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground uppercase tracking-wide",
-						children: f
-					}, f))
-				}),
-				room.note && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-					className: "mt-2 text-[11px] text-muted-foreground italic",
-					children: room.note
+					className: "mt-3 inline-flex items-center gap-1.5 rounded-lg bg-primary/10 px-4 py-2 text-sm font-medium text-primary hover:bg-primary/20 transition-colors",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ExternalLink, { className: "size-3.5" }), "View on Google Maps"]
 				})
 			]
 		}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 			className: "border-t border-border",
 			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-				className: "flex w-full items-center justify-between px-5 py-3 text-sm font-medium hover:bg-muted/40 transition-colors",
+				className: "flex w-full items-center justify-between px-6 py-4 text-base font-semibold hover:bg-muted/40 transition-colors",
 				onClick: () => setExpanded((v) => !v),
 				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
 					"Students (",
 					students.length,
 					")",
 					capacity !== null ? ` / ${capacity} capacity` : ""
-				] }), expanded ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronUp, { className: "size-4 text-muted-foreground" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronDown, { className: "size-4 text-muted-foreground" })]
+				] }), expanded ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronUp, { className: "size-5 text-muted-foreground" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronDown, { className: "size-5 text-muted-foreground" })]
 			}), expanded && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 				className: "px-5 pb-5",
 				children: students.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
@@ -381,18 +366,19 @@ function PropertiesPage() {
 	const { data: allRooms = [], isLoading } = useRooms();
 	const { data: admissions = [] } = useAdmissions();
 	const isGlobalAdmin = useIsGlobalAdmin();
-	const { user, collegeFilter } = useAuth();
+	const { collegeFilter } = useAuth();
+	const { data: userProfile } = useUserProfile();
 	const [search, setSearch] = (0, import_react.useState)("");
 	const [genderFilter, setGenderFilter] = (0, import_react.useState)("all");
 	const [activeFilter, setActiveFilter] = (0, import_react.useState)("all");
 	const verifiedRooms = (0, import_react.useMemo)(() => allRooms.filter((r) => r.verificationStatus === "verified" && r.paymentStatus === "paid"), [allRooms]);
 	const adminCollege = (0, import_react.useMemo)(() => {
 		if (isGlobalAdmin) return collegeFilter.college ?? "";
-		return user?.displayName ?? "";
+		return userProfile?.collegeName ?? "";
 	}, [
 		isGlobalAdmin,
 		collegeFilter.college,
-		user?.displayName
+		userProfile?.collegeName
 	]);
 	const rooms = (0, import_react.useMemo)(() => {
 		if (!adminCollege) return verifiedRooms;
@@ -514,17 +500,17 @@ function PropertiesPage() {
 							setGenderFilter(tab.key);
 							setActiveFilter("all");
 						},
-						className: `flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold transition-all shadow-sm
+						className: `flex items-center gap-2 rounded-xl border px-5 py-3 text-base font-semibold transition-all shadow-sm
                 ${tab.cls}
                 ${genderFilter === tab.key ? "shadow-md scale-105" : "bg-card text-foreground hover:bg-muted"}`,
 						children: [
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-								className: "text-base",
+								className: "text-lg",
 								children: tab.emoji
 							}),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: tab.label }),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-								className: `rounded-full px-1.5 py-0.5 text-[11px] font-bold
+								className: `rounded-full px-2 py-0.5 text-xs font-bold
                 ${genderFilter === tab.key ? "bg-white/25" : "bg-muted text-muted-foreground"}`,
 								children: genderCounts[tab.key]
 							})
@@ -560,27 +546,23 @@ function PropertiesPage() {
 							count: statusTypeCounts.occupied,
 							emoji: "🟡",
 							cls: "data-[active=true]:bg-amber-500 data-[active=true]:text-white"
-						},
-						...statusTypeCounts.types.map((t) => ({
-							key: `type:${t}`,
-							label: t,
-							count: genderFiltered.filter((r) => r.roomType === t).length,
-							emoji: "🛏️",
-							cls: "data-[active=true]:bg-secondary data-[active=true]:text-secondary-foreground"
-						}))
+						}
 					].map((card) => {
 						const isActive = activeFilter === card.key;
 						return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 							"data-active": isActive,
 							onClick: () => setActiveFilter(isActive ? "all" : card.key),
-							className: `flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium transition-all shadow-sm
+							className: `flex items-center gap-2 rounded-xl border px-5 py-3 text-base font-medium transition-all shadow-sm
                   ${card.cls}
                   ${isActive ? "border-transparent shadow-md scale-105" : "border-border bg-card text-foreground hover:bg-muted"}`,
 							children: [
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: card.emoji }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "text-lg",
+									children: card.emoji
+								}),
 								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: card.label }),
 								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-									className: `rounded-full px-1.5 py-0.5 text-[11px] font-bold
+									className: `rounded-full px-2 py-0.5 text-xs font-bold
                   ${isActive ? "bg-white/25" : "bg-muted text-muted-foreground"}`,
 									children: card.count
 								})

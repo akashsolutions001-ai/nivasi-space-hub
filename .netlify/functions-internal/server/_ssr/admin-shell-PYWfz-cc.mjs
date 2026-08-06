@@ -11,7 +11,7 @@ import { C as LogOut, E as LayoutDashboard, F as ChevronDown, I as Check, L as B
 import { n as clsx, t as cva } from "../_libs/class-variance-authority+clsx.mjs";
 import { t as twMerge } from "../_libs/tailwind-merge.mjs";
 import { a as SelectItemIndicator, c as SelectPortal, d as SelectSeparator$1, f as SelectTrigger$1, i as SelectItem$1, l as SelectScrollDownButton$1, m as SelectViewport, n as SelectContent$1, o as SelectItemText, p as SelectValue$1, r as SelectIcon, s as SelectLabel$1, t as Select$1, u as SelectScrollUpButton$1 } from "../_libs/@radix-ui/react-select+[...].mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/admin-shell-C6yF8tTs.js
+//#region node_modules/.nitro/vite/services/ssr/assets/admin-shell-PYWfz-cc.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 function cn(...inputs) {
@@ -505,6 +505,24 @@ async function fetchRooms() {
 		return [];
 	}
 }
+async function fetchUserProfile(uid) {
+	try {
+		const snap = await getDoc(doc(getDb(), "users", uid));
+		if (!snap.exists()) return null;
+		const d = snap.data();
+		return {
+			uid: d.uid ?? uid,
+			email: d.email ?? "",
+			displayName: d.displayName ?? "",
+			role: d.role ?? "admin",
+			collegeId: d.collegeId ?? "",
+			collegeName: d.collegeName ?? ""
+		};
+	} catch (error) {
+		console.error("[firestore] fetchUserProfile", error);
+		return null;
+	}
+}
 /**
 * Creates a new admin user in Firebase Auth and saves their profile to
 * the /users collection so they appear in the admin panel.
@@ -574,6 +592,14 @@ function useCities() {
 		queryKey: ["cities"],
 		queryFn: fetchCities,
 		enabled: isFirebaseConfigured
+	});
+}
+function useUserProfile() {
+	const { user } = useAuth();
+	return useQuery({
+		queryKey: ["userProfile", user?.uid],
+		queryFn: () => fetchUserProfile(user.uid),
+		enabled: isFirebaseConfigured && !!user?.uid
 	});
 }
 function computeStats(rows) {
@@ -1064,4 +1090,4 @@ function SetupNotice() {
 	});
 }
 //#endregion
-export { setPackageActive as A, deleteAdmission as C, savePackage as D, generateAdmissionId as E, useColleges as F, usePackages as I, useProperties as L, updateCollege as M, useAdmissions as N, setCityActive as O, useCities as P, useRooms as R, createAdmission as S, filterByPeriod as T, addCollege as _, DialogFooter as a, computeStats as b, NivasiLogo as c, SelectItem as d, SelectTrigger as f, addCity as g, Skeleton as h, DialogContent as i, updateAdmission as j, setCollegeActive as k, Select as l, SetupNotice as m, Button as n, DialogHeader as o, SelectValue as p, Dialog as r, DialogTitle as s, AdminShell as t, SelectContent as u, buttonVariants as v, fetchAdmission as w, createAdminUser as x, cn as y };
+export { setPackageActive as A, deleteAdmission as C, savePackage as D, generateAdmissionId as E, useColleges as F, usePackages as I, useProperties as L, updateCollege as M, useAdmissions as N, setCityActive as O, useCities as P, useRooms as R, createAdmission as S, filterByPeriod as T, addCollege as _, DialogFooter as a, computeStats as b, NivasiLogo as c, SelectItem as d, SelectTrigger as f, addCity as g, Skeleton as h, DialogContent as i, updateAdmission as j, setCollegeActive as k, Select as l, SetupNotice as m, Button as n, DialogHeader as o, SelectValue as p, Dialog as r, DialogTitle as s, AdminShell as t, SelectContent as u, buttonVariants as v, fetchAdmission as w, createAdminUser as x, cn as y, useUserProfile as z };

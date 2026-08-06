@@ -1,4 +1,4 @@
-//#region node_modules/.nitro/vite/services/ssr/assets/_tanstack-start-manifest_v-1j0M7kBf.js
+//#region node_modules/.nitro/vite/services/ssr/assets/_tanstack-start-manifest_v-CO4DBsRA.js
 var tsrStartManifest = () => ({ routes: {
 	__root__: {
 		filePath: "D:/BUSINEES/Nivasi/Admission Mangement System/nivasi-space-hub-main/src/routes/__root.tsx",
@@ -15,19 +15,19 @@ var tsrStartManifest = () => ({ routes: {
 			"/admin/admissions/$admissionId/"
 		],
 		preloads: [
-			"/assets/index-C3RkYOCy.js",
+			"/assets/index-CDoiuiKq.js",
 			"/assets/rolldown-runtime-hePW80VL.js",
 			"/assets/auth-B2InOkpw.js",
 			"/assets/lazyRouteComponent-Co06A18C.js",
 			"/assets/dist-D3zs-YL8.js",
 			"/assets/preload-helper-Czpn1I53.js",
-			"/assets/admin.admissions._admissionId.index-JxT0weYM.js",
-			"/assets/admin.admissions._admissionId.edit-Caq-G9AH.js"
+			"/assets/admin.admissions._admissionId.index-CMBqnluG.js",
+			"/assets/admin.admissions._admissionId.edit-DF6Pt8e8.js"
 		],
 		scripts: [{ attrs: {
 			type: "module",
 			async: !0,
-			src: "/assets/index-C3RkYOCy.js"
+			src: "/assets/index-CDoiuiKq.js"
 		} }]
 	},
 	"/": {
@@ -39,53 +39,53 @@ var tsrStartManifest = () => ({ routes: {
 		filePath: "D:/BUSINEES/Nivasi/Admission Mangement System/nivasi-space-hub-main/src/routes/admin.dashboard.tsx",
 		children: void 0,
 		preloads: [
-			"/assets/admin.dashboard-Co-k-nea.js",
-			"/assets/admin-shell-ChSCuSKM.js",
-			"/assets/badges-BUe-9CW9.js",
-			"/assets/eye-BSc4WwBi.js",
-			"/assets/plus-Dpy3U5CT.js",
+			"/assets/admin.dashboard-8UFVj_66.js",
+			"/assets/admin-shell-D7UeWZ9j.js",
+			"/assets/badges-C1Icn9fy.js",
+			"/assets/eye-MEEyq-bO.js",
+			"/assets/plus-CyX2_40z.js",
 			"/assets/format-BxGA9ukI.js",
-			"/assets/stat-card-48tcnW8X.js"
+			"/assets/stat-card-BHDxdUNN.js"
 		]
 	},
 	"/admin/login": {
 		filePath: "D:/BUSINEES/Nivasi/Admission Mangement System/nivasi-space-hub-main/src/routes/admin.login.tsx",
 		children: void 0,
 		preloads: [
-			"/assets/admin.login-8jfJTk5P.js",
-			"/assets/admin-shell-ChSCuSKM.js",
-			"/assets/loader-circle-BnrnnbLr.js",
-			"/assets/input-BnWIgWTU.js",
-			"/assets/label-Bu8pH4jh.js"
+			"/assets/admin.login-DEbu9qjj.js",
+			"/assets/admin-shell-D7UeWZ9j.js",
+			"/assets/loader-circle-FgIaS8pb.js",
+			"/assets/input-CaEWJXvt.js",
+			"/assets/label-CR_87cAj.js"
 		]
 	},
 	"/admin/packages": {
 		filePath: "D:/BUSINEES/Nivasi/Admission Mangement System/nivasi-space-hub-main/src/routes/admin.packages.tsx",
 		children: void 0,
 		preloads: [
-			"/assets/admin.packages-B9LiISWc.js",
-			"/assets/admin-shell-ChSCuSKM.js",
-			"/assets/loader-circle-BnrnnbLr.js",
-			"/assets/switch-Bs9MLsmL.js",
-			"/assets/pencil-B9PVlRKp.js",
-			"/assets/plus-Dpy3U5CT.js",
-			"/assets/input-BnWIgWTU.js",
-			"/assets/label-Bu8pH4jh.js",
-			"/assets/types-bahP1iFL.js",
+			"/assets/admin.packages-f2nmayPa.js",
+			"/assets/admin-shell-D7UeWZ9j.js",
+			"/assets/loader-circle-FgIaS8pb.js",
+			"/assets/switch-BQoIHAxq.js",
+			"/assets/pencil-BdsUXzaQ.js",
+			"/assets/plus-CyX2_40z.js",
+			"/assets/input-CaEWJXvt.js",
+			"/assets/label-CR_87cAj.js",
+			"/assets/types-DjldkmyN.js",
 			"/assets/format-BxGA9ukI.js",
-			"/assets/stat-card-48tcnW8X.js"
+			"/assets/stat-card-BHDxdUNN.js"
 		]
 	},
 	"/admin/properties": {
 		filePath: "D:/BUSINEES/Nivasi/Admission Mangement System/nivasi-space-hub-main/src/routes/admin.properties.tsx",
 		children: void 0,
 		preloads: [
-			"/assets/admin.properties-DzDKc4vy.js",
-			"/assets/admin-shell-ChSCuSKM.js",
-			"/assets/badges-BUe-9CW9.js",
-			"/assets/map-pin-BkJpJpZ2.js",
-			"/assets/user-C00M59ej.js",
-			"/assets/input-BnWIgWTU.js",
+			"/assets/admin.properties-D5yx2Pgh.js",
+			"/assets/admin-shell-D7UeWZ9j.js",
+			"/assets/badges-C1Icn9fy.js",
+			"/assets/map-pin-B3VdyjMj.js",
+			"/assets/user-Dbtk3eI8.js",
+			"/assets/input-CaEWJXvt.js",
 			"/assets/format-BxGA9ukI.js"
 		]
 	},
@@ -93,61 +93,61 @@ var tsrStartManifest = () => ({ routes: {
 		filePath: "D:/BUSINEES/Nivasi/Admission Mangement System/nivasi-space-hub-main/src/routes/admin.settings.tsx",
 		children: void 0,
 		preloads: [
-			"/assets/admin.settings-DmUHCjLB.js",
-			"/assets/admin-shell-ChSCuSKM.js",
-			"/assets/loader-circle-BnrnnbLr.js",
-			"/assets/switch-Bs9MLsmL.js",
-			"/assets/map-pin-BkJpJpZ2.js",
-			"/assets/plus-Dpy3U5CT.js",
-			"/assets/input-BnWIgWTU.js"
+			"/assets/admin.settings-BU5slvko.js",
+			"/assets/admin-shell-D7UeWZ9j.js",
+			"/assets/loader-circle-FgIaS8pb.js",
+			"/assets/switch-BQoIHAxq.js",
+			"/assets/map-pin-B3VdyjMj.js",
+			"/assets/plus-CyX2_40z.js",
+			"/assets/input-CaEWJXvt.js"
 		]
 	},
 	"/admin/admissions/new": {
 		filePath: "D:/BUSINEES/Nivasi/Admission Mangement System/nivasi-space-hub-main/src/routes/admin.admissions.new.tsx",
 		children: void 0,
 		preloads: [
-			"/assets/admin.admissions.new-C8_i4pRU.js",
-			"/assets/admin-shell-ChSCuSKM.js",
-			"/assets/admission-form-CMyFgbEX.js"
+			"/assets/admin.admissions.new-Dic1uye9.js",
+			"/assets/admin-shell-D7UeWZ9j.js",
+			"/assets/admission-form-CPzjwpuz.js"
 		]
 	},
 	"/admin/admissions/": {
 		filePath: "D:/BUSINEES/Nivasi/Admission Mangement System/nivasi-space-hub-main/src/routes/admin.admissions.index.tsx",
 		children: void 0,
 		preloads: [
-			"/assets/admin.admissions.index-DLiXl0iu.js",
-			"/assets/admin-shell-ChSCuSKM.js",
-			"/assets/badges-BUe-9CW9.js",
-			"/assets/plus-Dpy3U5CT.js",
-			"/assets/search-Co9dvK1A.js",
-			"/assets/input-BnWIgWTU.js",
+			"/assets/admin.admissions.index-GccxcMuY.js",
+			"/assets/admin-shell-D7UeWZ9j.js",
+			"/assets/badges-C1Icn9fy.js",
+			"/assets/plus-CyX2_40z.js",
+			"/assets/search-DHVwr-bA.js",
+			"/assets/input-CaEWJXvt.js",
 			"/assets/format-BxGA9ukI.js",
-			"/assets/stat-card-48tcnW8X.js"
+			"/assets/stat-card-BHDxdUNN.js"
 		]
 	},
 	"/admin/admissions/$admissionId/edit": {
 		filePath: "D:/BUSINEES/Nivasi/Admission Mangement System/nivasi-space-hub-main/src/routes/admin.admissions.$admissionId.edit.tsx",
 		children: void 0,
 		preloads: [
-			"/assets/admin.admissions._admissionId.edit-p2HvkxKZ.js",
-			"/assets/admin-shell-ChSCuSKM.js",
-			"/assets/admission-form-CMyFgbEX.js",
-			"/assets/stat-card-48tcnW8X.js"
+			"/assets/admin.admissions._admissionId.edit-kbtlirkF.js",
+			"/assets/admin-shell-D7UeWZ9j.js",
+			"/assets/admission-form-CPzjwpuz.js",
+			"/assets/stat-card-BHDxdUNN.js"
 		]
 	},
 	"/admin/admissions/$admissionId/": {
 		filePath: "D:/BUSINEES/Nivasi/Admission Mangement System/nivasi-space-hub-main/src/routes/admin.admissions.$admissionId.index.tsx",
 		children: void 0,
 		preloads: [
-			"/assets/admin.admissions._admissionId.index-B8zQy9j6.js",
-			"/assets/admin-shell-ChSCuSKM.js",
-			"/assets/badges-BUe-9CW9.js",
-			"/assets/eye-BSc4WwBi.js",
-			"/assets/pencil-B9PVlRKp.js",
-			"/assets/input-BnWIgWTU.js",
-			"/assets/label-Bu8pH4jh.js",
+			"/assets/admin.admissions._admissionId.index-ChcJu4yG.js",
+			"/assets/admin-shell-D7UeWZ9j.js",
+			"/assets/badges-C1Icn9fy.js",
+			"/assets/eye-MEEyq-bO.js",
+			"/assets/pencil-BdsUXzaQ.js",
+			"/assets/input-CaEWJXvt.js",
+			"/assets/label-CR_87cAj.js",
 			"/assets/format-BxGA9ukI.js",
-			"/assets/stat-card-48tcnW8X.js"
+			"/assets/stat-card-BHDxdUNN.js"
 		]
 	}
 } });

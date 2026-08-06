@@ -17,7 +17,7 @@ import { PaymentBadge } from "@/components/nivasi/badges";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { useAdmissions, useRooms } from "@/lib/hooks";
+import { useAdmissions, useRooms, useUserProfile } from "@/lib/hooks";
 import { useAuth, useIsGlobalAdmin } from "@/lib/auth";
 import { formatDate } from "@/lib/format";
 import type { Room } from "@/lib/db";
@@ -78,22 +78,22 @@ function PropertyCard({ room }: { room: Room }) {
   return (
     <div className="rounded-2xl border border-border bg-card shadow-soft overflow-hidden">
       {/* Header */}
-      <div className="p-4">
+      <div className="p-6">
         {/* Top row: title + badges */}
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <Building2 className="size-4" />
+        <div className="flex items-center gap-4 min-w-0">
+          <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+            <Building2 className="size-6" />
           </div>
           <div className="min-w-0">
-            <h3 className="font-display font-bold leading-tight">{room.title}</h3>
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1">
+            <h3 className="font-display text-xl font-bold leading-tight">{room.title}</h3>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1.5">
               {room.roomType && (
-                <Badge variant="secondary" className="text-[10px] h-5">{room.roomType}</Badge>
+                <Badge variant="secondary" className="text-xs h-6 px-2">{room.roomType}</Badge>
               )}
               {gl && (
                 <Badge
                   variant="outline"
-                  className={`text-[10px] h-5 font-semibold
+                  className={`text-xs h-6 px-2 font-semibold
                     ${gl === "Boys"  ? "border-blue-300 text-blue-700 bg-blue-50"  : ""}
                     ${gl === "Girls" ? "border-pink-300 text-pink-700 bg-pink-50"  : ""}
                     ${gl === "Co-ed" ? "border-purple-300 text-purple-700 bg-purple-50" : ""}`}
@@ -102,7 +102,7 @@ function PropertyCard({ room }: { room: Room }) {
                 </Badge>
               )}
               {room.rent ? (
-                <span className="text-[11px] font-medium text-primary">
+                <span className="text-sm font-semibold text-primary">
                   ₹{room.rent.toLocaleString("en-IN")}/mo
                 </span>
               ) : null}
@@ -110,35 +110,35 @@ function PropertyCard({ room }: { room: Room }) {
           </div>
         </div>
 
-        {/* 3 stat boxes — full width grid */}
+        {/* 3 stat boxes */}
         {(() => {
           const needed    = capacity !== null ? Math.max(0, capacity - occupied) : null;
           const available = capacity !== null ? Math.max(0, capacity - occupied) : null;
           const full      = capacity !== null && occupied >= capacity;
           return (
-            <div className="mt-3 grid grid-cols-3 gap-3">
-              <div className="rounded-xl border border-amber-200 bg-amber-50 py-3 text-center">
-                <p className="text-3xl font-black text-amber-600 leading-none">{occupied}</p>
-                <p className="mt-1 text-[11px] font-semibold text-amber-700/80 uppercase tracking-wide">Filled</p>
+            <div className="mt-4 grid grid-cols-3 gap-4">
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 py-4 text-center">
+                <p className="text-4xl font-black text-amber-600 leading-none">{occupied}</p>
+                <p className="mt-1.5 text-xs font-bold text-amber-700/80 uppercase tracking-wider">Filled</p>
               </div>
-              <div className={`rounded-xl border py-3 text-center
+              <div className={`rounded-2xl border py-4 text-center
                 ${capacity === null ? "border-border bg-muted/40" : full ? "border-destructive/30 bg-destructive/10" : "border-emerald-200 bg-emerald-50"}`}>
-                <p className={`text-3xl font-black leading-none
+                <p className={`text-4xl font-black leading-none
                   ${capacity === null ? "text-muted-foreground" : full ? "text-destructive" : "text-emerald-600"}`}>
                   {capacity !== null ? available : "—"}
                 </p>
-                <p className={`mt-1 text-[11px] font-semibold uppercase tracking-wide
+                <p className={`mt-1.5 text-xs font-bold uppercase tracking-wider
                   ${capacity === null ? "text-muted-foreground" : full ? "text-destructive/70" : "text-emerald-700/80"}`}>
                   {full ? "Full" : "Vacant"}
                 </p>
               </div>
-              <div className={`rounded-xl border py-3 text-center
+              <div className={`rounded-2xl border py-4 text-center
                 ${needed === null ? "border-border bg-muted/40" : needed === 0 ? "border-destructive/30 bg-destructive/10" : "border-blue-200 bg-blue-50"}`}>
-                <p className={`text-3xl font-black leading-none
+                <p className={`text-4xl font-black leading-none
                   ${needed === null ? "text-muted-foreground" : needed === 0 ? "text-destructive" : "text-blue-600"}`}>
                   {needed ?? "—"}
                 </p>
-                <p className={`mt-1 text-[11px] font-semibold uppercase tracking-wide
+                <p className={`mt-1.5 text-xs font-bold uppercase tracking-wider
                   ${needed === null ? "text-muted-foreground" : needed === 0 ? "text-destructive/70" : "text-blue-700/80"}`}>
                   Need More
                 </p>
@@ -148,29 +148,23 @@ function PropertyCard({ room }: { room: Room }) {
         })()}
 
         {/* Location & contact */}
-        <div className="mt-3 grid gap-1">
+        <div className="mt-4 grid gap-2">
           {(room.address || room.city) && (
-            <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
-              <MapPin className="size-3.5 mt-0.5 shrink-0 text-primary" />
+            <div className="flex items-start gap-2 text-base font-semibold text-foreground">
+              <MapPin className="size-5 mt-0.5 shrink-0 text-primary" />
               <span>{[room.address, room.city].filter(Boolean).join(", ")}</span>
             </div>
           )}
           {room.location && (
-            <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
-              <MapPin className="size-3.5 mt-0.5 shrink-0" />
+            <div className="flex items-start gap-2 text-base font-semibold text-foreground">
+              <MapPin className="size-5 mt-0.5 shrink-0" />
               <span>{room.location}</span>
             </div>
           )}
           {room.contact && (
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Phone className="size-3.5 shrink-0 text-primary" />
-              <a href={`tel:${room.contact}`} className="hover:underline">{room.contact}</a>
-            </div>
-          )}
-          {room.college && (
-            <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
-              <User className="size-3.5 mt-0.5 shrink-0" />
-              <span>{room.college}</span>
+            <div className="flex items-center gap-2 text-base font-semibold text-foreground">
+              <Phone className="size-5 shrink-0 text-primary" />
+              <a href={`tel:${room.contact}`} className="hover:underline text-primary">{room.contact}</a>
             </div>
           )}
         </div>
@@ -181,43 +175,24 @@ function PropertyCard({ room }: { room: Room }) {
             href={room.mapLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20 transition-colors"
+            className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-primary/10 px-4 py-2 text-sm font-medium text-primary hover:bg-primary/20 transition-colors"
           >
-            <ExternalLink className="size-3" />
+            <ExternalLink className="size-3.5" />
             View on Google Maps
           </a>
-        )}
-
-        {/* Features */}
-        {room.features && room.features.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {room.features.map((f) => (
-              <span
-                key={f}
-                className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground uppercase tracking-wide"
-              >
-                {f}
-              </span>
-            ))}
-          </div>
-        )}
-
-        {/* Note */}
-        {room.note && (
-          <p className="mt-2 text-[11px] text-muted-foreground italic">{room.note}</p>
         )}
       </div>
 
       {/* Student list toggle */}
       <div className="border-t border-border">
         <button
-          className="flex w-full items-center justify-between px-5 py-3 text-sm font-medium hover:bg-muted/40 transition-colors"
+          className="flex w-full items-center justify-between px-6 py-4 text-base font-semibold hover:bg-muted/40 transition-colors"
           onClick={() => setExpanded((v) => !v)}
         >
           <span>Students ({students.length}){capacity !== null ? ` / ${capacity} capacity` : ""}</span>
           {expanded
-            ? <ChevronUp className="size-4 text-muted-foreground" />
-            : <ChevronDown className="size-4 text-muted-foreground" />}
+            ? <ChevronUp className="size-5 text-muted-foreground" />
+            : <ChevronDown className="size-5 text-muted-foreground" />}
         </button>
 
         {expanded && (
@@ -317,7 +292,8 @@ function PropertiesPage() {
   const { data: allRooms = [], isLoading } = useRooms();
   const { data: admissions = [] } = useAdmissions();
   const isGlobalAdmin = useIsGlobalAdmin();
-  const { user, collegeFilter } = useAuth();
+  const { collegeFilter } = useAuth();
+  const { data: userProfile } = useUserProfile();
   const [search, setSearch] = useState("");
   const [genderFilter, setGenderFilter] = useState<"all" | "boys" | "girls" | "coed">("all");
   const [activeFilter, setActiveFilter] = useState<string>("all");
@@ -331,10 +307,12 @@ function PropertiesPage() {
   );
 
   // ── Step 2: college-scoped rooms ──────────────────────────────────────────
+  // Global admin → collegeFilter.college (from popup)
+  // Regular admin → collegeName from their Firestore /users profile
   const adminCollege = useMemo(() => {
     if (isGlobalAdmin) return collegeFilter.college ?? "";
-    return user?.displayName ?? "";
-  }, [isGlobalAdmin, collegeFilter.college, user?.displayName]);
+    return userProfile?.collegeName ?? "";
+  }, [isGlobalAdmin, collegeFilter.college, userProfile?.collegeName]);
 
   const rooms = useMemo(() => {
     if (!adminCollege) return verifiedRooms;
@@ -446,13 +424,13 @@ function PropertiesPage() {
               key={tab.key}
               data-active={genderFilter === tab.key}
               onClick={() => { setGenderFilter(tab.key); setActiveFilter("all"); }}
-              className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold transition-all shadow-sm
+              className={`flex items-center gap-2 rounded-xl border px-5 py-3 text-base font-semibold transition-all shadow-sm
                 ${tab.cls}
                 ${genderFilter === tab.key ? "shadow-md scale-105" : "bg-card text-foreground hover:bg-muted"}`}
             >
-              <span className="text-base">{tab.emoji}</span>
+              <span className="text-lg">{tab.emoji}</span>
               <span>{tab.label}</span>
-              <span className={`rounded-full px-1.5 py-0.5 text-[11px] font-bold
+              <span className={`rounded-full px-2 py-0.5 text-xs font-bold
                 ${genderFilter === tab.key ? "bg-white/25" : "bg-muted text-muted-foreground"}`}>
                 {genderCounts[tab.key]}
               </span>
@@ -469,12 +447,6 @@ function PropertiesPage() {
             { key: "all",      label: "All",      count: genderFiltered.length, emoji: "🔍", cls: "data-[active=true]:bg-primary data-[active=true]:text-primary-foreground" },
             { key: "vacant",   label: "Vacant",   count: statusTypeCounts.vacant,   emoji: "🟢", cls: "data-[active=true]:bg-emerald-500 data-[active=true]:text-white" },
             { key: "occupied", label: "Occupied", count: statusTypeCounts.occupied, emoji: "🟡", cls: "data-[active=true]:bg-amber-500 data-[active=true]:text-white" },
-            ...statusTypeCounts.types.map((t) => ({
-              key: `type:${t}`, label: t,
-              count: genderFiltered.filter((r) => r.roomType === t).length,
-              emoji: "🛏️",
-              cls: "data-[active=true]:bg-secondary data-[active=true]:text-secondary-foreground",
-            })),
           ].map((card) => {
             const isActive = activeFilter === card.key;
             return (
@@ -482,13 +454,13 @@ function PropertiesPage() {
                 key={card.key}
                 data-active={isActive}
                 onClick={() => setActiveFilter(isActive ? "all" : card.key)}
-                className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium transition-all shadow-sm
+                className={`flex items-center gap-2 rounded-xl border px-5 py-3 text-base font-medium transition-all shadow-sm
                   ${card.cls}
                   ${isActive ? "border-transparent shadow-md scale-105" : "border-border bg-card text-foreground hover:bg-muted"}`}
               >
-                <span>{card.emoji}</span>
+                <span className="text-lg">{card.emoji}</span>
                 <span>{card.label}</span>
-                <span className={`rounded-full px-1.5 py-0.5 text-[11px] font-bold
+                <span className={`rounded-full px-2 py-0.5 text-xs font-bold
                   ${isActive ? "bg-white/25" : "bg-muted text-muted-foreground"}`}>
                   {card.count}
                 </span>

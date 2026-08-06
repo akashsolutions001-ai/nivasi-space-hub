@@ -4,10 +4,10 @@ import { F as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+
 import { o as useAuth } from "./auth-DbpSDgTm.mjs";
 import { _ as useNavigate } from "../_libs/@tanstack/react-router+[...].mjs";
 import { T as LoaderCircle } from "../_libs/lucide-react.mjs";
-import { c as NivasiLogo, m as SetupNotice, n as Button } from "./admin-shell-C6yF8tTs.mjs";
-import { t as Input } from "./input-DzEdIhBa.mjs";
-import { t as Label } from "./label-_GPBDCRi.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/admin.login-Dl0fvXBL.js
+import { c as NivasiLogo, m as SetupNotice, n as Button } from "./admin-shell-PYWfz-cc.mjs";
+import { t as Input } from "./input-DFS5fhWB.mjs";
+import { t as Label } from "./label-0ph1R82A.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/admin.login-BSCH1a16.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 function LoginPage() {

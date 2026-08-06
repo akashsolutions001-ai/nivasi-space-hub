@@ -452,7 +452,35 @@ export async function setPropertyActive(id: string, active: boolean): Promise<vo
   await updateDoc(doc(getDb(), "properties", id), { active, updatedAt: serverTimestamp() });
 }
 
-/* --------------------------------- Admin Users ---------------------------- */
+/* --------------------------------- Current User Profile ------------------ */
+
+export interface UserProfile {
+  uid: string;
+  email: string;
+  displayName: string;
+  role: string;
+  collegeId?: string;
+  collegeName?: string;
+}
+
+export async function fetchUserProfile(uid: string): Promise<UserProfile | null> {
+  try {
+    const snap = await getDoc(doc(getDb(), "users", uid));
+    if (!snap.exists()) return null;
+    const d: any = snap.data();
+    return {
+      uid: d.uid ?? uid,
+      email: d.email ?? "",
+      displayName: d.displayName ?? "",
+      role: d.role ?? "admin",
+      collegeId: d.collegeId ?? "",
+      collegeName: d.collegeName ?? "",
+    };
+  } catch (error) {
+    console.error("[firestore] fetchUserProfile", error);
+    return null;
+  }
+}
 
 export interface AdminUserInput {
   email: string;
