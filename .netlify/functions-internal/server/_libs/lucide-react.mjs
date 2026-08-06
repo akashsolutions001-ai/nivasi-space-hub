@@ -169,6 +169,34 @@ var Briefcase = createLucideIcon("briefcase", [["path", {
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var Building2 = createLucideIcon("building-2", [
+	["path", {
+		d: "M10 12h4",
+		key: "a56b0p"
+	}],
+	["path", {
+		d: "M10 8h4",
+		key: "1sr2af"
+	}],
+	["path", {
+		d: "M14 21v-3a2 2 0 0 0-4 0v3",
+		key: "1rgiei"
+	}],
+	["path", {
+		d: "M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2",
+		key: "secmi2"
+	}],
+	["path", {
+		d: "M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16",
+		key: "16ra0t"
+	}]
+]);
+/**
+* @license lucide-react v0.575.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var Check = createLucideIcon("check", [["path", {
 	d: "M20 6 9 17l-5-5",
 	key: "1gmf2c"
@@ -224,6 +252,26 @@ var Download = createLucideIcon("download", [
 	["path", {
 		d: "m7 10 5 5 5-5",
 		key: "brsn70"
+	}]
+]);
+/**
+* @license lucide-react v0.575.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var ExternalLink = createLucideIcon("external-link", [
+	["path", {
+		d: "M15 3h6v6",
+		key: "1q9fwt"
+	}],
+	["path", {
+		d: "M10 14 21 3",
+		key: "gplh6r"
+	}],
+	["path", {
+		d: "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6",
+		key: "a6xqqp"
 	}]
 ]);
 /**
@@ -472,6 +520,16 @@ var Pencil = createLucideIcon("pencil", [["path", {
 }], ["path", {
 	d: "m15 5 4 4",
 	key: "1mk7zo"
+}]]);
+/**
+* @license lucide-react v0.575.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var Phone = createLucideIcon("phone", [["path", {
+	d: "M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384",
+	key: "9njp5v"
 }]]);
 /**
 * @license lucide-react v0.575.0 - ISC
@@ -825,4 +883,4 @@ var X = createLucideIcon("x", [["path", {
 	key: "d8bk6v"
 }]]);
 //#endregion
-export { Download as A, Lock as C, GraduationCap as D, IndianRupee as E, Briefcase as F, BedDouble as I, ArrowLeft as L, ChevronUp as M, ChevronDown as N, Eye as O, Check as P, LogOut as S, LayoutDashboard as T, Plus as _, Users as a, Menu as b, TriangleAlert as c, Stethoscope as d, ShieldAlert as f, RefreshCw as g, Search as h, UtensilsCrossed as i, ChevronsUpDown as j, EyeOff as k, TrendingUp as l, Settings as m, Wrench as n, User as o, Share2 as p, Wallet as r, UserPlus as s, X as t, Trash2 as u, Pencil as v, LoaderCircle as w, MapPin as x, Package as y };
+export { EyeOff as A, ArrowLeft as B, LogOut as C, IndianRupee as D, LayoutDashboard as E, ChevronDown as F, Check as I, Building2 as L, Download as M, ChevronsUpDown as N, GraduationCap as O, ChevronUp as P, Briefcase as R, MapPin as S, LoaderCircle as T, Plus as _, Users as a, Package as b, TriangleAlert as c, Stethoscope as d, ShieldAlert as f, RefreshCw as g, Search as h, UtensilsCrossed as i, ExternalLink as j, Eye as k, TrendingUp as l, Settings as m, Wrench as n, User as o, Share2 as p, Wallet as r, UserPlus as s, X as t, Trash2 as u, Phone as v, Lock as w, Menu as x, Pencil as y, BedDouble as z };

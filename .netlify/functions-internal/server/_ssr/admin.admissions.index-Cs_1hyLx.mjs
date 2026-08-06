@@ -3,13 +3,13 @@ import { u as require_react } from "../_libs/@floating-ui/react-dom+[...].mjs";
 import { F as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
 import { o as useAuth, s as useIsGlobalAdmin } from "./auth-DbpSDgTm.mjs";
 import { _ as useNavigate, g as Link } from "../_libs/@tanstack/react-router+[...].mjs";
-import { A as Download, _ as Plus, h as Search } from "../_libs/lucide-react.mjs";
-import { N as useAdmissions, d as SelectItem, f as SelectTrigger, h as Skeleton, l as Select, n as Button, p as SelectValue, t as AdminShell, u as SelectContent } from "./admin-shell-DbLl1eJ-.mjs";
-import { t as Input } from "./input-BRq9ZYTb.mjs";
+import { M as Download, _ as Plus, h as Search } from "../_libs/lucide-react.mjs";
+import { N as useAdmissions, d as SelectItem, f as SelectTrigger, h as Skeleton, l as Select, n as Button, p as SelectValue, t as AdminShell, u as SelectContent } from "./admin-shell-C6yF8tTs.mjs";
+import { t as Input } from "./input-DzEdIhBa.mjs";
 import { n as formatDate, r as formatINR } from "./format-Bg5w10xg.mjs";
-import { t as EmptyState } from "./stat-card-DO4KCARC.mjs";
-import { i as StatusPill, n as PaymentBadge, r as ProfileAvatar, t as MattressBadge } from "./badges-DujbgiUt.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/admin.admissions.index-BC-ETLAA.js
+import { t as EmptyState } from "./stat-card-DyHAKPtE.mjs";
+import { i as StatusPill, n as PaymentBadge, r as ProfileAvatar, t as MattressBadge } from "./badges-BBZdxcC1.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/admin.admissions.index-Cs_1hyLx.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 function exportToExcel(data) {
@@ -177,6 +177,10 @@ function AdmissionsListPage() {
 					className: "bg-muted/60 text-left text-[11px] font-semibold tracking-wide text-muted-foreground uppercase",
 					children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
+							className: "px-4 py-3 w-10",
+							children: "Sr"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
 							className: "px-4 py-3",
 							children: "Student"
 						}),
@@ -187,6 +191,10 @@ function AdmissionsListPage() {
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
 							className: "px-4 py-3",
 							children: "College"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
+							className: "px-4 py-3",
+							children: "Property"
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
 							className: "px-4 py-3",
@@ -209,13 +217,17 @@ function AdmissionsListPage() {
 							children: "Date"
 						})
 					] })
-				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tbody", { children: rows.map((a) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", {
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tbody", { children: rows.map((a, idx) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", {
 					className: "border-t border-border transition-colors hover:bg-muted/40 cursor-pointer",
 					onClick: () => navigate({
 						to: "/admin/admissions/$admissionId",
 						params: { admissionId: a.admissionId }
 					}),
 					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {
+							className: "px-4 py-3 text-xs text-muted-foreground font-medium",
+							children: idx + 1
+						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {
 							className: "px-4 py-3",
 							children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
@@ -240,6 +252,20 @@ function AdmissionsListPage() {
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {
 							className: "px-4 py-3 text-muted-foreground",
 							children: a.collegeName || "—"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("td", {
+							className: "px-4 py-3 text-muted-foreground",
+							children: [a.propertyName ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "block truncate max-w-[140px]",
+								children: a.propertyName
+							}) : "—", a.roomNumber && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+								className: "block text-xs text-muted-foreground/70",
+								children: [
+									"Room ",
+									a.roomNumber,
+									a.bedNumber ? ` · Bed ${a.bedNumber}` : ""
+								]
+							})]
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("td", {
 							className: "px-4 py-3",
@@ -298,7 +324,7 @@ function AdmissionsListPage() {
 			})
 		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 			className: "grid gap-3 lg:hidden",
-			children: rows.map((a) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Link, {
+			children: rows.map((a, idx) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Link, {
 				to: "/admin/admissions/$admissionId",
 				params: { admissionId: a.admissionId },
 				className: "rounded-2xl border border-border bg-card p-4 shadow-soft",
@@ -306,6 +332,10 @@ function AdmissionsListPage() {
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 						className: "flex items-center gap-3",
 						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "shrink-0 text-xs font-semibold text-muted-foreground w-5",
+								children: idx + 1
+							}),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ProfileAvatar, {
 								path: a.profileImagePath,
 								name: a.fullName

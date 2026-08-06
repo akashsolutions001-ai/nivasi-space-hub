@@ -214,9 +214,11 @@ function AdmissionsListPage() {
             <table className="w-full text-sm">
               <thead className="bg-muted/60 text-left text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
                 <tr>
+                  <th className="px-4 py-3 w-10">Sr</th>
                   <th className="px-4 py-3">Student</th>
                   <th className="px-4 py-3">Admission ID</th>
                   <th className="px-4 py-3">College</th>
+                  <th className="px-4 py-3">Property</th>
                   <th className="px-4 py-3">Package</th>
                   <th className="px-4 py-3 text-success">Paid</th>
                   <th className="px-4 py-3 text-destructive">Pending</th>
@@ -225,12 +227,13 @@ function AdmissionsListPage() {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((a) => (
+                {rows.map((a, idx) => (
                   <tr
                     key={a.id}
                     className="border-t border-border transition-colors hover:bg-muted/40 cursor-pointer"
                     onClick={() => navigate({ to: "/admin/admissions/$admissionId", params: { admissionId: a.admissionId } })}
                   >
+                    <td className="px-4 py-3 text-xs text-muted-foreground font-medium">{idx + 1}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         <ProfileAvatar path={a.profileImagePath} name={a.fullName} className="size-9" />
@@ -244,6 +247,14 @@ function AdmissionsListPage() {
                     </td>
                     <td className="px-4 py-3 font-mono text-xs text-primary">{a.admissionId}</td>
                     <td className="px-4 py-3 text-muted-foreground">{a.collegeName || "—"}</td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {a.propertyName ? (
+                        <span className="block truncate max-w-[140px]">{a.propertyName}</span>
+                      ) : "—"}
+                      {a.roomNumber && (
+                        <span className="block text-xs text-muted-foreground/70">Room {a.roomNumber}{a.bedNumber ? ` · Bed ${a.bedNumber}` : ""}</span>
+                      )}
+                    </td>
                     <td className="px-4 py-3">
                       <span className="block">{a.packageName || "—"}</span>
                       <span className="block text-xs text-muted-foreground">
@@ -293,7 +304,7 @@ function AdmissionsListPage() {
 
           {/* Mobile cards */}
           <div className="grid gap-3 lg:hidden">
-            {rows.map((a) => (
+            {rows.map((a, idx) => (
               <Link
                 key={a.id}
                 to="/admin/admissions/$admissionId"
@@ -301,6 +312,7 @@ function AdmissionsListPage() {
                 className="rounded-2xl border border-border bg-card p-4 shadow-soft"
               >
                 <div className="flex items-center gap-3">
+                  <span className="shrink-0 text-xs font-semibold text-muted-foreground w-5">{idx + 1}</span>
                   <ProfileAvatar path={a.profileImagePath} name={a.fullName} />
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-semibold">{a.fullName}</p>

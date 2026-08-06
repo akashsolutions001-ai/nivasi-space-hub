@@ -3,11 +3,11 @@ import { u as require_react } from "../_libs/@floating-ui/react-dom+[...].mjs";
 import { F as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
 import { o as useAuth } from "./auth-DbpSDgTm.mjs";
 import { _ as useNavigate } from "../_libs/@tanstack/react-router+[...].mjs";
-import { w as LoaderCircle } from "../_libs/lucide-react.mjs";
-import { c as NivasiLogo, m as SetupNotice, n as Button } from "./admin-shell-DbLl1eJ-.mjs";
-import { t as Input } from "./input-BRq9ZYTb.mjs";
-import { t as Label } from "./label-CwHe0bR-.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/admin.login-ouMbums_.js
+import { T as LoaderCircle } from "../_libs/lucide-react.mjs";
+import { c as NivasiLogo, m as SetupNotice, n as Button } from "./admin-shell-C6yF8tTs.mjs";
+import { t as Input } from "./input-DzEdIhBa.mjs";
+import { t as Label } from "./label-_GPBDCRi.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/admin.login-Dl0fvXBL.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 function LoginPage() {

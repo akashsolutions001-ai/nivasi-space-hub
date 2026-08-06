@@ -85,5 +85,8 @@ export interface Property {
   propertyName: string;
   address?: string;
   city?: string;
+  ownerName?: string;
+  ownerPhone?: string;
+  totalBeds?: number;
   active: boolean;
 }

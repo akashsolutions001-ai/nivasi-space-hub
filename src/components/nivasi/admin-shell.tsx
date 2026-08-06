@@ -7,6 +7,7 @@ import {
   Package,
   Settings,
   Users,
+  Building2,
   ShieldAlert,
 } from "lucide-react";
 
@@ -19,10 +20,11 @@ import { useAuth, useIsGlobalAdmin } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
 const NAV = [
-  { label: "Dashboard", to: "/admin/dashboard", icon: LayoutDashboard },
-  { label: "Admissions", to: "/admin/admissions", icon: Users },
-  { label: "Packages", to: "/admin/packages", icon: Package },
-  { label: "Settings", to: "/admin/settings", icon: Settings },
+  { label: "Dashboard",  to: "/admin/dashboard",  icon: LayoutDashboard },
+  { label: "Admissions", to: "/admin/admissions",  icon: Users },
+  { label: "Properties", to: "/admin/properties",  icon: Building2 },
+  { label: "Packages",   to: "/admin/packages",    icon: Package },
+  { label: "Settings",   to: "/admin/settings",    icon: Settings },
 ] as const;
 
 function NavLinks({ onNavigate }: { onNavigate?: (() => void) | undefined }) {
@@ -169,8 +171,8 @@ export function AdminShell({
           <NivasiLogo />
         </header>
 
-        <main className="flex-1 px-3 py-5 sm:px-6 lg:px-8 lg:py-8">
-          <div className="mx-auto w-full max-w-7xl">
+        <main className="flex-1 px-3 py-5 sm:px-5 lg:px-6 lg:py-7">
+          <div className="w-full">
             <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
               <div className="min-w-0">
                 <h1 className="truncate text-xl font-bold sm:text-2xl lg:text-[28px]">{title}</h1>

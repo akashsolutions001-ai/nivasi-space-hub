@@ -7,11 +7,11 @@ import { F as doc, P as collection, R as serverTimestamp, S as where, _ as order
 import { a as isFirebaseConfigured, i as getFirebaseAuth, n as getDb, o as useAuth, s as useIsGlobalAdmin } from "./auth-DbpSDgTm.mjs";
 import { _ as useNavigate, g as Link, l as useRouterState } from "../_libs/@tanstack/react-router+[...].mjs";
 import { t as useQuery } from "../_libs/tanstack__react-query.mjs";
-import { D as GraduationCap, M as ChevronUp, N as ChevronDown, P as Check, S as LogOut, T as LayoutDashboard, a as Users, b as Menu, d as Stethoscope, f as ShieldAlert, g as RefreshCw, m as Settings, n as Wrench, t as X, y as Package } from "../_libs/lucide-react.mjs";
+import { C as LogOut, E as LayoutDashboard, F as ChevronDown, I as Check, L as Building2, O as GraduationCap, P as ChevronUp, a as Users, b as Package, d as Stethoscope, f as ShieldAlert, g as RefreshCw, m as Settings, n as Wrench, t as X, x as Menu } from "../_libs/lucide-react.mjs";
 import { n as clsx, t as cva } from "../_libs/class-variance-authority+clsx.mjs";
 import { t as twMerge } from "../_libs/tailwind-merge.mjs";
 import { a as SelectItemIndicator, c as SelectPortal, d as SelectSeparator$1, f as SelectTrigger$1, i as SelectItem$1, l as SelectScrollDownButton$1, m as SelectViewport, n as SelectContent$1, o as SelectItemText, p as SelectValue$1, r as SelectIcon, s as SelectLabel$1, t as Select$1, u as SelectScrollUpButton$1 } from "../_libs/@radix-ui/react-select+[...].mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/admin-shell-DbLl1eJ-.js
+//#region node_modules/.nitro/vite/services/ssr/assets/admin-shell-C6yF8tTs.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 function cn(...inputs) {
@@ -454,6 +454,9 @@ async function fetchProperties() {
 				propertyName: d.propertyName ?? d.name ?? "",
 				address: d.address ?? "",
 				city: d.city ?? "",
+				ownerName: d.ownerName ?? "",
+				ownerPhone: d.ownerPhone ?? "",
+				totalBeds: Number(d.totalBeds ?? 0),
 				active: d.active !== false
 			};
 		}).filter((p) => p.propertyName).sort((a, b) => a.propertyName.localeCompare(b.propertyName));
@@ -471,8 +474,30 @@ async function fetchRooms() {
 				id: s.id,
 				title: d.title ?? "",
 				rooms: d.rooms ?? "",
+				roomType: d.roomType ?? "",
 				gender: d.gender ?? void 0,
-				subscriptionStatus: d.subscriptionStatus ?? ""
+				city: d.city ?? "",
+				address: d.address ?? "",
+				location: d.location ?? "",
+				mapLink: d.mapLink ?? "",
+				contact: d.contact ?? d.ownerPhone ?? "",
+				college: d.college ?? "",
+				rent: Number(d.rent ?? 0),
+				pricingType: d.pricingType ?? "",
+				billInclusion: d.billInclusion ?? "",
+				features: Array.isArray(d.features) ? d.features : [],
+				note: d.note ?? "",
+				description: d.description ?? "",
+				subscriptionStatus: d.subscriptionStatus ?? "",
+				paymentStatus: d.paymentStatus ?? "",
+				roomStatus: d.roomStatus ?? "",
+				verificationStatus: d.verificationStatus ?? "",
+				visibility: d.visibility ?? "",
+				isPublished: d.isPublished ?? false,
+				hidden: d.hidden ?? false,
+				addedByAdmin: d.addedByAdmin ?? false,
+				ownerName: d.ownerName ?? "",
+				ownerPhone: d.ownerPhone ?? ""
 			};
 		}).filter((r) => r.title).sort((a, b) => a.title.localeCompare(b.title));
 	} catch (error) {
@@ -844,6 +869,11 @@ var NAV = [
 		icon: Users
 	},
 	{
+		label: "Properties",
+		to: "/admin/properties",
+		icon: Building2
+	},
+	{
 		label: "Packages",
 		to: "/admin/packages",
 		icon: Package
@@ -974,9 +1004,9 @@ function AdminShell({ title, subtitle, action, children }) {
 						})]
 					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(NivasiLogo, {})]
 				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("main", {
-					className: "flex-1 px-3 py-5 sm:px-6 lg:px-8 lg:py-8",
+					className: "flex-1 px-3 py-5 sm:px-5 lg:px-6 lg:py-7",
 					children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "mx-auto w-full max-w-7xl",
+						className: "w-full",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 							className: "mb-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between",
 							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {

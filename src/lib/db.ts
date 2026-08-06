@@ -321,6 +321,9 @@ export async function fetchProperties(): Promise<Property[]> {
           propertyName: d.propertyName ?? d.name ?? "",
           address: d.address ?? "",
           city: d.city ?? "",
+          ownerName: d.ownerName ?? "",
+          ownerPhone: d.ownerPhone ?? "",
+          totalBeds: Number(d.totalBeds ?? 0),
           active: d.active !== false,
         } satisfies Property;
       })
@@ -338,8 +341,30 @@ export interface Room {
   id: string;
   title: string;
   rooms?: string;
-  gender?: string;       // e.g. "male", "female", "boys", "girls", "any", "co-ed"
+  roomType?: string;
+  gender?: string;
+  city?: string;
+  address?: string;
+  location?: string;
+  mapLink?: string;
+  contact?: string;
+  college?: string;
+  rent?: number;
+  pricingType?: string;
+  billInclusion?: string;
+  features?: string[];
+  note?: string;
+  description?: string;
   subscriptionStatus?: string;
+  paymentStatus?: string;
+  roomStatus?: string;
+  verificationStatus?: string;
+  visibility?: string;
+  isPublished?: boolean;
+  hidden?: boolean;
+  addedByAdmin?: boolean;
+  ownerName?: string;
+  ownerPhone?: string;
 }
 
 /** Fetches all documents from the `rooms` collection and returns their details. */
@@ -353,8 +378,30 @@ export async function fetchRooms(): Promise<Room[]> {
           id: s.id,
           title: (d.title as string) ?? "",
           rooms: d.rooms ?? "",
+          roomType: d.roomType ?? "",
           gender: (d.gender as string | undefined) ?? undefined,
+          city: d.city ?? "",
+          address: d.address ?? "",
+          location: d.location ?? "",
+          mapLink: d.mapLink ?? "",
+          contact: d.contact ?? d.ownerPhone ?? "",
+          college: d.college ?? "",
+          rent: Number(d.rent ?? 0),
+          pricingType: d.pricingType ?? "",
+          billInclusion: d.billInclusion ?? "",
+          features: Array.isArray(d.features) ? d.features : [],
+          note: d.note ?? "",
+          description: d.description ?? "",
           subscriptionStatus: d.subscriptionStatus ?? "",
+          paymentStatus: d.paymentStatus ?? "",
+          roomStatus: d.roomStatus ?? "",
+          verificationStatus: d.verificationStatus ?? "",
+          visibility: d.visibility ?? "",
+          isPublished: d.isPublished ?? false,
+          hidden: d.hidden ?? false,
+          addedByAdmin: d.addedByAdmin ?? false,
+          ownerName: d.ownerName ?? "",
+          ownerPhone: d.ownerPhone ?? "",
         } satisfies Room;
       })
       .filter((r) => r.title)
@@ -365,17 +412,40 @@ export async function fetchRooms(): Promise<Room[]> {
   }
 }
 
-export async function addProperty(propertyName: string, city?: string): Promise<void> {
+export async function addProperty(
+  propertyName: string,
+  city?: string,
+  ownerName?: string,
+  ownerPhone?: string,
+  totalBeds?: number,
+): Promise<void> {
   const ref = doc(collection(getDb(), "properties"));
   await setDoc(ref, {
     propertyId: ref.id,
     propertyName,
     city: city ?? "",
     address: "",
+    ownerName: ownerName ?? "",
+    ownerPhone: ownerPhone ?? "",
+    totalBeds: totalBeds ?? 0,
     active: true,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
+}
+
+export async function updateProperty(
+  id: string,
+  patch: {
+    propertyName?: string;
+    city?: string;
+    address?: string;
+    ownerName?: string;
+    ownerPhone?: string;
+    totalBeds?: number;
+  },
+): Promise<void> {
+  await updateDoc(doc(getDb(), "properties", id), { ...patch, updatedAt: serverTimestamp() });
 }
 
 export async function setPropertyActive(id: string, active: boolean): Promise<void> {

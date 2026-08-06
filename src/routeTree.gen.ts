@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
 import { Route as AdminPackagesRouteImport } from './routes/admin.packages'
+import { Route as AdminPropertiesRouteImport } from './routes/admin.properties'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminAdmissionsIndexRouteImport } from './routes/admin.admissions.index'
 import { Route as AdminAdmissionsNewRouteImport } from './routes/admin.admissions.new'
@@ -37,6 +38,11 @@ const AdminLoginRoute = AdminLoginRouteImport.update({
 const AdminPackagesRoute = AdminPackagesRouteImport.update({
   id: '/admin/packages',
   path: '/admin/packages',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminPropertiesRoute = AdminPropertiesRouteImport.update({
+  id: '/admin/properties',
+  path: '/admin/properties',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminSettingsRoute = AdminSettingsRouteImport.update({
@@ -72,6 +78,7 @@ export interface FileRoutesByFullPath {
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/packages': typeof AdminPackagesRoute
+  '/admin/properties': typeof AdminPropertiesRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/admissions/new': typeof AdminAdmissionsNewRoute
   '/admin/admissions/': typeof AdminAdmissionsIndexRoute
@@ -83,6 +90,7 @@ export interface FileRoutesByTo {
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/packages': typeof AdminPackagesRoute
+  '/admin/properties': typeof AdminPropertiesRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/admissions/new': typeof AdminAdmissionsNewRoute
   '/admin/admissions': typeof AdminAdmissionsIndexRoute
@@ -95,6 +103,7 @@ export interface FileRoutesById {
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/packages': typeof AdminPackagesRoute
+  '/admin/properties': typeof AdminPropertiesRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/admissions/new': typeof AdminAdmissionsNewRoute
   '/admin/admissions/': typeof AdminAdmissionsIndexRoute
@@ -108,6 +117,7 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/login'
     | '/admin/packages'
+    | '/admin/properties'
     | '/admin/settings'
     | '/admin/admissions/new'
     | '/admin/admissions/'
@@ -119,6 +129,7 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/login'
     | '/admin/packages'
+    | '/admin/properties'
     | '/admin/settings'
     | '/admin/admissions/new'
     | '/admin/admissions'
@@ -130,6 +141,7 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/login'
     | '/admin/packages'
+    | '/admin/properties'
     | '/admin/settings'
     | '/admin/admissions/new'
     | '/admin/admissions/'
@@ -142,6 +154,7 @@ export interface RootRouteChildren {
   AdminDashboardRoute: typeof AdminDashboardRoute
   AdminLoginRoute: typeof AdminLoginRoute
   AdminPackagesRoute: typeof AdminPackagesRoute
+  AdminPropertiesRoute: typeof AdminPropertiesRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminAdmissionsNewRoute: typeof AdminAdmissionsNewRoute
   AdminAdmissionsIndexRoute: typeof AdminAdmissionsIndexRoute
@@ -177,6 +190,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/packages'
       fullPath: '/admin/packages'
       preLoaderRoute: typeof AdminPackagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/properties': {
+      id: '/admin/properties'
+      path: '/admin/properties'
+      fullPath: '/admin/properties'
+      preLoaderRoute: typeof AdminPropertiesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/settings': {
@@ -222,6 +242,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminDashboardRoute: AdminDashboardRoute,
   AdminLoginRoute: AdminLoginRoute,
   AdminPackagesRoute: AdminPackagesRoute,
+  AdminPropertiesRoute: AdminPropertiesRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminAdmissionsNewRoute: AdminAdmissionsNewRoute,
   AdminAdmissionsIndexRoute: AdminAdmissionsIndexRoute,
