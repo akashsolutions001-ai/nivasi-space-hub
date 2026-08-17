@@ -194,9 +194,11 @@ export function AdmissionForm({ existing }: { existing?: Admission | null }) {
    */
   const filteredRooms = useMemo(() => {
     const g = form.gender.toLowerCase();
-    if (!g) return rooms; // no gender selected → show all
+    // Always exclude hidden rooms
+    const visibleRooms = rooms.filter((room) => !room.hidden);
+    if (!g) return visibleRooms; // no gender selected → show all (except hidden)
 
-    return rooms.filter((room) => {
+    return visibleRooms.filter((room) => {
       const roomGender = (room.gender ?? "").toLowerCase();
       const titleLower = room.title.toLowerCase();
 

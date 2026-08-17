@@ -1,4 +1,4 @@
-//#region node_modules/.nitro/vite/services/ssr/assets/_tanstack-start-manifest_v-CO4DBsRA.js
+//#region node_modules/.nitro/vite/services/ssr/assets/_tanstack-start-manifest_v-CbRhcs6O.js
 var tsrStartManifest = () => ({ routes: {
 	__root__: {
 		filePath: "D:/BUSINEES/Nivasi/Admission Mangement System/nivasi-space-hub-main/src/routes/__root.tsx",
@@ -15,19 +15,19 @@ var tsrStartManifest = () => ({ routes: {
 			"/admin/admissions/$admissionId/"
 		],
 		preloads: [
-			"/assets/index-CDoiuiKq.js",
+			"/assets/index-DxjdMUc5.js",
 			"/assets/rolldown-runtime-hePW80VL.js",
 			"/assets/auth-B2InOkpw.js",
 			"/assets/lazyRouteComponent-Co06A18C.js",
 			"/assets/dist-D3zs-YL8.js",
 			"/assets/preload-helper-Czpn1I53.js",
 			"/assets/admin.admissions._admissionId.index-CMBqnluG.js",
-			"/assets/admin.admissions._admissionId.edit-DF6Pt8e8.js"
+			"/assets/admin.admissions._admissionId.edit-QHm5D_iy.js"
 		],
 		scripts: [{ attrs: {
 			type: "module",
 			async: !0,
-			src: "/assets/index-CDoiuiKq.js"
+			src: "/assets/index-DxjdMUc5.js"
 		} }]
 	},
 	"/": {
@@ -106,9 +106,9 @@ var tsrStartManifest = () => ({ routes: {
 		filePath: "D:/BUSINEES/Nivasi/Admission Mangement System/nivasi-space-hub-main/src/routes/admin.admissions.new.tsx",
 		children: void 0,
 		preloads: [
-			"/assets/admin.admissions.new-Dic1uye9.js",
+			"/assets/admin.admissions.new-BUFnrsGy.js",
 			"/assets/admin-shell-D7UeWZ9j.js",
-			"/assets/admission-form-CPzjwpuz.js"
+			"/assets/admission-form-tPKzqwXQ.js"
 		]
 	},
 	"/admin/admissions/": {
@@ -129,9 +129,9 @@ var tsrStartManifest = () => ({ routes: {
 		filePath: "D:/BUSINEES/Nivasi/Admission Mangement System/nivasi-space-hub-main/src/routes/admin.admissions.$admissionId.edit.tsx",
 		children: void 0,
 		preloads: [
-			"/assets/admin.admissions._admissionId.edit-kbtlirkF.js",
+			"/assets/admin.admissions._admissionId.edit-DnNTM4do.js",
 			"/assets/admin-shell-D7UeWZ9j.js",
-			"/assets/admission-form-CPzjwpuz.js",
+			"/assets/admission-form-tPKzqwXQ.js",
 			"/assets/stat-card-BHDxdUNN.js"
 		]
 	},

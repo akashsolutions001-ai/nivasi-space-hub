@@ -12,7 +12,7 @@ import { n as SERVICE_OPTIONS, t as Checkbox } from "./types-CVBAIL3K.mjs";
 import { a as isValidIndianMobile, o as todayISO, r as formatINR, t as addDays } from "./format-Bg5w10xg.mjs";
 import { n as toast } from "../_libs/sonner.mjs";
 import { t as _e } from "../_libs/cmdk.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/admission-form-BwrigcVe.js
+//#region node_modules/.nitro/vite/services/ssr/assets/admission-form-C6H-ndCY.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var Textarea = import_react.forwardRef(({ className, ...props }, ref) => {
@@ -195,8 +195,9 @@ function AdmissionForm({ existing }) {
 	*/
 	const filteredRooms = (0, import_react.useMemo)(() => {
 		const g = form.gender.toLowerCase();
-		if (!g) return rooms;
-		return rooms.filter((room) => {
+		const visibleRooms = rooms.filter((room) => !room.hidden);
+		if (!g) return visibleRooms;
+		return visibleRooms.filter((room) => {
 			const roomGender = (room.gender ?? "").toLowerCase();
 			const titleLower = room.title.toLowerCase();
 			if ([

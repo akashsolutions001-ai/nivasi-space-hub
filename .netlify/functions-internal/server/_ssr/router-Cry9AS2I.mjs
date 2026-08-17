@@ -3,12 +3,12 @@ import { u as require_react } from "../_libs/@floating-ui/react-dom+[...].mjs";
 import { F as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
 import { t as AuthProvider } from "./auth-DbpSDgTm.mjs";
 import { A as redirect, c as HeadContent, d as createRouter, f as Outlet, g as Link, h as createRootRouteWithContext, m as createFileRoute, p as lazyRouteComponent, s as Scripts, v as useRouter } from "../_libs/@tanstack/react-router+[...].mjs";
-import { t as Route$9 } from "./admin.admissions._admissionId.edit-D_3irjKu.mjs";
+import { t as Route$9 } from "./admin.admissions._admissionId.edit-BMLlbLzG.mjs";
 import { t as QueryClient } from "../_libs/tanstack__query-core.mjs";
 import { n as QueryClientProvider } from "../_libs/tanstack__react-query.mjs";
 import { t as Toaster } from "../_libs/sonner.mjs";
 import { t as Route$10 } from "./admin.admissions._admissionId.index-Bm12wjd9.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/router-BRQPv7PW.js
+//#region node_modules/.nitro/vite/services/ssr/assets/router-Cry9AS2I.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var styles_default = "/assets/styles-6N5yM6kU.css";
@@ -313,7 +313,7 @@ var Route$1 = createFileRoute("/admin/admissions/")({
 	] }),
 	component: lazyRouteComponent($$splitComponentImporter$1, "component")
 });
-var $$splitComponentImporter = () => import("./admin.admissions.new-DCYi_VVw.mjs");
+var $$splitComponentImporter = () => import("./admin.admissions.new-DZWehYYe.mjs");
 var Route = createFileRoute("/admin/admissions/new")({
 	head: () => ({ meta: [
 		{ title: "New Admission — NivasiSpace Admin" },
