@@ -4,11 +4,11 @@ import { F as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+
 import { o as useAuth, s as useIsGlobalAdmin } from "./auth-DbpSDgTm.mjs";
 import { r as useQueryClient } from "../_libs/tanstack__react-query.mjs";
 import { O as GraduationCap, S as MapPin, T as LoaderCircle, _ as Plus, d as Stethoscope, n as Wrench, s as UserPlus, w as Lock } from "../_libs/lucide-react.mjs";
-import { F as useColleges, M as updateCollege, O as setCityActive, P as useCities, _ as addCollege, d as SelectItem, f as SelectTrigger, g as addCity, h as Skeleton, k as setCollegeActive, l as Select, n as Button, p as SelectValue, t as AdminShell, u as SelectContent, x as createAdminUser } from "./admin-shell-PYWfz-cc.mjs";
-import { t as Input } from "./input-DFS5fhWB.mjs";
+import { F as useColleges, M as updateCollege, O as setCityActive, P as useCities, _ as addCollege, d as SelectItem, f as SelectTrigger, g as addCity, h as Skeleton, k as setCollegeActive, l as Select, n as Button, p as SelectValue, t as AdminShell, u as SelectContent, x as createAdminUser } from "./admin-shell-Di_RTl8C.mjs";
+import { t as Input } from "./input-CC5v3XE9.mjs";
 import { n as toast } from "../_libs/sonner.mjs";
-import { t as Switch } from "./switch-DGPP6uMz.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/admin.settings-D8fid41V.js
+import { t as Switch } from "./switch-g_5CRJsW.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/admin.settings-Di7F5upK.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 function SettingsPage() {

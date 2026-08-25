@@ -5,15 +5,15 @@ import { a as isFirebaseConfigured, s as useIsGlobalAdmin } from "./auth-DbpSDgT
 import { _ as useNavigate, g as Link } from "../_libs/@tanstack/react-router+[...].mjs";
 import { r as useQueryClient, t as useQuery } from "../_libs/tanstack__react-query.mjs";
 import { A as EyeOff, B as ArrowLeft, f as ShieldAlert, k as Eye, p as Share2, u as Trash2, y as Pencil } from "../_libs/lucide-react.mjs";
-import { C as deleteAdmission, h as Skeleton, n as Button, t as AdminShell, v as buttonVariants, w as fetchAdmission, y as cn } from "./admin-shell-PYWfz-cc.mjs";
-import { t as Input } from "./input-DFS5fhWB.mjs";
-import { t as Label } from "./label-0ph1R82A.mjs";
+import { C as deleteAdmission, h as Skeleton, n as Button, t as AdminShell, v as buttonVariants, w as fetchAdmission, y as cn } from "./admin-shell-Di_RTl8C.mjs";
+import { t as Input } from "./input-CC5v3XE9.mjs";
+import { t as Label } from "./label-CciR_X34.mjs";
 import { n as formatDate, r as formatINR } from "./format-Bg5w10xg.mjs";
 import { n as toast } from "../_libs/sonner.mjs";
-import { t as EmptyState } from "./stat-card-CvXtoRUg.mjs";
-import { t as Route } from "./admin.admissions._admissionId.index-Bm12wjd9.mjs";
-import { i as StatusPill, n as PaymentBadge, r as ProfileAvatar, t as MattressBadge } from "./badges-DciROGo9.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/admin.admissions._admissionId.index-BGbpEKEC.js
+import { t as EmptyState } from "./stat-card-BffqhZ36.mjs";
+import { t as Route } from "./admin.admissions._admissionId.index-B2oxFye7.mjs";
+import { i as StatusPill, n as PaymentBadge, r as ProfileAvatar, t as MattressBadge } from "./badges-Daqd9jjw.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/admin.admissions._admissionId.index-BI1hBdCC.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var AlertDialog = Root2;

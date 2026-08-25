@@ -5,14 +5,14 @@ import { _ as useNavigate } from "../_libs/@tanstack/react-router+[...].mjs";
 import { r as useQueryClient } from "../_libs/tanstack__react-query.mjs";
 import { I as Check, N as ChevronsUpDown, T as LoaderCircle, h as Search, o as User } from "../_libs/lucide-react.mjs";
 import { i as Trigger, n as Portal, r as Root2, t as Content2 } from "../_libs/@radix-ui/react-popover+[...].mjs";
-import { E as generateAdmissionId, F as useColleges, I as usePackages, L as useProperties, R as useRooms, S as createAdmission, d as SelectItem, f as SelectTrigger, j as updateAdmission, l as Select, n as Button, p as SelectValue, u as SelectContent, y as cn } from "./admin-shell-PYWfz-cc.mjs";
-import { t as Input } from "./input-DFS5fhWB.mjs";
-import { t as Label } from "./label-0ph1R82A.mjs";
-import { n as SERVICE_OPTIONS, t as Checkbox } from "./types-CVBAIL3K.mjs";
+import { E as generateAdmissionId, F as useColleges, I as usePackages, L as useProperties, R as useRooms, S as createAdmission, d as SelectItem, f as SelectTrigger, j as updateAdmission, l as Select, n as Button, p as SelectValue, u as SelectContent, y as cn } from "./admin-shell-Di_RTl8C.mjs";
+import { t as Input } from "./input-CC5v3XE9.mjs";
+import { t as Label } from "./label-CciR_X34.mjs";
+import { n as SERVICE_OPTIONS, t as Checkbox } from "./types-rKTnOQE5.mjs";
 import { a as isValidIndianMobile, o as todayISO, r as formatINR, t as addDays } from "./format-Bg5w10xg.mjs";
 import { n as toast } from "../_libs/sonner.mjs";
 import { t as _e } from "../_libs/cmdk.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/admission-form-C6H-ndCY.js
+//#region node_modules/.nitro/vite/services/ssr/assets/admission-form-Dv48CO-c.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var Textarea = import_react.forwardRef(({ className, ...props }, ref) => {
@@ -114,9 +114,13 @@ function toForm(a) {
 		packageStartDate: a?.packageStartDate ?? "",
 		packageEndDate: a?.packageEndDate ?? "",
 		amountPaid: a ? String(a.amountPaid) : "0",
+		paymentMode: a?.paymentMode ?? null,
 		bagProvided: a?.bagProvided ?? false,
+		bagPaymentCollected: a?.bagPaymentCollected ?? false,
 		tiffinProvided: a?.tiffinProvided ?? false,
+		tiffinPaymentCollected: a?.tiffinPaymentCollected ?? false,
 		mattressRequired: a?.mattressRequired ?? false,
+		mattressPaymentCollected: a?.mattressPaymentCollected ?? false,
 		notes: a?.notes ?? ""
 	};
 }
@@ -310,9 +314,13 @@ function AdmissionForm({ existing }) {
 				amountPaid: paid,
 				balanceAmount: balance,
 				paymentStatus,
+				paymentMode: form.paymentMode,
 				bagProvided: form.bagProvided,
+				bagPaymentCollected: form.bagPaymentCollected,
 				tiffinProvided: form.tiffinProvided,
+				tiffinPaymentCollected: form.tiffinPaymentCollected,
 				mattressRequired: form.mattressRequired,
+				mattressPaymentCollected: form.mattressPaymentCollected,
 				notes: form.notes.trim()
 			};
 			if (existing) {
@@ -929,9 +937,38 @@ function AdmissionForm({ existing }) {
 							})
 						})
 					]
-				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-					className: cn("mt-4 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold", paymentStatus === "completed" ? "bg-success/12 text-success" : "bg-warning/20 text-warning-foreground"),
-					children: paymentStatus === "completed" ? "✓ Payment Completed" : "⚠ Payment Pending"
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "mt-4 flex flex-wrap items-center gap-6",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+						className: cn("inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold", paymentStatus === "completed" ? "bg-success/12 text-success" : "bg-warning/20 text-warning-foreground"),
+						children: paymentStatus === "completed" ? "✓ Payment Completed" : "⚠ Payment Pending"
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex items-center gap-5",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "text-xs font-semibold text-foreground",
+								children: "Payment Mode:"
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
+								className: "flex cursor-pointer items-center gap-1.5 text-sm font-medium",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+									type: "checkbox",
+									className: "size-4 accent-primary",
+									checked: form.paymentMode === "online",
+									onChange: () => set("paymentMode", form.paymentMode === "online" ? null : "online")
+								}), "Paid Online"]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
+								className: "flex cursor-pointer items-center gap-1.5 text-sm font-medium",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+									type: "checkbox",
+									className: "size-4 accent-primary",
+									checked: form.paymentMode === "cash",
+									onChange: () => set("paymentMode", form.paymentMode === "cash" ? null : "cash")
+								}), "Paid Cash"]
+							})
+						]
+					})]
 				})]
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Section, {
@@ -939,20 +976,53 @@ function AdmissionForm({ existing }) {
 				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					className: "grid gap-3 sm:grid-cols-3",
 					children: [
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ToggleRow, {
-							label: "Bag Provided?",
-							value: form.bagProvided,
-							onChange: (v) => set("bagProvided", v)
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex flex-col gap-1.5",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ToggleRow, {
+								label: "Bag Provided?",
+								value: form.bagProvided,
+								onChange: (v) => set("bagProvided", v)
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
+								className: "flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-xs font-medium text-foreground",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+									type: "checkbox",
+									className: "size-3.5 accent-primary",
+									checked: form.bagPaymentCollected,
+									onChange: (e) => set("bagPaymentCollected", e.target.checked)
+								}), "Payment Collected"]
+							})]
 						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ToggleRow, {
-							label: "Tiffin Provided?",
-							value: form.tiffinProvided,
-							onChange: (v) => set("tiffinProvided", v)
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex flex-col gap-1.5",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ToggleRow, {
+								label: "Tiffin Provided?",
+								value: form.tiffinProvided,
+								onChange: (v) => set("tiffinProvided", v)
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
+								className: "flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-xs font-medium text-foreground",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+									type: "checkbox",
+									className: "size-3.5 accent-primary",
+									checked: form.tiffinPaymentCollected,
+									onChange: (e) => set("tiffinPaymentCollected", e.target.checked)
+								}), "Payment Collected"]
+							})]
 						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ToggleRow, {
-							label: "Mattress Required?",
-							value: form.mattressRequired,
-							onChange: (v) => set("mattressRequired", v)
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex flex-col gap-1.5",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ToggleRow, {
+								label: "Mattress Required?",
+								value: form.mattressRequired,
+								onChange: (v) => set("mattressRequired", v)
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
+								className: "flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-xs font-medium text-foreground",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+									type: "checkbox",
+									className: "size-3.5 accent-primary",
+									checked: form.mattressPaymentCollected,
+									onChange: (e) => set("mattressPaymentCollected", e.target.checked)
+								}), "Payment Collected"]
+							})]
 						})
 					]
 				})
@@ -1071,9 +1141,13 @@ function ReceiptShareButtons({ admissionId, formData }) {
 				amountPaid: paid,
 				balanceAmount: balance,
 				paymentStatus: balance <= 0 && amount > 0 ? "completed" : "pending",
+				paymentMode: formData.paymentMode,
 				bagProvided: formData.bagProvided,
+				bagPaymentCollected: formData.bagPaymentCollected,
 				tiffinProvided: formData.tiffinProvided,
+				tiffinPaymentCollected: formData.tiffinPaymentCollected,
 				mattressRequired: formData.mattressRequired,
+				mattressPaymentCollected: formData.mattressPaymentCollected,
 				notes: formData.notes
 			});
 		});

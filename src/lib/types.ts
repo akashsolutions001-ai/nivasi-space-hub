@@ -41,9 +41,13 @@ export interface Admission {
   amountPaid: number;
   balanceAmount: number;
   paymentStatus: PaymentStatus;
+  paymentMode?: "online" | "cash" | null;
   bagProvided: boolean;
+  bagPaymentCollected: boolean;
   tiffinProvided: boolean;
+  tiffinPaymentCollected: boolean;
   mattressRequired: boolean;
+  mattressPaymentCollected: boolean;
   notes?: string;
   createdAt?: Date | null;
   updatedAt?: Date | null;

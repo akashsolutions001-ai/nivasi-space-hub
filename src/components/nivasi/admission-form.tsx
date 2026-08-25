@@ -58,9 +58,13 @@ interface FormState {
   packageStartDate: string;
   packageEndDate: string;
   amountPaid: string;
+  paymentMode: "online" | "cash" | null;
   bagProvided: boolean;
+  bagPaymentCollected: boolean;
   tiffinProvided: boolean;
+  tiffinPaymentCollected: boolean;
   mattressRequired: boolean;
+  mattressPaymentCollected: boolean;
   notes: string;
 }
 
@@ -92,9 +96,13 @@ function toForm(a?: Admission | null): FormState {
     packageStartDate: a?.packageStartDate ?? "",
     packageEndDate: a?.packageEndDate ?? "",
     amountPaid: a ? String(a.amountPaid) : "0",
+    paymentMode: a?.paymentMode ?? null,
     bagProvided: a?.bagProvided ?? false,
+    bagPaymentCollected: a?.bagPaymentCollected ?? false,
     tiffinProvided: a?.tiffinProvided ?? false,
+    tiffinPaymentCollected: a?.tiffinPaymentCollected ?? false,
     mattressRequired: a?.mattressRequired ?? false,
+    mattressPaymentCollected: a?.mattressPaymentCollected ?? false,
     notes: a?.notes ?? "",
   };
 }
@@ -329,9 +337,13 @@ export function AdmissionForm({ existing }: { existing?: Admission | null }) {
         amountPaid: paid,
         balanceAmount: balance,
         paymentStatus,
+        paymentMode: form.paymentMode,
         bagProvided: form.bagProvided,
+        bagPaymentCollected: form.bagPaymentCollected,
         tiffinProvided: form.tiffinProvided,
+        tiffinPaymentCollected: form.tiffinPaymentCollected,
         mattressRequired: form.mattressRequired,
+        mattressPaymentCollected: form.mattressPaymentCollected,
         notes: form.notes.trim(),
       };
 
@@ -796,35 +808,96 @@ export function AdmissionForm({ existing }: { existing?: Admission | null }) {
             <Input value={formatINR(balance)} readOnly className="bg-muted font-semibold" />
           </Field>
         </div>
-        <p
-          className={cn(
-            "mt-4 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold",
-            paymentStatus === "completed"
-              ? "bg-success/12 text-success"
-              : "bg-warning/20 text-warning-foreground",
-          )}
-        >
-          {paymentStatus === "completed" ? "✓ Payment Completed" : "⚠ Payment Pending"}
-        </p>
+        <div className="mt-4 flex flex-wrap items-center gap-6">
+          <p
+            className={cn(
+              "inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold",
+              paymentStatus === "completed"
+                ? "bg-success/12 text-success"
+                : "bg-warning/20 text-warning-foreground",
+            )}
+          >
+            {paymentStatus === "completed" ? "✓ Payment Completed" : "⚠ Payment Pending"}
+          </p>
+
+          <div className="flex items-center gap-5">
+            <p className="text-xs font-semibold text-foreground">Payment Mode:</p>
+            <label className="flex cursor-pointer items-center gap-1.5 text-sm font-medium">
+              <input
+                type="checkbox"
+                className="size-4 accent-primary"
+                checked={form.paymentMode === "online"}
+                onChange={() =>
+                  set("paymentMode", form.paymentMode === "online" ? null : "online")
+                }
+              />
+              Paid Online
+            </label>
+            <label className="flex cursor-pointer items-center gap-1.5 text-sm font-medium">
+              <input
+                type="checkbox"
+                className="size-4 accent-primary"
+                checked={form.paymentMode === "cash"}
+                onChange={() =>
+                  set("paymentMode", form.paymentMode === "cash" ? null : "cash")
+                }
+              />
+              Paid Cash
+            </label>
+          </div>
+        </div>
       </Section>
 
       <Section title="Provided Items">
         <div className="grid gap-3 sm:grid-cols-3">
-          <ToggleRow
-            label="Bag Provided?"
-            value={form.bagProvided}
-            onChange={(v) => set("bagProvided", v)}
-          />
-          <ToggleRow
-            label="Tiffin Provided?"
-            value={form.tiffinProvided}
-            onChange={(v) => set("tiffinProvided", v)}
-          />
-          <ToggleRow
-            label="Mattress Required?"
-            value={form.mattressRequired}
-            onChange={(v) => set("mattressRequired", v)}
-          />
+          <div className="flex flex-col gap-1.5">
+            <ToggleRow
+              label="Bag Provided?"
+              value={form.bagProvided}
+              onChange={(v) => set("bagProvided", v)}
+            />
+            <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-xs font-medium text-foreground">
+              <input
+                type="checkbox"
+                className="size-3.5 accent-primary"
+                checked={form.bagPaymentCollected}
+                onChange={(e) => set("bagPaymentCollected", e.target.checked)}
+              />
+              Payment Collected
+            </label>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <ToggleRow
+              label="Tiffin Provided?"
+              value={form.tiffinProvided}
+              onChange={(v) => set("tiffinProvided", v)}
+            />
+            <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-xs font-medium text-foreground">
+              <input
+                type="checkbox"
+                className="size-3.5 accent-primary"
+                checked={form.tiffinPaymentCollected}
+                onChange={(e) => set("tiffinPaymentCollected", e.target.checked)}
+              />
+              Payment Collected
+            </label>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <ToggleRow
+              label="Mattress Required?"
+              value={form.mattressRequired}
+              onChange={(v) => set("mattressRequired", v)}
+            />
+            <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-xs font-medium text-foreground">
+              <input
+                type="checkbox"
+                className="size-3.5 accent-primary"
+                checked={form.mattressPaymentCollected}
+                onChange={(e) => set("mattressPaymentCollected", e.target.checked)}
+              />
+              Payment Collected
+            </label>
+          </div>
         </div>
       </Section>
 
@@ -958,9 +1031,13 @@ function ReceiptShareButtons({
         amountPaid: paid,
         balanceAmount: balance,
         paymentStatus: balance <= 0 && amount > 0 ? "completed" : "pending",
+        paymentMode: formData.paymentMode,
         bagProvided: formData.bagProvided,
+        bagPaymentCollected: formData.bagPaymentCollected,
         tiffinProvided: formData.tiffinProvided,
+        tiffinPaymentCollected: formData.tiffinPaymentCollected,
         mattressRequired: formData.mattressRequired,
+        mattressPaymentCollected: formData.mattressPaymentCollected,
         notes: formData.notes,
       } as any);
     });

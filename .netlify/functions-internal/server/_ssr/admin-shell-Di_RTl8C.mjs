@@ -11,7 +11,7 @@ import { C as LogOut, E as LayoutDashboard, F as ChevronDown, I as Check, L as B
 import { n as clsx, t as cva } from "../_libs/class-variance-authority+clsx.mjs";
 import { t as twMerge } from "../_libs/tailwind-merge.mjs";
 import { a as SelectItemIndicator, c as SelectPortal, d as SelectSeparator$1, f as SelectTrigger$1, i as SelectItem$1, l as SelectScrollDownButton$1, m as SelectViewport, n as SelectContent$1, o as SelectItemText, p as SelectValue$1, r as SelectIcon, s as SelectLabel$1, t as Select$1, u as SelectScrollUpButton$1 } from "../_libs/@radix-ui/react-select+[...].mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/admin-shell-PYWfz-cc.js
+//#region node_modules/.nitro/vite/services/ssr/assets/admin-shell-Di_RTl8C.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 function cn(...inputs) {
@@ -242,8 +242,12 @@ function mapAdmission(snap) {
 		balanceAmount: Number(d.balanceAmount ?? 0),
 		paymentStatus: d.paymentStatus === "completed" ? "completed" : "pending",
 		bagProvided: Boolean(d.bagProvided),
+		bagPaymentCollected: Boolean(d.bagPaymentCollected),
 		tiffinProvided: Boolean(d.tiffinProvided),
+		tiffinPaymentCollected: Boolean(d.tiffinPaymentCollected),
 		mattressRequired: Boolean(d.mattressRequired),
+		mattressPaymentCollected: Boolean(d.mattressPaymentCollected),
+		paymentMode: d.paymentMode === "online" || d.paymentMode === "cash" ? d.paymentMode : null,
 		notes: d.notes ?? "",
 		parentName: d.parentName ?? "",
 		parentPhone: d.parentPhone ?? "",
