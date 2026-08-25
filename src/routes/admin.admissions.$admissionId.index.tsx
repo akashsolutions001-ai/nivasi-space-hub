@@ -210,7 +210,7 @@ function PaymentSection({
   data,
   isGlobalAdmin,
 }: {
-  data: { packageAmount: number; amountPaid: number; balanceAmount: number; paymentStatus: "completed" | "pending" };
+  data: { packageAmount: number; amountPaid: number; balanceAmount: number; paymentStatus: "completed" | "pending"; paymentMode?: "online" | "cash" | null };
   isGlobalAdmin: boolean;
 }) {
   const [show, setShow] = useState(true);
@@ -244,6 +244,18 @@ function PaymentSection({
             }
           />
           <Row label="Payment Status" value={<PaymentBadge status={data.paymentStatus} />} />
+          <Row
+            label="Payment Mode"
+            value={
+              data.paymentMode === "online" ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-700">💳 Online</span>
+              ) : data.paymentMode === "cash" ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-700">💵 Cash</span>
+              ) : (
+                <span className="text-muted-foreground text-sm">—</span>
+              )
+            }
+          />
         </>
       ) : (
         <p className="text-sm text-muted-foreground py-2">Amounts hidden. Click 👁 to reveal.</p>
@@ -527,10 +539,40 @@ function AdmissionDetailPage() {
           <PaymentSection data={data} isGlobalAdmin={isGlobalAdmin} />
 
           <Section title="🎒 Provided Items">
-            <div className="flex flex-wrap gap-2 mt-1">
-              <StatusPill ok={data.bagProvided}    okLabel="Bag Provided"    pendingLabel="Bag Pending" />
-              <StatusPill ok={data.tiffinProvided} okLabel="Tiffin Provided" pendingLabel="Tiffin Pending" />
-              <MattressBadge required={data.mattressRequired} />
+            <div className="grid gap-3 sm:grid-cols-3 mt-1">
+              <div className="rounded-xl border border-border bg-background p-3 space-y-2">
+                <div className="flex flex-wrap gap-2">
+                  <StatusPill ok={data.bagProvided} okLabel="Bag Provided" pendingLabel="Bag Pending" />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Payment:{" "}
+                  <span className={data.bagPaymentCollected ? "font-semibold text-success" : "font-semibold text-warning-foreground"}>
+                    {data.bagPaymentCollected ? "✓ Collected" : "⚠ Pending"}
+                  </span>
+                </p>
+              </div>
+              <div className="rounded-xl border border-border bg-background p-3 space-y-2">
+                <div className="flex flex-wrap gap-2">
+                  <StatusPill ok={data.tiffinProvided} okLabel="Tiffin Provided" pendingLabel="Tiffin Pending" />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Payment:{" "}
+                  <span className={data.tiffinPaymentCollected ? "font-semibold text-success" : "font-semibold text-warning-foreground"}>
+                    {data.tiffinPaymentCollected ? "✓ Collected" : "⚠ Pending"}
+                  </span>
+                </p>
+              </div>
+              <div className="rounded-xl border border-border bg-background p-3 space-y-2">
+                <div className="flex flex-wrap gap-2">
+                  <MattressBadge required={data.mattressRequired} />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Payment:{" "}
+                  <span className={data.mattressPaymentCollected ? "font-semibold text-success" : "font-semibold text-warning-foreground"}>
+                    {data.mattressPaymentCollected ? "✓ Collected" : "⚠ Pending"}
+                  </span>
+                </p>
+              </div>
             </div>
           </Section>
 

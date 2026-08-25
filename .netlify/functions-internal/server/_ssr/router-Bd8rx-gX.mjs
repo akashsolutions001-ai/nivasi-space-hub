@@ -7,11 +7,11 @@ import { t as Route$9 } from "./admin.admissions._admissionId.edit-t6Nx2Tu-.mjs"
 import { t as QueryClient } from "../_libs/tanstack__query-core.mjs";
 import { n as QueryClientProvider } from "../_libs/tanstack__react-query.mjs";
 import { t as Toaster } from "../_libs/sonner.mjs";
-import { t as Route$10 } from "./admin.admissions._admissionId.index-B2oxFye7.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/router-C1IsCWwY.js
+import { t as Route$10 } from "./admin.admissions._admissionId.index-C9HMHmU7.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/router-Bd8rx-gX.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
-var styles_default = "/assets/styles-BfizuGaA.css";
+var styles_default = "/assets/styles-CHwhcSI_.css";
 function reportLovableError(error, context = {}) {
 	if (typeof window === "undefined") return;
 	window.__lovableEvents?.captureException?.(error, {

@@ -11,9 +11,9 @@ import { t as Label } from "./label-CciR_X34.mjs";
 import { n as formatDate, r as formatINR } from "./format-Bg5w10xg.mjs";
 import { n as toast } from "../_libs/sonner.mjs";
 import { t as EmptyState } from "./stat-card-BffqhZ36.mjs";
-import { t as Route } from "./admin.admissions._admissionId.index-B2oxFye7.mjs";
+import { t as Route } from "./admin.admissions._admissionId.index-C9HMHmU7.mjs";
 import { i as StatusPill, n as PaymentBadge, r as ProfileAvatar, t as MattressBadge } from "./badges-Daqd9jjw.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/admin.admissions._admissionId.index-BI1hBdCC.js
+//#region node_modules/.nitro/vite/services/ssr/assets/admin.admissions._admissionId.index-WrXT3dLs.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var AlertDialog = Root2;
@@ -243,6 +243,19 @@ function PaymentSection({ data, isGlobalAdmin }) {
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Row, {
 				label: "Payment Status",
 				value: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PaymentBadge, { status: data.paymentStatus })
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Row, {
+				label: "Payment Mode",
+				value: data.paymentMode === "online" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: "inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-700",
+					children: "💳 Online"
+				}) : data.paymentMode === "cash" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: "inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-700",
+					children: "💵 Cash"
+				}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: "text-muted-foreground text-sm",
+					children: "—"
+				})
 			})
 		] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 			className: "text-sm text-muted-foreground py-2",
@@ -570,19 +583,67 @@ function AdmissionDetailPage() {
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Section, {
 					title: "🎒 Provided Items",
 					children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "flex flex-wrap gap-2 mt-1",
+						className: "grid gap-3 sm:grid-cols-3 mt-1",
 						children: [
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(StatusPill, {
-								ok: data.bagProvided,
-								okLabel: "Bag Provided",
-								pendingLabel: "Bag Pending"
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "rounded-xl border border-border bg-background p-3 space-y-2",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "flex flex-wrap gap-2",
+									children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(StatusPill, {
+										ok: data.bagProvided,
+										okLabel: "Bag Provided",
+										pendingLabel: "Bag Pending"
+									})
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+									className: "text-xs text-muted-foreground",
+									children: [
+										"Payment:",
+										" ",
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+											className: data.bagPaymentCollected ? "font-semibold text-success" : "font-semibold text-warning-foreground",
+											children: data.bagPaymentCollected ? "✓ Collected" : "⚠ Pending"
+										})
+									]
+								})]
 							}),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(StatusPill, {
-								ok: data.tiffinProvided,
-								okLabel: "Tiffin Provided",
-								pendingLabel: "Tiffin Pending"
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "rounded-xl border border-border bg-background p-3 space-y-2",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "flex flex-wrap gap-2",
+									children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(StatusPill, {
+										ok: data.tiffinProvided,
+										okLabel: "Tiffin Provided",
+										pendingLabel: "Tiffin Pending"
+									})
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+									className: "text-xs text-muted-foreground",
+									children: [
+										"Payment:",
+										" ",
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+											className: data.tiffinPaymentCollected ? "font-semibold text-success" : "font-semibold text-warning-foreground",
+											children: data.tiffinPaymentCollected ? "✓ Collected" : "⚠ Pending"
+										})
+									]
+								})]
 							}),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MattressBadge, { required: data.mattressRequired })
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "rounded-xl border border-border bg-background p-3 space-y-2",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "flex flex-wrap gap-2",
+									children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(MattressBadge, { required: data.mattressRequired })
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+									className: "text-xs text-muted-foreground",
+									children: [
+										"Payment:",
+										" ",
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+											className: data.mattressPaymentCollected ? "font-semibold text-success" : "font-semibold text-warning-foreground",
+											children: data.mattressPaymentCollected ? "✓ Collected" : "⚠ Pending"
+										})
+									]
+								})]
+							})
 						]
 					})
 				}),
