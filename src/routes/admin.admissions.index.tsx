@@ -97,6 +97,22 @@ function AdmissionsListPage() {
   const [query, setQuery] = useState("");
   const [payment, setPayment] = useState("all");
   const [items, setItems] = useState("all");
+  const [packageFilter, setPackageFilter] = useState("all");
+  const [propertyFilter, setPropertyFilter] = useState("all");
+
+  // Build unique package list from all admissions for the filter dropdown
+  const packageOptions = useMemo(() => {
+    const seen = new Set<string>();
+    const opts: { id: string; name: string }[] = [];
+    for (const a of admissions) {
+      const key = a.packageName?.trim();
+      if (key && !seen.has(key)) {
+        seen.add(key);
+        opts.push({ id: key, name: key });
+      }
+    }
+    return opts.sort((a, b) => a.name.localeCompare(b.name));
+  }, [admissions]);
 
   // Global admin: pre-filter to selected college before search/payment filters
   const collegeAdmissions = useMemo(() => {
@@ -115,12 +131,15 @@ function AdmissionsListPage() {
       )
         return false;
       if (payment !== "all" && a.paymentStatus !== payment) return false;
+      if (packageFilter !== "all" && a.packageName?.trim() !== packageFilter) return false;
+      if (propertyFilter === "allotted" && !a.propertyName?.trim()) return false;
+      if (propertyFilter === "not-allotted" && !!a.propertyName?.trim()) return false;
       if (items === "bag-pending" && a.bagProvided) return false;
       if (items === "tiffin-pending" && a.tiffinProvided) return false;
       if (items === "mattress-required" && !a.mattressRequired) return false;
       return true;
     });
-  }, [admissions, query, payment, items]);
+  }, [admissions, query, payment, packageFilter, propertyFilter, items]);
 
   return (
     <AdminShell
@@ -167,6 +186,29 @@ function AdmissionsListPage() {
             <SelectItem value="all">All payments</SelectItem>
             <SelectItem value="completed">Paid</SelectItem>
             <SelectItem value="pending">Pending</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={packageFilter} onValueChange={setPackageFilter}>
+          <SelectTrigger className="w-52">
+            <SelectValue placeholder="All packages" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All packages</SelectItem>
+            {packageOptions.map((p) => (
+              <SelectItem key={p.id} value={p.id}>
+                {p.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={propertyFilter} onValueChange={setPropertyFilter}>
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="All properties" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All properties</SelectItem>
+            <SelectItem value="allotted">Property allotted</SelectItem>
+            <SelectItem value="not-allotted">Not allotted</SelectItem>
           </SelectContent>
         </Select>
         <Select value={items} onValueChange={setItems}>
