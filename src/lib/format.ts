@@ -27,6 +27,10 @@ export function isValidIndianMobile(value: string): boolean {
   return /^[6-9]\d{9}$/.test(value.replace(/\D/g, ""));
 }
 
+export function isValidEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value.trim());
+}
+
 export function startOfToday(): Date {
   const d = new Date();
   d.setHours(0, 0, 0, 0);

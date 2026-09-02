@@ -43,6 +43,8 @@ service cloud.firestore {
     }
 
     // ── /admissions/{admissionId} ─────────────────────────────────────────────
+    // Students sign in via Firebase Auth (email + parentPhone as password),
+    // so all reads/writes require an authenticated session.
 
     match /admissions/{admissionId} {
       allow read, write: if isSignedIn();
@@ -123,6 +125,76 @@ service cloud.firestore {
 
     match /payments/{orderId} {
       allow read, write: if false;
+    }
+
+    // ── /messes/{messId} ─────────────────────────────────────────────────────
+
+    match /messes/{messId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // ── /employees/{employeeId} ──────────────────────────────────────────────
+
+    match /employees/{employeeId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // ── /deliveries/{deliveryId} ─────────────────────────────────────────────
+
+    match /deliveries/{deliveryId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // ── /payouts/{payoutId} ───────────────────────────────────────────────────
+
+    match /payouts/{payoutId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // ── /laundries/{laundryId} ────────────────────────────────────────────────
+
+    match /laundries/{laundryId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // ── /laundryEmployees/{employeeId} ────────────────────────────────────────
+
+    match /laundryEmployees/{employeeId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // ── /laundryPickups/{pickupId} ────────────────────────────────────────────
+
+    match /laundryPickups/{pickupId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // ── /messRecords/{recordId} ───────────────────────────────────────────────
+    // Daily tiffin records per student. Document ID = "{studentId}_{date}".
+
+    match /messRecords/{recordId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // ── /doNotWantRecords/{recordId} ──────────────────────────────────────────
+    // Student Do Not Want date-range records.
+
+    match /doNotWantRecords/{recordId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // ── /messRequests/{requestId} ─────────────────────────────────────────────
+    // Student Special Mess Requests.
+
+    match /messRequests/{requestId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // ── /studentLaundryRecords/{recordId} ─────────────────────────────────────
+    // Weekly laundry records per student. Document ID = "{studentId}_{weekId}".
+
+    match /studentLaundryRecords/{recordId} {
+      allow read, write: if isSignedIn();
     }
 
     // ── Catch-all: deny everything else ──────────────────────────────────────

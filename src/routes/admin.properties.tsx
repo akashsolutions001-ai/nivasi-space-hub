@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useAdmissions, useRooms, useUserProfile } from "@/lib/hooks";
-import { useAuth, useIsGlobalAdmin } from "@/lib/auth";
+import { useIsGlobalAdmin } from "@/lib/auth";
 import { formatDate } from "@/lib/format";
 import type { Room } from "@/lib/db";
 
@@ -292,34 +292,42 @@ function PropertiesPage() {
   const { data: allRooms = [], isLoading } = useRooms();
   const { data: admissions = [] } = useAdmissions();
   const isGlobalAdmin = useIsGlobalAdmin();
-  const { collegeFilter } = useAuth();
   const { data: userProfile } = useUserProfile();
   const [search, setSearch] = useState("");
   const [genderFilter, setGenderFilter] = useState<"all" | "boys" | "girls" | "coed">("all");
   const [activeFilter, setActiveFilter] = useState<string>("all");
 
-  // ── Step 1: verified + paid rooms only ────────────────────────────────────
+  // ── Step 1: visible rooms — relaxed filter so rooms without strict
+  //    verificationStatus/paymentStatus fields are still shown
   const verifiedRooms = useMemo(
-    () => allRooms.filter(
-      (r) => r.verificationStatus === "verified" && r.paymentStatus === "paid",
-    ),
+    () => allRooms.filter((r) => {
+      // Exclude explicitly hidden rooms
+      if (r.hidden === true) return false;
+      // If verificationStatus is set, it must be "verified"
+      if (r.verificationStatus && r.verificationStatus !== "verified") return false;
+      // If paymentStatus is set, it must be "paid" (allow empty/missing)
+      if (r.paymentStatus && r.paymentStatus !== "paid") return false;
+      return true;
+    }),
     [allRooms],
   );
 
   // ── Step 2: college-scoped rooms ──────────────────────────────────────────
-  // Global admin → collegeFilter.college (from popup)
-  // Regular admin → collegeName from their Firestore /users profile
+  // Global admin → sees ALL rooms (rooms are physical properties, not college-specific)
+  // Regular admin → scoped to their college if their profile has a collegeName
   const adminCollege = useMemo(() => {
-    if (isGlobalAdmin) return collegeFilter.college ?? "";
+    if (isGlobalAdmin) return ""; // Global admin sees all rooms
     return userProfile?.collegeName ?? "";
-  }, [isGlobalAdmin, collegeFilter.college, userProfile?.collegeName]);
+  }, [isGlobalAdmin, userProfile?.collegeName]);
 
   const rooms = useMemo(() => {
-    if (!adminCollege) return verifiedRooms;
+    if (!adminCollege) return verifiedRooms; // no college filter → show all
     const col = adminCollege.trim().toLowerCase();
-    return verifiedRooms.filter((r) =>
-      (r.college ?? "").trim().toLowerCase() === col,
-    );
+    return verifiedRooms.filter((r) => {
+      const roomCollege = (r.college ?? "").trim().toLowerCase();
+      if (!roomCollege) return true; // room has no college field → show to everyone
+      return roomCollege === col || roomCollege.includes(col) || col.includes(roomCollege);
+    });
   }, [verifiedRooms, adminCollege]);
 
   // Helper: student count per room
@@ -396,7 +404,13 @@ function PropertiesPage() {
   return (
     <AdminShell
       title="Properties"
-      subtitle={adminCollege ? `Verified rooms · ${adminCollege}` : "Verified rooms — occupancy overview."}
+      subtitle={
+        isGlobalAdmin
+          ? `All verified rooms · ${allRooms.length} total`
+          : adminCollege
+          ? `Verified rooms · ${adminCollege}`
+          : "Verified rooms — occupancy overview."
+      }
     >
       {/* Summary strip */}
       <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3">

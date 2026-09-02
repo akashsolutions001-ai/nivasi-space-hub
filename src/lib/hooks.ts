@@ -5,51 +5,63 @@ import { isFirebaseConfigured } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth";
 import type { Admission } from "@/lib/types";
 
+// Helper: true once Firebase is configured AND a user is signed in
+function useIsReady() {
+  const { user, loading } = useAuth();
+  return isFirebaseConfigured && !loading && !!user;
+}
+
 export function useAdmissions() {
+  const ready = useIsReady();
   return useQuery({
     queryKey: ["admissions"],
     queryFn: fetchAdmissions,
-    enabled: isFirebaseConfigured,
+    enabled: ready,
   });
 }
 
 export function usePackages() {
+  const ready = useIsReady();
   return useQuery({
     queryKey: ["packages"],
     queryFn: fetchPackages,
-    enabled: isFirebaseConfigured,
+    enabled: ready,
   });
 }
 
 export function useColleges() {
+  const ready = useIsReady();
   return useQuery({
     queryKey: ["colleges"],
     queryFn: fetchColleges,
-    enabled: isFirebaseConfigured,
+    enabled: ready,
   });
 }
 
 export function useProperties() {
+  const ready = useIsReady();
   return useQuery({
     queryKey: ["properties"],
     queryFn: fetchProperties,
-    enabled: isFirebaseConfigured,
+    enabled: ready,
   });
 }
 
 export function useRooms() {
+  const ready = useIsReady();
   return useQuery({
     queryKey: ["rooms"],
     queryFn: fetchRooms,
-    enabled: isFirebaseConfigured,
+    enabled: ready,
   });
 }
 
 export function useCities() {
+  const ready = useIsReady();
   return useQuery({
     queryKey: ["cities"],
     queryFn: fetchCities,
-    enabled: isFirebaseConfigured,
+    enabled: ready,
   });
 }
 
@@ -125,5 +137,274 @@ export function filterByPeriod(rows: Admission[], period: string): Admission[] {
   return rows.filter((r) => {
     const d = r.createdAt ?? (r.admissionDate ? new Date(r.admissionDate) : null);
     return d ? d.getTime() >= start.getTime() : false;
+  });
+}
+
+// ── Mess & Tiffin hooks ──────────────────────────────────────────────────────
+
+import {
+  fetchMesses,
+  fetchEmployees,
+  fetchEmployeesByMess,
+  fetchEmployeeByUid,
+  fetchDeliveriesForDate,
+  fetchDeliveriesForStudent,
+  fetchDeliverySummaryForDate,
+  todayDateString,
+} from "@/lib/db";
+
+export function useMesses() {
+  const ready = useIsReady();
+  return useQuery({
+    queryKey: ["messes"],
+    queryFn: fetchMesses,
+    enabled: ready,
+  });
+}
+
+export function useEmployees() {
+  const ready = useIsReady();
+  return useQuery({
+    queryKey: ["employees"],
+    queryFn: fetchEmployees,
+    enabled: ready,
+  });
+}
+
+export function useEmployeesByMess(messId: string | null) {
+  return useQuery({
+    queryKey: ["employees", "mess", messId],
+    queryFn: () => fetchEmployeesByMess(messId!),
+    enabled: isFirebaseConfigured && !!messId,
+  });
+}
+
+export function useEmployeeByUid(uid: string | undefined) {
+  return useQuery({
+    queryKey: ["employees", "uid", uid],
+    queryFn: () => fetchEmployeeByUid(uid!),
+    enabled: isFirebaseConfigured && !!uid,
+  });
+}
+
+export function useDeliveriesForDate(messId: string | null, date?: string) {
+  const d = date ?? todayDateString();
+  return useQuery({
+    queryKey: ["deliveries", messId, d],
+    queryFn: () => fetchDeliveriesForDate(messId!, d),
+    enabled: isFirebaseConfigured && !!messId,
+  });
+}
+
+export function useDeliveriesForStudent(studentId: string | null) {
+  return useQuery({
+    queryKey: ["deliveries", "student", studentId],
+    queryFn: () => fetchDeliveriesForStudent(studentId!),
+    enabled: isFirebaseConfigured && !!studentId,
+  });
+}
+
+export function useDeliverySummary(messId: string | null, date?: string) {
+  const d = date ?? todayDateString();
+  return useQuery({
+    queryKey: ["deliverySummary", messId, d],
+    queryFn: () => fetchDeliverySummaryForDate(messId!, d),
+    enabled: isFirebaseConfigured && !!messId,
+  });
+}
+
+// ── Payout hooks ──────────────────────────────────────────────────────────────
+
+import { fetchPayouts, fetchPayoutsByMess, fetchPayoutsByLaundry } from "@/lib/db";
+import type { Payout } from "@/lib/types";
+
+/** Load all payouts for the current month by default */
+export function usePayouts(startDate?: Date, endDate?: Date) {
+  const ready = useIsReady();
+  const start = startDate ?? (() => { const d = new Date(); d.setDate(1); d.setHours(0,0,0,0); return d; })();
+  const end   = endDate   ?? new Date();
+  return useQuery({
+    queryKey: ["payouts", start.toISOString().slice(0,10), end.toISOString().slice(0,10)],
+    queryFn: () => fetchPayouts({ startDate: start, endDate: end }),
+    enabled: ready,
+  });
+}
+
+/** Load ALL payouts for dashboard stats (no date filter) */
+export function useAllPayouts() {
+  const ready = useIsReady();
+  return useQuery({
+    queryKey: ["payouts", "all"],
+    queryFn: () => fetchPayouts({ limitCount: 2000 }),
+    enabled: ready,
+  });
+}
+
+export function usePayoutsByMess(messIds: string[]) {
+  return useQuery({
+    queryKey: ["payouts", "byMess", messIds.join(",")],
+    queryFn: async () => {
+      const results = await Promise.all(
+        messIds.map((id) => fetchPayoutsByMess(id)),
+      );
+      const seen = new Set<string>();
+      return results.flat().filter((p) => {
+        if (seen.has(p.id)) return false;
+        seen.add(p.id);
+        return true;
+      }).sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0));
+    },
+    enabled: isFirebaseConfigured && messIds.length > 0,
+  });
+}
+
+export function usePayoutsByLaundry(laundryIds: string[]) {
+  return useQuery({
+    queryKey: ["payouts", "byLaundry", laundryIds.join(",")],
+    queryFn: async () => {
+      const results = await Promise.all(
+        laundryIds.map((id) => fetchPayoutsByLaundry(id)),
+      );
+      const seen = new Set<string>();
+      return results.flat().filter((p) => {
+        if (seen.has(p.id)) return false;
+        seen.add(p.id);
+        return true;
+      }).sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0));
+    },
+    enabled: isFirebaseConfigured && laundryIds.length > 0,
+  });
+}
+
+// ── Laundry hooks ─────────────────────────────────────────────────────────────
+
+import {
+  fetchLaundries,
+  fetchLaundryEmployees,
+  fetchLaundryEmployeeByUid,
+  fetchLaundryPickupsForDate,
+  fetchLaundryPickupSummaryForDate,
+} from "@/lib/db";
+
+export function useLaundries() {
+  const ready = useIsReady();
+  return useQuery({
+    queryKey: ["laundries"],
+    queryFn: fetchLaundries,
+    enabled: ready,
+  });
+}
+
+export function useLaundryEmployees() {
+  const ready = useIsReady();
+  return useQuery({
+    queryKey: ["laundryEmployees"],
+    queryFn: fetchLaundryEmployees,
+    enabled: ready,
+  });
+}
+
+export function useLaundryEmployeeByUid(uid: string | undefined) {
+  return useQuery({
+    queryKey: ["laundryEmployees", "uid", uid],
+    queryFn: () => fetchLaundryEmployeeByUid(uid!),
+    enabled: isFirebaseConfigured && !!uid,
+  });
+}
+
+export function useLaundryPickupsForDate(laundryId: string | null, date?: string) {
+  const d = date ?? todayDateString();
+  return useQuery({
+    queryKey: ["laundryPickups", laundryId, d],
+    queryFn: () => fetchLaundryPickupsForDate(laundryId!, d),
+    enabled: isFirebaseConfigured && !!laundryId,
+  });
+}
+
+export function useLaundryPickupSummary(laundryId: string | null, date?: string) {
+  const d = date ?? todayDateString();
+  return useQuery({
+    queryKey: ["laundryPickupSummary", laundryId, d],
+    queryFn: () => fetchLaundryPickupSummaryForDate(laundryId!, d),
+    enabled: isFirebaseConfigured && !!laundryId,
+  });
+}
+
+// ── Student Mess & Laundry hooks ──────────────────────────────────────────────
+
+import {
+  fetchMessRecord,
+  fetchMessRecordsForDate,
+  fetchMessRecordsForStudent,
+  fetchMessRequestsForStudent,
+  fetchMessRequestsForMess,
+  fetchAllMessRequests,
+  fetchStudentLaundryRecords,
+  fetchDoNotWantForStudent,
+} from "@/lib/db";
+import type { MessRecord, MessRequest, StudentLaundryRecord, DoNotWantRecord } from "@/lib/types";
+
+export function useMessRecord(studentId: string | null, date: string) {
+  return useQuery({
+    queryKey: ["messRecord", studentId, date],
+    queryFn: () => fetchMessRecord(studentId!, date),
+    enabled: isFirebaseConfigured && !!studentId,
+  });
+}
+
+export function useMessRecordsForDate(messId: string | null, date: string) {
+  return useQuery({
+    queryKey: ["messRecords", "date", messId, date],
+    queryFn: () => fetchMessRecordsForDate(messId!, date),
+    enabled: isFirebaseConfigured && !!messId,
+  });
+}
+
+export function useMessRecordsForStudent(studentId: string | null) {
+  return useQuery({
+    queryKey: ["messRecords", "student", studentId],
+    queryFn: () => fetchMessRecordsForStudent(studentId!),
+    enabled: isFirebaseConfigured && !!studentId,
+  });
+}
+
+export function useMessRequestsForStudent(studentId: string | null) {
+  return useQuery({
+    queryKey: ["messRequests", "student", studentId],
+    queryFn: () => fetchMessRequestsForStudent(studentId!),
+    enabled: isFirebaseConfigured && !!studentId,
+  });
+}
+
+export function useMessRequestsForMess(messId: string | null) {
+  return useQuery({
+    queryKey: ["messRequests", "mess", messId],
+    queryFn: () => fetchMessRequestsForMess(messId!),
+    enabled: isFirebaseConfigured && !!messId,
+  });
+}
+
+export function useAllMessRequests() {
+  const ready = useIsReady();
+  return useQuery({
+    queryKey: ["messRequests", "all"],
+    queryFn: fetchAllMessRequests,
+    enabled: ready,
+  });
+}
+
+export function useStudentLaundryRecords(studentId: string | null) {
+  return useQuery({
+    queryKey: ["studentLaundryRecords", studentId],
+    queryFn: () => fetchStudentLaundryRecords(studentId!),
+    enabled: isFirebaseConfigured && !!studentId,
+  });
+}
+
+export function useDoNotWantForStudent(studentId: string | null) {
+  return useQuery({
+    queryKey: ["doNotWant", studentId],
+    queryFn: () => fetchDoNotWantForStudent(studentId!),
+    enabled: isFirebaseConfigured && !!studentId,
   });
 }

@@ -27,10 +27,13 @@ import {
 } from "@/components/ui/select";
 import { useAuth, useIsGlobalAdmin } from "@/lib/auth";
 import { useColleges, useCities } from "@/lib/hooks";
+import { isValidEmail } from "@/lib/format";
 import {
   addCollege,
   addCity,
   createAdminUser,
+  ensureStudentAuthAccount,
+  fetchAdmissions,
   setCollegeActive,
   setCityActive,
   updateCollege,
@@ -97,6 +100,9 @@ function SettingsPage() {
 
         {/* Add Admin for College — global admin only */}
         {isGlobalAdmin && <AdminUsersCard />}
+
+        {/* Backfill Firebase Auth accounts for existing students — global admin only */}
+        {isGlobalAdmin && <BackfillStudentAuthCard />}
       </div>
     </AdminShell>
   );
@@ -202,6 +208,10 @@ function AdminUsersCard() {
       toast.error("Please fill in all fields and select a college.");
       return;
     }
+    if (!isValidEmail(email)) {
+      toast.error("Enter a valid email address.");
+      return;
+    }
     if (password.length < 6) {
       toast.error("Password must be at least 6 characters.");
       return;
@@ -296,6 +306,57 @@ function AdminUsersCard() {
           </Button>
         </div>
       </form>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Backfill Firebase Auth accounts for existing students              */
+/* ------------------------------------------------------------------ */
+function BackfillStudentAuthCard() {
+  const [running, setRunning] = useState(false);
+  const [result, setResult] = useState<{ created: number; exists: number; skipped: number } | null>(null);
+
+  async function run() {
+    setRunning(true);
+    setResult(null);
+    try {
+      const admissions = await fetchAdmissions();
+      let created = 0, exists = 0, skipped = 0;
+      for (const a of admissions) {
+        const status = await ensureStudentAuthAccount(a.email ?? "", a.parentPhone ?? "", a.fullName);
+        if (status === "created") created++;
+        else if (status === "exists") exists++;
+        else skipped++;
+      }
+      setResult({ created, exists, skipped });
+      toast.success(`Done — ${created} created, ${exists} already existed, ${skipped} skipped.`);
+    } catch {
+      toast.error("Failed to backfill student auth accounts.");
+    } finally {
+      setRunning(false);
+    }
+  }
+
+  return (
+    <section className="rounded-2xl border border-border bg-card p-5 shadow-soft">
+      <h2 className="flex items-center gap-2 font-display text-base font-bold">
+        <Wrench className="size-4 text-primary" />
+        Backfill Student Login Accounts
+      </h2>
+      <p className="mt-1 text-xs text-muted-foreground">
+        Creates Firebase Auth accounts for existing students who don't have one yet.
+        Password = parent phone number (digits only). Safe to run multiple times.
+      </p>
+      <Button size="sm" className="mt-3" onClick={run} disabled={running}>
+        {running && <Loader2 className="mr-1.5 size-4 animate-spin" />}
+        {running ? "Running…" : "Run Backfill"}
+      </Button>
+      {result && (
+        <p className="mt-2 text-xs text-muted-foreground">
+          Created: {result.created} · Already existed: {result.exists} · Skipped: {result.skipped}
+        </p>
+      )}
     </section>
   );
 }

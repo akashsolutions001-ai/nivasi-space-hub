@@ -262,6 +262,7 @@ function AdmissionsListPage() {
                   <th className="px-4 py-3">College</th>
                   <th className="px-4 py-3">Property</th>
                   <th className="px-4 py-3">Package</th>
+                  <th className="px-4 py-3">Mess</th>
                   <th className="px-4 py-3 text-success">Paid</th>
                   <th className="px-4 py-3 text-destructive">Pending</th>
                   <th className="px-4 py-3">Items</th>
@@ -302,6 +303,16 @@ function AdmissionsListPage() {
                       <span className="block text-xs text-muted-foreground">
                         {formatINR(a.packageAmount)}
                       </span>
+                    </td>
+                    {/* Mess column */}
+                    <td className="px-4 py-3">
+                      {(a as any).messName ? (
+                        <span className="inline-flex items-center gap-1 rounded-full border border-success/30 bg-success/10 px-2 py-0.5 text-xs font-medium text-success">
+                          🍱 {(a as any).messName}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
                     </td>
                     {/* Paid column */}
                     <td className="px-4 py-3">
@@ -380,6 +391,11 @@ function AdmissionsListPage() {
                     pendingLabel="Tiffin pending"
                   />
                   <MattressBadge required={a.mattressRequired} />
+                  {(a as any).messName && (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-success/30 bg-success/10 px-2 py-0.5 text-xs font-medium text-success">
+                      🍱 {(a as any).messName}
+                    </span>
+                  )}
                 </div>
               </Link>
             ))}

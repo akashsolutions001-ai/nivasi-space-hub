@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Eye, EyeOff, Pencil, Share2, ShieldAlert, Trash2 } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Pencil, Share2, ShieldAlert, Trash2, UtensilsCrossed, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { AdminShell } from "@/components/nivasi/admin-shell";
@@ -23,11 +23,16 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { deleteAdmission, fetchAdmission } from "@/lib/db";
+import { deleteAdmission, fetchAdmission, assignStudentToMess, updateStudentTiffinStatus } from "@/lib/db";
 import { useIsGlobalAdmin } from "@/lib/auth";
 import { isFirebaseConfigured } from "@/lib/firebase";
 import { formatDate, formatINR } from "@/lib/format";
-import type { Admission } from "@/lib/types";
+import { useMesses } from "@/lib/hooks";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import type { Admission, TiffinStatus } from "@/lib/types";
 
 // Global admin credentials for delete confirmation
 const GLOBAL_EMAIL    = "Globaladmin@nivasispace.com";
@@ -391,6 +396,112 @@ function DeleteButton({
   );
 }
 
+/* ── Mess assignment section ── */
+
+function MessSection({ data }: { data: Admission }) {
+  const qc = useQueryClient();
+  const { data: messes = [] } = useMesses();
+  const [saving, setSaving] = useState(false);
+
+  const currentMessId: string = (data as any).messId ?? "";
+  const currentTiffin: TiffinStatus = ((data as any).tiffinStatus as TiffinStatus) || "active";
+  const currentMess = messes.find((m) => m.id === currentMessId);
+
+  async function handleMessChange(messId: string) {
+    const mess = messes.find((m) => m.id === messId);
+    if (!mess) return;
+    setSaving(true);
+    try {
+      await assignStudentToMess(data.id, messId, mess.messName, currentTiffin || "active");
+      await qc.invalidateQueries({ queryKey: ["admission", data.admissionId] });
+      await qc.invalidateQueries({ queryKey: ["admissions"] });
+      toast.success(`Assigned to ${mess.messName}`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not assign mess.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleTiffinChange(status: TiffinStatus) {
+    setSaving(true);
+    try {
+      await updateStudentTiffinStatus(data.id, status);
+      await qc.invalidateQueries({ queryKey: ["admission", data.admissionId] });
+      await qc.invalidateQueries({ queryKey: ["admissions"] });
+      toast.success("Tiffin status updated.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not update tiffin status.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const tiffinColor = currentTiffin === "active"
+    ? "border-success/30 bg-success/10 text-success"
+    : currentTiffin === "paused"
+    ? "border-warning/30 bg-warning/10 text-warning-foreground"
+    : "border-destructive/20 bg-destructive/10 text-destructive";
+
+  return (
+    <section className="rounded-2xl border border-border bg-card p-5 shadow-soft">
+      <div className="mb-3 flex items-center gap-2">
+        <UtensilsCrossed className="size-4 text-primary" />
+        <h2 className="font-display text-base font-bold">Mess & Tiffin</h2>
+        {saving && <Loader2 className="size-4 animate-spin text-muted-foreground" />}
+      </div>
+
+      {currentMess ? (
+        <div className="mb-3 rounded-xl border border-success/30 bg-success/5 px-3 py-2.5">
+          <p className="text-sm font-semibold text-success">{currentMess.messName}</p>
+          {currentMess.ownerName && (
+            <p className="mt-0.5 text-xs text-muted-foreground">Owner: {currentMess.ownerName}</p>
+          )}
+          {currentMess.ownerPhone && (
+            <p className="text-xs text-muted-foreground">{currentMess.ownerPhone}</p>
+          )}
+          <Badge variant="outline" className={`mt-1.5 text-[11px] capitalize ${tiffinColor}`}>
+            Tiffin: {currentTiffin || "active"}
+          </Badge>
+        </div>
+      ) : (
+        <p className="mb-3 text-sm text-muted-foreground italic">Not assigned to any mess yet.</p>
+      )}
+
+      <div className="space-y-2">
+        <div className="space-y-1">
+          <p className="text-xs font-medium text-muted-foreground">Assign to Mess</p>
+          <Select value={currentMessId || ""} onValueChange={handleMessChange} disabled={saving}>
+            <SelectTrigger className="h-9 text-sm">
+              <SelectValue placeholder="Select a mess…" />
+            </SelectTrigger>
+            <SelectContent>
+              {messes.filter((m) => m.status === "active").map((m) => (
+                <SelectItem key={m.id} value={m.id}>{m.messName}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        {currentMessId && (
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-muted-foreground">Tiffin Status</p>
+            <Select value={currentTiffin} onValueChange={(v) => handleTiffinChange(v as TiffinStatus)} disabled={saving}>
+              <SelectTrigger className="h-9 text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="paused">Paused</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
 /* ---------------------------------- page --------------------------------- */
 
 function AdmissionDetailPage() {
@@ -534,6 +645,9 @@ function AdmissionDetailPage() {
             <Row label="Package Start" value={formatDate(data.packageStartDate)} />
             <Row label="Package End"   value={formatDate(data.packageEndDate)} />
           </Section>
+
+          {/* Mess & Tiffin assignment */}
+          <MessSection data={data} />
 
           {/* Payment — role-aware component */}
           <PaymentSection data={data} isGlobalAdmin={isGlobalAdmin} />

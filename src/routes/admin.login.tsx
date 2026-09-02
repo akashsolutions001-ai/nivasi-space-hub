@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 
 import { NivasiLogo } from "@/components/nivasi/logo";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/auth";
+import { hasStudentSession } from "@/lib/studentAuth";
 
 export const Route = createFileRoute("/admin/login")({
   head: () => ({
@@ -25,7 +26,7 @@ export const Route = createFileRoute("/admin/login")({
 });
 
 function LoginPage() {
-  const { login, user, loading, configured } = useAuth();
+  const { login, user, loading, configured, userRole } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -33,8 +34,18 @@ function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!loading && user) navigate({ to: "/admin/dashboard", replace: true });
-  }, [loading, user, navigate]);
+    if (loading) return;
+    if (!user) return;
+    // Student — no users doc, role resolves to "unknown"
+    if (userRole === "unknown") {
+      navigate({ to: "/student/dashboard", replace: true });
+      return;
+    }
+    // Staff — send to admin dashboard
+    if (userRole === "admin" || userRole === "mess_employee" || userRole === "laundry_employee") {
+      navigate({ to: "/admin/dashboard", replace: true });
+    }
+  }, [loading, user, userRole, navigate]);
 
   if (!configured) return <SetupNotice />;
 
@@ -140,6 +151,15 @@ function LoginPage() {
           <p className="mt-6 text-center text-xs text-muted-foreground">
             Accounts are created by your administrator. Self sign-up is disabled.
           </p>
+
+          <div className="mt-6 border-t border-border pt-6">
+            <p className="text-center text-xs text-muted-foreground mb-3">Are you a student?</p>
+            <Link to="/student/login">
+              <Button variant="outline" className="w-full">
+                Student Portal
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
     </div>

@@ -9,6 +9,9 @@ import {
   Users,
   Building2,
   ShieldAlert,
+  UtensilsCrossed,
+  WashingMachine,
+  ArrowDownCircle,
 } from "lucide-react";
 
 import { NivasiLogo } from "./logo";
@@ -16,7 +19,8 @@ import { CollegeFilterChip, CollegeFilterDialog } from "./college-filter-dialog"
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAuth, useIsGlobalAdmin } from "@/lib/auth";
+import { useAuth, useIsGlobalAdmin, useIsMessEmployee, useIsLaundryEmployee } from "@/lib/auth";
+import { hasStudentSession } from "@/lib/studentAuth";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -24,14 +28,32 @@ const NAV = [
   { label: "Admissions", to: "/admin/admissions",  icon: Users },
   { label: "Properties", to: "/admin/properties",  icon: Building2 },
   { label: "Packages",   to: "/admin/packages",    icon: Package },
+  { label: "Mess",       to: "/admin/mess",        icon: UtensilsCrossed },
+  { label: "Laundry",    to: "/admin/laundry",     icon: WashingMachine },
+  { label: "Payouts",    to: "/admin/payouts",     icon: ArrowDownCircle },
   { label: "Settings",   to: "/admin/settings",    icon: Settings },
 ] as const;
 
 function NavLinks({ onNavigate }: { onNavigate?: (() => void) | undefined }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isMessEmployee = useIsMessEmployee();
+  const isLaundryEmployee = useIsLaundryEmployee();
+  const isEmployee = isMessEmployee || isLaundryEmployee;
+
+  // Define employee-specific navigation items
+  const employeeNav = [
+    // Mess employees see Mess tab, Laundry employees see Laundry tab
+    ...(isMessEmployee ? [{ label: "Mess", to: "/admin/mess", icon: UtensilsCrossed }] : []),
+    ...(isLaundryEmployee ? [{ label: "Laundry", to: "/admin/laundry", icon: WashingMachine }] : []),
+    // Both employee types see "My Payout" tab
+    { label: "My Payout", to: isMessEmployee ? "/employee/mess/payouts" : "/employee/laundry/payouts", icon: ArrowDownCircle },
+  ] as const;
+
+  const visibleNav = isEmployee ? employeeNav : NAV;
+
   return (
     <nav className="flex flex-col gap-1">
-      {NAV.map((item) => {
+      {visibleNav.map((item) => {
         const active = pathname.startsWith(item.to);
         return (
           <Link
@@ -109,7 +131,7 @@ export function AdminShell({
   action?: ReactNode;
   children: ReactNode;
 }) {
-  const { user, loading, configured, needsCollegeFilter } = useAuth();
+  const { user, loading, configured, needsCollegeFilter, userRole } = useAuth();
   const isGlobalAdmin = useIsGlobalAdmin();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -122,12 +144,26 @@ export function AdminShell({
     }
   }, [isGlobalAdmin, needsCollegeFilter]);
 
-  // Fix: move redirect into useEffect to avoid setState-during-render warning
+  // Redirect to login if not authenticated or not a recognized staff role.
+  // We wait for loading to finish AND for userRole to be resolved (not "unknown")
+  // before deciding whether to redirect, to avoid a race condition during role resolution.
   useEffect(() => {
-    if (!loading && configured && !user) {
+    if (loading || !configured) return;
+    if (!user) {
+      navigate({ to: "/admin/login", replace: true });
+      return;
+    }
+    // If role is "unknown" after loading, the signed-in user is a student
+    // (no users doc) — send them to the student portal.
+    if (userRole === "unknown") {
+      navigate({ to: "/student/dashboard", replace: true });
+      return;
+    }
+    // Explicitly non-staff role
+    if (userRole !== "admin" && userRole !== "mess_employee" && userRole !== "laundry_employee") {
       navigate({ to: "/admin/login", replace: true });
     }
-  }, [loading, configured, user, navigate]);
+  }, [loading, configured, user, userRole, navigate]);
 
   if (!configured) {
     return <SetupNotice />;
@@ -142,9 +178,13 @@ export function AdminShell({
     );
   }
 
-  if (!user) {
-    // Render nothing while the useEffect redirect fires
-    return null;
+  if (!user || hasStudentSession()) {
+    return (
+      <div className="min-h-screen space-y-4 p-8">
+        <Skeleton className="h-10 w-64" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    );
   }
 
   return (
