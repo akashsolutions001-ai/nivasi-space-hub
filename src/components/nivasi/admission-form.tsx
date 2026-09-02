@@ -903,21 +903,49 @@ export function AdmissionForm({ existing }: { existing?: Admission | null }) {
           </div>
         </div>
 
-        {/* Meal preference — shown when tiffin is provided */}
+        {/* Meal preference */}
         <div className="mt-3 max-w-xs">
           <p className="mb-1.5 text-xs font-medium text-muted-foreground">Meal Preference</p>
-          <Select
-            value={form.mealPreference}
-            onValueChange={(v) => set("mealPreference", v as "veg" | "non-veg")}
-          >
-            <SelectTrigger className="h-9 text-sm">
-              <SelectValue placeholder="Select preference…" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="veg">🟢 Veg</SelectItem>
-              <SelectItem value="non-veg">🔴 Non-Veg</SelectItem>
-            </SelectContent>
-          </Select>
+          {form.mealPreference ? (
+            <div className="flex items-center gap-2">
+              <div
+                className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold ${
+                  form.mealPreference === "veg"
+                    ? "border-green-400 bg-green-100 text-green-700 dark:border-green-600 dark:bg-green-900/40 dark:text-green-400"
+                    : "border-red-400 bg-red-100 text-red-700 dark:border-red-600 dark:bg-red-900/40 dark:text-red-400"
+                }`}
+              >
+                <span className={`size-2 rounded-full shrink-0 ${form.mealPreference === "veg" ? "bg-green-500" : "bg-red-500"}`} />
+                {form.mealPreference === "veg" ? "Veg" : "Non-Veg"}
+              </div>
+              <button
+                type="button"
+                onClick={() => set("mealPreference", "")}
+                className="text-[11px] text-muted-foreground hover:text-foreground underline transition-colors"
+              >
+                Change
+              </button>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => set("mealPreference", "veg")}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:border-green-400 hover:bg-green-50 hover:text-green-700 dark:hover:bg-green-900/20 dark:hover:text-green-400"
+              >
+                <span className="size-2 rounded-full bg-green-500 shrink-0" />
+                Veg
+              </button>
+              <button
+                type="button"
+                onClick={() => set("mealPreference", "non-veg")}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:border-red-400 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+              >
+                <span className="size-2 rounded-full bg-red-500 shrink-0" />
+                Non-Veg
+              </button>
+            </div>
+          )}
         </div>
       </Section>
 

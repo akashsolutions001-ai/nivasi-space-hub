@@ -402,11 +402,16 @@ function MessSection({ data }: { data: Admission }) {
   const qc = useQueryClient();
   const { data: messes = [] } = useMesses();
   const [saving, setSaving] = useState(false);
+  const [editingMealPref, setEditingMealPref] = useState(false);
+  // Local state so the pill updates instantly without waiting for query refetch
+  const [localMealPref, setLocalMealPref] = useState<"veg" | "non-veg" | "">(
+    (data.mealPreference as "veg" | "non-veg") ?? ""
+  );
 
   const currentMessId: string = (data as any).messId ?? "";
   const currentTiffin: TiffinStatus = ((data as any).tiffinStatus as TiffinStatus) || "active";
   const currentMess = messes.find((m) => m.id === currentMessId);
-  const currentMealPref: "veg" | "non-veg" | "" = (data.mealPreference as "veg" | "non-veg") ?? "";
+  const currentMealPref: "veg" | "non-veg" | "" = localMealPref;
 
   async function handleMessChange(messId: string) {
     const mess = messes.find((m) => m.id === messId);
@@ -439,6 +444,8 @@ function MessSection({ data }: { data: Admission }) {
   }
 
   async function handleMealPrefChange(pref: "veg" | "non-veg") {
+    setLocalMealPref(pref);       // update instantly
+    setEditingMealPref(false);    // collapse to pill immediately
     setSaving(true);
     try {
       await updateAdmission(data.id, { mealPreference: pref });
@@ -446,6 +453,7 @@ function MessSection({ data }: { data: Admission }) {
       await qc.invalidateQueries({ queryKey: ["admissions"] });
       toast.success("Meal preference updated.");
     } catch (err) {
+      setLocalMealPref((data.mealPreference as "veg" | "non-veg") ?? ""); // revert on error
       toast.error(err instanceof Error ? err.message : "Could not update meal preference.");
     } finally {
       setSaving(false);
@@ -479,8 +487,16 @@ function MessSection({ data }: { data: Admission }) {
             Tiffin: {currentTiffin || "active"}
           </Badge>
           {currentMealPref && (
-            <Badge variant="outline" className="mt-1 text-[11px]">
-              {currentMealPref === "veg" ? "🟢 Veg" : "🔴 Non-Veg"}
+            <Badge
+              variant="outline"
+              className={`mt-1 text-[11px] font-semibold ${
+                currentMealPref === "veg"
+                  ? "border-green-400 bg-green-100 text-green-700 dark:border-green-600 dark:bg-green-900/40 dark:text-green-400"
+                  : "border-red-400 bg-red-100 text-red-700 dark:border-red-600 dark:bg-red-900/40 dark:text-red-400"
+              }`}
+            >
+              <span className={`mr-1 inline-block size-1.5 rounded-full ${currentMealPref === "veg" ? "bg-green-500" : "bg-red-500"}`} />
+              {currentMealPref === "veg" ? "Veg" : "Non-Veg"}
             </Badge>
           )}
         </div>
@@ -518,20 +534,55 @@ function MessSection({ data }: { data: Admission }) {
           </div>
         )}
         <div className="space-y-1">
-          <p className="text-xs font-medium text-muted-foreground">Meal Preference</p>
-          <Select
-            value={currentMealPref}
-            onValueChange={(v) => handleMealPrefChange(v as "veg" | "non-veg")}
-            disabled={saving}
-          >
-            <SelectTrigger className="h-9 text-sm">
-              <SelectValue placeholder="Select preference…" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="veg">🟢 Veg</SelectItem>
-              <SelectItem value="non-veg">🔴 Non-Veg</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-medium text-muted-foreground">Meal Preference</p>
+            {currentMealPref && !editingMealPref && (
+              <button
+                type="button"
+                onClick={() => setEditingMealPref(true)}
+                className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Pencil className="size-3" />
+                Edit
+              </button>
+            )}
+          </div>
+
+          {/* Show selected pill when preference is set and not editing */}
+          {currentMealPref && !editingMealPref ? (
+            <div
+              className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold ${
+                currentMealPref === "veg"
+                  ? "border-green-400 bg-green-100 text-green-700 dark:border-green-600 dark:bg-green-900/40 dark:text-green-400"
+                  : "border-red-400 bg-red-100 text-red-700 dark:border-red-600 dark:bg-red-900/40 dark:text-red-400"
+              }`}
+            >
+              <span className={`size-2 rounded-full shrink-0 ${currentMealPref === "veg" ? "bg-green-500" : "bg-red-500"}`} />
+              {currentMealPref === "veg" ? "Veg" : "Non-Veg"}
+            </div>
+          ) : (
+            /* Show both buttons when no preference set or editing */
+            <div className="flex gap-2">
+              <button
+                type="button"
+                disabled={saving}
+                onClick={async () => { await handleMealPrefChange("veg"); }}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:border-green-400 hover:bg-green-50 hover:text-green-700 disabled:opacity-50 dark:hover:bg-green-900/20 dark:hover:text-green-400"
+              >
+                <span className="size-2 rounded-full bg-green-500 shrink-0" />
+                Veg
+              </button>
+              <button
+                type="button"
+                disabled={saving}
+                onClick={async () => { await handleMealPrefChange("non-veg"); }}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:border-red-400 hover:bg-red-50 hover:text-red-700 disabled:opacity-50 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+              >
+                <span className="size-2 rounded-full bg-red-500 shrink-0" />
+                Non-Veg
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </section>
