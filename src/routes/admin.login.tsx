@@ -36,15 +36,12 @@ function LoginPage() {
   useEffect(() => {
     if (loading) return;
     if (!user) return;
-    // Student — no users doc, role resolves to "unknown"
-    if (userRole === "unknown") {
-      navigate({ to: "/student/dashboard", replace: true });
-      return;
-    }
-    // Staff — send to admin dashboard
+    // Already authenticated as staff — go straight to dashboard
     if (userRole === "admin" || userRole === "mess_employee" || userRole === "laundry_employee") {
       navigate({ to: "/admin/dashboard", replace: true });
     }
+    // "unknown" means either a student account or role not yet in DB — stay on this page
+    // so staff can log in with their own credentials (login() will overwrite the session)
   }, [loading, user, userRole, navigate]);
 
   if (!configured) return <SetupNotice />;
@@ -59,7 +56,7 @@ function LoginPage() {
     setSubmitting(true);
     try {
       await login(email, password);
-      navigate({ to: "/admin/dashboard", replace: true });
+      // Navigation is handled by the useEffect above once userRole resolves
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to sign in.");
     } finally {

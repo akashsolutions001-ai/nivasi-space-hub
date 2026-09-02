@@ -183,7 +183,7 @@ export async function ensureStudentAuthAccount(
   email: string,
   parentPhone: string,
   fullName: string,
-): Promise<"created" | "exists" | "skipped"> {
+): Promise<"created" | "exists" | "skipped" | "rate-limited"> {
   const password = parentPhone.replace(/\D/g, "");
   if (!email || password.length < 6) return "skipped";
 
@@ -203,6 +203,7 @@ export async function ensureStudentAuthAccount(
     if (!res.ok) {
       const msg = data?.error?.message ?? "";
       if (msg === "EMAIL_EXISTS") return "exists";
+      if (msg.startsWith("TOO_MANY_ATTEMPTS")) return "rate-limited";
       console.warn("[auth] ensureStudentAuthAccount failed:", msg, "email:", email);
       return "skipped";
     }
@@ -1993,11 +1994,13 @@ export async function fetchMessRequestsForMess(messId: string): Promise<MessRequ
       query(
         collection(getDb(), "messRequests"),
         where("messId", "==", messId),
-        orderBy("createdAt", "desc"),
         limit(100),
       ),
     );
-    return snap.docs.map(mapMessRequest);
+    // Sort client-side to avoid requiring a composite Firestore index
+    return snap.docs
+      .map(mapMessRequest)
+      .sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0));
   } catch (error) {
     console.error("[firestore] fetchMessRequestsForMess", error);
     return [];

@@ -313,23 +313,77 @@ function AdminUsersCard() {
 /* ------------------------------------------------------------------ */
 /*  Backfill Firebase Auth accounts for existing students              */
 /* ------------------------------------------------------------------ */
+type SkippedEntry = { name: string; admissionId: string; reason: "no-email" | "no-phone" | "rate-limited" | "other" };
+
+/** Small pause so Firebase doesn't rate-limit the bulk signUp calls. */
+function sleep(ms: number) {
+  return new Promise<void>((resolve) => setTimeout(resolve, ms));
+}
+
 function BackfillStudentAuthCard() {
   const [running, setRunning] = useState(false);
-  const [result, setResult] = useState<{ created: number; exists: number; skipped: number } | null>(null);
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+  const [result, setResult] = useState<{
+    created: number;
+    exists: number;
+    skipped: number;
+    skippedList: SkippedEntry[];
+  } | null>(null);
 
   async function run() {
     setRunning(true);
     setResult(null);
+    setProgress(null);
     try {
       const admissions = await fetchAdmissions();
       let created = 0, exists = 0, skipped = 0;
-      for (const a of admissions) {
-        const status = await ensureStudentAuthAccount(a.email ?? "", a.parentPhone ?? "", a.fullName);
+      const skippedList: SkippedEntry[] = [];
+      setProgress({ done: 0, total: admissions.length });
+
+      for (let i = 0; i < admissions.length; i++) {
+        const a = admissions[i]!;
+        const email = a.email ?? "";
+        const phone = a.parentPhone ?? "";
+        const password = phone.replace(/\D/g, "");
+
+        if (!email || password.length < 6) {
+          skipped++;
+          skippedList.push({
+            name: a.fullName,
+            admissionId: a.admissionId,
+            reason: !email ? "no-email" : "no-phone",
+          });
+          setProgress({ done: i + 1, total: admissions.length });
+          continue;
+        }
+
+        // Space out calls to avoid Firebase rate-limiting (300 ms between signUp calls)
+        if (i > 0) await sleep(300);
+
+        let status = await ensureStudentAuthAccount(email, phone, a.fullName);
+
+        // On rate-limit, wait 5 s and retry once
+        if (status === "rate-limited") {
+          await sleep(5000);
+          status = await ensureStudentAuthAccount(email, phone, a.fullName);
+        }
+
         if (status === "created") created++;
         else if (status === "exists") exists++;
-        else skipped++;
+        else {
+          skipped++;
+          skippedList.push({
+            name: a.fullName,
+            admissionId: a.admissionId,
+            reason: status === "rate-limited" ? "rate-limited" : "other",
+          });
+        }
+
+        setProgress({ done: i + 1, total: admissions.length });
       }
-      setResult({ created, exists, skipped });
+
+      setResult({ created, exists, skipped, skippedList });
+      setProgress(null);
       toast.success(`Done — ${created} created, ${exists} already existed, ${skipped} skipped.`);
     } catch {
       toast.error("Failed to backfill student auth accounts.");
@@ -337,6 +391,12 @@ function BackfillStudentAuthCard() {
       setRunning(false);
     }
   }
+
+  const skippedList = result?.skippedList ?? [];
+  const noEmail = skippedList.filter((s) => s.reason === "no-email");
+  const noPhone = skippedList.filter((s) => s.reason === "no-phone");
+  const rateLimited = skippedList.filter((s) => s.reason === "rate-limited");
+  const otherErr = skippedList.filter((s) => s.reason === "other");
 
   return (
     <section className="rounded-2xl border border-border bg-card p-5 shadow-soft">
@@ -352,10 +412,79 @@ function BackfillStudentAuthCard() {
         {running && <Loader2 className="mr-1.5 size-4 animate-spin" />}
         {running ? "Running…" : "Run Backfill"}
       </Button>
-      {result && (
+      {running && progress && (
         <p className="mt-2 text-xs text-muted-foreground">
-          Created: {result.created} · Already existed: {result.exists} · Skipped: {result.skipped}
+          Processing {progress.done} / {progress.total}…
         </p>
+      )}
+      {result && (
+        <div className="mt-3 space-y-2 text-xs">
+          <p className="text-muted-foreground">
+            Created: <span className="font-semibold text-foreground">{result.created}</span>
+            {" · "}Already existed: <span className="font-semibold text-foreground">{result.exists}</span>
+            {" · "}Skipped: <span className="font-semibold text-foreground">{result.skipped}</span>
+          </p>
+
+          {noEmail.length > 0 && (
+            <div className="rounded-lg border border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950/30 p-3">
+              <p className="font-semibold text-yellow-700 dark:text-yellow-400 mb-1">
+                Missing email ({noEmail.length}) — add email to these admission records
+              </p>
+              <ul className="space-y-0.5 text-muted-foreground">
+                {noEmail.map((s) => (
+                  <li key={s.admissionId}>
+                    {s.name} <span className="font-mono text-primary">{s.admissionId}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {noPhone.length > 0 && (
+            <div className="rounded-lg border border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950/30 p-3">
+              <p className="font-semibold text-orange-700 dark:text-orange-400 mb-1">
+                Missing / short parent phone ({noPhone.length}) — add parent phone to these records
+              </p>
+              <ul className="space-y-0.5 text-muted-foreground">
+                {noPhone.map((s) => (
+                  <li key={s.admissionId}>
+                    {s.name} <span className="font-mono text-primary">{s.admissionId}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {rateLimited.length > 0 && (
+            <div className="rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/30 p-3">
+              <p className="font-semibold text-blue-700 dark:text-blue-400 mb-1">
+                Rate-limited by Firebase ({rateLimited.length}) — wait a few minutes and run again
+              </p>
+              <ul className="space-y-0.5 text-muted-foreground">
+                {rateLimited.map((s) => (
+                  <li key={s.admissionId}>
+                    {s.name} <span className="font-mono text-primary">{s.admissionId}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {otherErr.length > 0 && (
+            <div className="rounded-lg border border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/30 p-3">
+              <p className="font-semibold text-red-700 dark:text-red-400 mb-1">
+                Firebase error ({otherErr.length}) — check browser console
+              </p>
+              <ul className="space-y-0.5 text-muted-foreground">
+                {otherErr.map((s) => (
+                  <li key={s.admissionId}>
+                    {s.name} <span className="font-mono text-primary">{s.admissionId}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
       )}
     </section>
   );

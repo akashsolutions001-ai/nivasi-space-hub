@@ -23,7 +23,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { deleteAdmission, fetchAdmission, assignStudentToMess, updateStudentTiffinStatus } from "@/lib/db";
+import { deleteAdmission, fetchAdmission, assignStudentToMess, updateStudentTiffinStatus, updateAdmission } from "@/lib/db";
 import { useIsGlobalAdmin } from "@/lib/auth";
 import { isFirebaseConfigured } from "@/lib/firebase";
 import { formatDate, formatINR } from "@/lib/format";
@@ -406,6 +406,7 @@ function MessSection({ data }: { data: Admission }) {
   const currentMessId: string = (data as any).messId ?? "";
   const currentTiffin: TiffinStatus = ((data as any).tiffinStatus as TiffinStatus) || "active";
   const currentMess = messes.find((m) => m.id === currentMessId);
+  const currentMealPref: "veg" | "non-veg" | "" = (data.mealPreference as "veg" | "non-veg") ?? "";
 
   async function handleMessChange(messId: string) {
     const mess = messes.find((m) => m.id === messId);
@@ -437,6 +438,20 @@ function MessSection({ data }: { data: Admission }) {
     }
   }
 
+  async function handleMealPrefChange(pref: "veg" | "non-veg") {
+    setSaving(true);
+    try {
+      await updateAdmission(data.id, { mealPreference: pref });
+      await qc.invalidateQueries({ queryKey: ["admission", data.admissionId] });
+      await qc.invalidateQueries({ queryKey: ["admissions"] });
+      toast.success("Meal preference updated.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not update meal preference.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   const tiffinColor = currentTiffin === "active"
     ? "border-success/30 bg-success/10 text-success"
     : currentTiffin === "paused"
@@ -463,6 +478,11 @@ function MessSection({ data }: { data: Admission }) {
           <Badge variant="outline" className={`mt-1.5 text-[11px] capitalize ${tiffinColor}`}>
             Tiffin: {currentTiffin || "active"}
           </Badge>
+          {currentMealPref && (
+            <Badge variant="outline" className="mt-1 text-[11px]">
+              {currentMealPref === "veg" ? "🟢 Veg" : "🔴 Non-Veg"}
+            </Badge>
+          )}
         </div>
       ) : (
         <p className="mb-3 text-sm text-muted-foreground italic">Not assigned to any mess yet.</p>
@@ -497,6 +517,22 @@ function MessSection({ data }: { data: Admission }) {
             </Select>
           </div>
         )}
+        <div className="space-y-1">
+          <p className="text-xs font-medium text-muted-foreground">Meal Preference</p>
+          <Select
+            value={currentMealPref}
+            onValueChange={(v) => handleMealPrefChange(v as "veg" | "non-veg")}
+            disabled={saving}
+          >
+            <SelectTrigger className="h-9 text-sm">
+              <SelectValue placeholder="Select preference…" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="veg">🟢 Veg</SelectItem>
+              <SelectItem value="non-veg">🔴 Non-Veg</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
     </section>
   );

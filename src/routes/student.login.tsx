@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Loader2, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 
@@ -14,11 +14,12 @@ export const Route = createFileRoute("/student/login")({
 });
 
 function StudentLoginPage() {
-  const { session, loading, loginStudent } = useStudentAuth();
+  const { session, loading, loginStudent, logoutStudent } = useStudentAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [signingOutForStaff, setSigningOutForStaff] = useState(false);
 
   // Redirect if already logged in
   useEffect(() => {
@@ -38,6 +39,16 @@ function StudentLoginPage() {
       toast.error(err instanceof Error ? err.message : "Login failed. Please try again.");
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function handleGoToStaffLogin() {
+    setSigningOutForStaff(true);
+    try {
+      await logoutStudent();
+    } finally {
+      setSigningOutForStaff(false);
+      navigate({ to: "/admin/login" });
     }
   }
 
@@ -111,9 +122,14 @@ function StudentLoginPage() {
 
         <p className="text-center text-xs text-muted-foreground">
           Staff?{" "}
-          <Link to="/admin/login" className="font-medium text-foreground underline underline-offset-2">
-            Sign in here
-          </Link>
+          <button
+            type="button"
+            onClick={handleGoToStaffLogin}
+            disabled={signingOutForStaff}
+            className="font-medium text-foreground underline underline-offset-2 disabled:opacity-50"
+          >
+            {signingOutForStaff ? "Signing out…" : "Sign in here"}
+          </button>
         </p>
       </div>
     </div>

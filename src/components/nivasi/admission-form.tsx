@@ -65,6 +65,7 @@ interface FormState {
   tiffinPaymentCollected: boolean;
   mattressRequired: boolean;
   mattressPaymentCollected: boolean;
+  mealPreference: "veg" | "non-veg" | "";
   notes: string;
 }
 
@@ -103,6 +104,7 @@ function toForm(a?: Admission | null): FormState {
     tiffinPaymentCollected: a?.tiffinPaymentCollected ?? false,
     mattressRequired: a?.mattressRequired ?? false,
     mattressPaymentCollected: a?.mattressPaymentCollected ?? false,
+    mealPreference: (a?.mealPreference as "veg" | "non-veg" | "") ?? "",
     notes: a?.notes ?? "",
   };
 }
@@ -344,6 +346,7 @@ export function AdmissionForm({ existing }: { existing?: Admission | null }) {
         tiffinPaymentCollected: form.tiffinPaymentCollected,
         mattressRequired: form.mattressRequired,
         mattressPaymentCollected: form.mattressPaymentCollected,
+        mealPreference: (form.mealPreference as "veg" | "non-veg") || undefined,
         notes: form.notes.trim(),
       };
 
@@ -898,6 +901,23 @@ export function AdmissionForm({ existing }: { existing?: Admission | null }) {
               Payment Collected
             </label>
           </div>
+        </div>
+
+        {/* Meal preference — shown when tiffin is provided */}
+        <div className="mt-3 max-w-xs">
+          <p className="mb-1.5 text-xs font-medium text-muted-foreground">Meal Preference</p>
+          <Select
+            value={form.mealPreference}
+            onValueChange={(v) => set("mealPreference", v as "veg" | "non-veg")}
+          >
+            <SelectTrigger className="h-9 text-sm">
+              <SelectValue placeholder="Select preference…" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="veg">🟢 Veg</SelectItem>
+              <SelectItem value="non-veg">🔴 Non-Veg</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </Section>
 

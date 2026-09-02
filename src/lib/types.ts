@@ -48,6 +48,7 @@ export interface Admission {
   tiffinPaymentCollected: boolean;
   mattressRequired: boolean;
   mattressPaymentCollected: boolean;
+  mealPreference?: "veg" | "non-veg";
   notes?: string;
   createdAt?: Date | null;
   updatedAt?: Date | null;
