@@ -69,6 +69,7 @@ function mapAdmission(snap: QueryDocumentSnapshot<DocumentData>): Admission {
     mattressRequired: Boolean(d.mattressRequired),
     mattressPaymentCollected: Boolean(d.mattressPaymentCollected),
     paymentMode: d.paymentMode === "online" || d.paymentMode === "cash" ? d.paymentMode : null,
+    mealPreference: d.mealPreference === "veg" || d.mealPreference === "non-veg" ? d.mealPreference : undefined,
     notes: d.notes ?? "",
     parentName: d.parentName ?? "",
     parentPhone: d.parentPhone ?? "",

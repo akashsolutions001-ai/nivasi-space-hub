@@ -324,6 +324,7 @@ function buildAdmission(id: string, d: Record<string, unknown>): Admission {
     mattressRequired: Boolean(d["mattressRequired"]),
     mattressPaymentCollected: Boolean(d["mattressPaymentCollected"]),
     paymentMode: d["paymentMode"] === "online" || d["paymentMode"] === "cash" ? d["paymentMode"] : null,
+    mealPreference: d["mealPreference"] === "veg" || d["mealPreference"] === "non-veg" ? d["mealPreference"] : undefined,
     notes: String(d["notes"] ?? ""),
     parentName: String(d["parentName"] ?? ""),
     parentPhone: String(d["parentPhone"] ?? ""),
