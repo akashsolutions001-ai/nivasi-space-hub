@@ -211,7 +211,7 @@ function LaundryAssignPage() {
                       variant={l.id === currentLaundryId ? "default" : "outline"}
                       size="sm" className="h-7 text-xs"
                       disabled={singleAssigning === student.id}
-                      onClick={() => assignSingle(student.id, l.id, l.laundryName)}
+                      onClick={() => assignSingle(student.id, l.id, l.laundryName, laundryStatus)}
                     >
                       {singleAssigning === student.id && l.id !== currentLaundryId ? <Loader2 className="size-3 animate-spin" /> : null}
                       {l.laundryName}

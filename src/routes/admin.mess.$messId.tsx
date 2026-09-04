@@ -144,12 +144,26 @@ function StudentDetailPanel({
         className="flex w-full items-center justify-between text-xs text-muted-foreground py-1"
         onClick={() => setOpen((v) => !v)}
       >
-        <span className="flex items-center gap-1.5">
-          <MessageSquare className="size-3" />
-          Tiffin Record &amp; Requests
-          {hasActivity && <span className="inline-flex size-1.5 rounded-full bg-primary" />}
+        <span className="flex items-center gap-1.5 flex-wrap">
+          <MessageSquare className="size-3 shrink-0" />
+          {activeRequest ? (
+            <>
+              <span className="font-medium text-foreground">
+                {REQUEST_TYPE_LABELS[activeRequest.requestType] ?? activeRequest.requestType}
+              </span>
+              {activeRequest.description && (
+                <span className="text-muted-foreground truncate max-w-[180px]">"{activeRequest.description}"</span>
+              )}
+              <span className="inline-flex size-1.5 rounded-full bg-primary shrink-0" />
+            </>
+          ) : (
+            <>
+              <span>Requests</span>
+              {hasActivity && <span className="inline-flex size-1.5 rounded-full bg-primary shrink-0" />}
+            </>
+          )}
         </span>
-        {open ? <ChevronUp className="size-3" /> : <ChevronDown className="size-3" />}
+        {open ? <ChevronUp className="size-3 shrink-0" /> : <ChevronDown className="size-3 shrink-0" />}
       </button>
       {open && (
         <div className="mt-2 space-y-2">

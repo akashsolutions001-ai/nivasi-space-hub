@@ -1,16 +1,16 @@
 import { useState, useEffect, useMemo } from "react";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import {
-  Loader2, LogOut, MapPin, Phone, UtensilsCrossed, Home,
+  Loader2, MapPin, Phone, UtensilsCrossed, Home,
   CheckCircle2, Clock, XCircle, SkipForward, CalendarDays,
-  WashingMachine, ChevronRight,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StudentShell } from "@/components/nivasi/student-shell";
 import { useStudentAuth } from "@/lib/studentAuth";
-import { useDeliveriesForStudent, useMesses } from "@/lib/hooks";
+import { useDeliveriesForStudent, useMesses, useMessRequestsForStudent } from "@/lib/hooks";
 import type { DeliveryStatus } from "@/lib/types";
 
 export const Route = createFileRoute("/student/dashboard")({
@@ -52,10 +52,13 @@ function getMapUrl(propertyName?: string): string | null {
 // ── page ──────────────────────────────────────────────────────────────────────
 
 function StudentDashboardPage() {
-  const { session, admission, loading, logoutStudent } = useStudentAuth();
+  const { session, admission, loading } = useStudentAuth();
   const navigate = useNavigate();
   const { data: messes = [] } = useMesses();
   const { data: deliveries = [], isLoading: delLoading } = useDeliveriesForStudent(
+    admission?.id ?? null,
+  );
+  const { data: messRequests = [], isLoading: reqLoading } = useMessRequestsForStudent(
     admission?.id ?? null,
   );
 
@@ -65,11 +68,6 @@ function StudentDashboardPage() {
       navigate({ to: "/student/login", replace: true });
     }
   }, [loading, session, navigate]);
-
-  function handleLogout() {
-    logoutStudent();
-    navigate({ to: "/student/login", replace: true });
-  }
 
   // Group deliveries by date descending
   const deliveriesByDate = useMemo(() => {
@@ -95,23 +93,7 @@ function StudentDashboardPage() {
   const mapUrl = getMapUrl(admission?.propertyName);
 
   return (
-    <div className="min-h-screen bg-background pb-16">
-      {/* Header */}
-      <header className="sticky top-0 z-30 border-b border-border bg-background/85 px-4 py-3 backdrop-blur">
-        <div className="mx-auto flex max-w-lg items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <div className="flex size-8 items-center justify-center rounded-xl gradient-brand">
-              <UtensilsCrossed className="size-4 text-primary-foreground" />
-            </div>
-            <span className="font-display font-bold">My Dashboard</span>
-          </div>
-          <Button variant="ghost" size="icon" onClick={handleLogout} aria-label="Log out">
-            <LogOut className="size-4" />
-          </Button>
-        </div>
-      </header>
-
-      <div className="mx-auto max-w-lg space-y-4 px-4 pt-4">
+    <StudentShell title="My Dashboard">
 
         {!admission ? (
           <div className="rounded-2xl border border-dashed border-border bg-card p-6 text-center shadow-soft">
@@ -164,7 +146,7 @@ function StudentDashboardPage() {
                 {mess ? (
                   <div className="flex items-center gap-2 text-sm">
                     <UtensilsCrossed className="size-3.5 shrink-0 text-muted-foreground" />
-                    <span>{mess.messName}{mess.ownerName ? ` · ${mess.ownerName}` : ""}</span>
+                    <span>{mess.serialNumber != null ? `Mess #${mess.serialNumber}` : mess.messName}</span>
                   </div>
                 ) : (
                   <p className="text-sm text-muted-foreground italic">Not assigned to a mess yet.</p>
@@ -180,63 +162,44 @@ function StudentDashboardPage() {
               )}
             </div>
 
-            {/* Quick navigation cards */}
-            <div className="grid grid-cols-2 gap-3">
-              <Link
-                to="/student/mess"
-                className="flex flex-col items-center gap-2 rounded-2xl border border-border bg-card p-4 shadow-soft hover:border-primary/40 hover:bg-primary/5 transition-colors"
-              >
-                <div className="flex size-10 items-center justify-center rounded-xl gradient-brand">
-                  <UtensilsCrossed className="size-5 text-primary-foreground" />
-                </div>
-                <span className="font-semibold text-sm">My Mess</span>
-                <p className="text-[11px] text-muted-foreground text-center">Tiffin &amp; requests</p>
-                <ChevronRight className="size-3.5 text-muted-foreground" />
-              </Link>
-              <Link
-                to="/student/laundry"
-                className="flex flex-col items-center gap-2 rounded-2xl border border-border bg-card p-4 shadow-soft hover:border-primary/40 hover:bg-primary/5 transition-colors"
-              >
-                <div className="flex size-10 items-center justify-center rounded-xl gradient-brand">
-                  <WashingMachine className="size-5 text-primary-foreground" />
-                </div>
-                <span className="font-semibold text-sm">My Laundry</span>
-                <p className="text-[11px] text-muted-foreground text-center">Weekly service</p>
-                <ChevronRight className="size-3.5 text-muted-foreground" />
-              </Link>
-            </div>
-
             {/* Today's delivery */}
             <TodayDeliveryCard deliveries={deliveries} />
 
-            {/* Delivery history */}
+            {/* Request History — mess requests */}
             <div className="rounded-2xl border border-border bg-card p-5 shadow-soft">
               <h3 className="mb-3 flex items-center gap-2 font-display text-base font-bold">
                 <CalendarDays className="size-4 text-primary" />
-                Tiffin History
+                Request History
               </h3>
-              {delLoading ? (
+              {reqLoading ? (
                 <Skeleton className="h-32 rounded-xl" />
-              ) : deliveriesByDate.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No delivery records yet.</p>
+              ) : messRequests.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No requests yet.</p>
               ) : (
-                <div className="space-y-4">
-                  {deliveriesByDate.map(([date, records]) => (
-                    <div key={date}>
-                      <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                        {formatDate(date)}
-                      </p>
-                      <div className="space-y-1">
-                        {records.map((r) => (
-                          <div key={r.id} className="flex items-center justify-between gap-2 rounded-xl border border-border px-3 py-2">
-                            <span className="capitalize text-sm">{r.meal}</span>
-                            <Badge variant="outline" className={`flex items-center gap-1 text-[11px] ${STATUS_COLORS[r.status]}`}>
-                              {STATUS_ICONS[r.status]}
-                              {r.status === "not_available" ? "N/A" : r.status.charAt(0).toUpperCase() + r.status.slice(1)}
-                            </Badge>
-                          </div>
-                        ))}
+                <div className="divide-y divide-border">
+                  {messRequests.map((req) => (
+                    <div key={req.id} className="py-2.5 space-y-0.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Badge variant="outline" className="text-[11px] capitalize">
+                            {req.requestType === "less_quantity" ? "Less Quantity"
+                              : req.requestType === "more_quantity" ? "More Quantity"
+                              : "Other"}
+                          </Badge>
+                          <Badge
+                            variant="outline"
+                            className={`text-[11px] ${req.status === "active" ? "border-success/30 bg-success/10 text-success" : "text-muted-foreground"}`}
+                          >
+                            {req.status === "active" ? "Active" : "Inactive"}
+                          </Badge>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground shrink-0">
+                          {req.createdAt ? req.createdAt.toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "—"}
+                        </p>
                       </div>
+                      {req.description && (
+                        <p className="text-sm text-muted-foreground">"{req.description}"</p>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -244,8 +207,8 @@ function StudentDashboardPage() {
             </div>
           </>
         )}
-      </div>
-    </div>
+
+    </StudentShell>
   );
 }
 

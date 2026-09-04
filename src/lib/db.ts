@@ -695,6 +695,7 @@ function mapMess(snap: QueryDocumentSnapshot<DocumentData>): Mess {
     id: snap.id,
     messId: d.messId ?? snap.id,
     messName: d.messName ?? "",
+    serialNumber: typeof d.serialNumber === "number" ? d.serialNumber : undefined,
     ownerName: d.ownerName ?? "",
     ownerPhone: d.ownerPhone ?? "",
     propertyId: d.propertyId ?? "",
@@ -1969,6 +1970,17 @@ export async function updateMessRequest(
   } catch (error) {
     console.error("[firestore] updateMessRequest", error);
     throw new Error("Unable to update mess request. Please check your connection.");
+  }
+}
+
+export async function deleteMessRequest(id: string): Promise<void> {
+  try {
+    await import("firebase/firestore").then(({ deleteDoc }) =>
+      deleteDoc(doc(getDb(), "messRequests", id)),
+    );
+  } catch (error) {
+    console.error("[firestore] deleteMessRequest", error);
+    throw new Error("Unable to delete request. Please try again.");
   }
 }
 

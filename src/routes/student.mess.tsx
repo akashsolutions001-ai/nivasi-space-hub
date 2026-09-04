@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  ArrowLeft, UtensilsCrossed, Loader2, CheckCircle2,
+  UtensilsCrossed, Loader2, CheckCircle2,
   XCircle, AlertCircle, Clock, RotateCcw, CalendarDays,
-  ChevronDown, ChevronUp, Pencil, History,
+  ChevronDown, ChevronUp, Pencil, History, Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -17,6 +17,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
+import { StudentShell } from "@/components/nivasi/student-shell";
 import { useStudentAuth } from "@/lib/studentAuth";
 import { useMesses, useMessRecordsForStudent, useMessRequestsForStudent } from "@/lib/hooks";
 import {
@@ -25,6 +26,7 @@ import {
   createDoNotWantRecord,
   createMessRequest,
   updateMessRequest,
+  deleteMessRequest,
   todayISTDateString,
   currentISTTime,
 } from "@/lib/db";
@@ -613,6 +615,7 @@ function StudentMessPage() {
 
   const [historyOpen, setHistoryOpen] = useState(false);
   const [requestsOpen, setRequestsOpen] = useState(false);
+  const [deletingRequestId, setDeletingRequestId] = useState<string | null>(null);
 
   // Dialogs
   const [dnwOpen, setDnwOpen] = useState<{ meal: "lunch" | "dinner" | "both" } | null>(null);
@@ -703,6 +706,19 @@ function StudentMessPage() {
     }
   }
 
+  async function handleDeleteRequest(id: string) {
+    setDeletingRequestId(id);
+    try {
+      await deleteMessRequest(id);
+      await qc.invalidateQueries({ queryKey: ["messRequests", "student", myAdmission?.id] });
+      toast.success("Request deleted.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not delete request.");
+    } finally {
+      setDeletingRequestId(null);
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -719,23 +735,7 @@ function StudentMessPage() {
   });
 
   return (
-    <div className="min-h-screen bg-background pb-16">
-      {/* Header */}
-      <header className="sticky top-0 z-30 border-b border-border bg-background/85 px-4 py-3 backdrop-blur">
-        <div className="mx-auto flex max-w-lg items-center gap-3">
-          <Button asChild variant="ghost" size="icon" aria-label="Back">
-            <Link to="/student/dashboard"><ArrowLeft className="size-4" /></Link>
-          </Button>
-          <div className="flex items-center gap-2">
-            <div className="flex size-7 items-center justify-center rounded-lg gradient-brand">
-              <UtensilsCrossed className="size-3.5 text-primary-foreground" />
-            </div>
-            <span className="font-display font-bold">My Mess</span>
-          </div>
-        </div>
-      </header>
-
-      <div className="mx-auto max-w-lg space-y-4 px-4 pt-4">
+    <StudentShell title="My Mess" backTo="/student/dashboard">
 
         {/* No admission */}
         {!myAdmission && (
@@ -763,7 +763,9 @@ function StudentMessPage() {
             {/* Assigned Mess info */}
             <div className="rounded-2xl border border-border bg-card p-5 shadow-soft space-y-2">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Assigned Mess</p>
-              <h2 className="font-display text-lg font-bold">{mess?.messName ?? "Loading…"}</h2>
+              <h2 className="font-display text-lg font-bold">
+                {mess?.serialNumber != null ? `Mess #${mess.serialNumber}` : "Loading…"}
+              </h2>
               {mess?.messDescription && (
                 <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
                   {mess.messDescription}
@@ -860,40 +862,52 @@ function StudentMessPage() {
               >
                 {activeRequest ? "New Request" : "Submit a Request"}
               </Button>
-            </div>
 
-            {/* Request History */}
-            {requests.length > 0 && (
-              <div className="rounded-2xl border border-border bg-card shadow-soft overflow-hidden">
-                <button
-                  className="flex w-full items-center justify-between px-5 py-3.5"
-                  onClick={() => setRequestsOpen((v) => !v)}
-                >
-                  <div className="flex items-center gap-2">
-                    <History className="size-4 text-muted-foreground" />
-                    <span className="text-sm font-semibold">Mess Request History</span>
-                  </div>
-                  {requestsOpen ? <ChevronUp className="size-4 text-muted-foreground" /> : <ChevronDown className="size-4 text-muted-foreground" />}
-                </button>
-                {requestsOpen && (
-                  <div className="border-t border-border divide-y divide-border">
-                    {requests.map((req) => (
-                      <div key={req.id} className="px-5 py-3 space-y-0.5">
-                        <div className="flex items-center gap-2">
-                          <p className="text-xs text-muted-foreground">
-                            {req.createdAt ? formatISTTimestamp(req.createdAt) : "—"}
-                          </p>
-                          <Badge variant="outline" className="text-[10px]">
-                            {REQUEST_LABELS[req.requestType]}
-                          </Badge>
+              {/* Request History — inline below submit button */}
+              {requests.length > 0 && (
+                <div className="space-y-1 pt-1">
+                  <button
+                    className="flex w-full items-center justify-between text-xs text-muted-foreground pb-1"
+                    onClick={() => setRequestsOpen((v) => !v)}
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <History className="size-3" />
+                      History
+                    </span>
+                    {requestsOpen ? <ChevronUp className="size-3" /> : <ChevronDown className="size-3" />}
+                  </button>
+                  {requestsOpen && (
+                    <div className="divide-y divide-border rounded-xl border border-border overflow-hidden">
+                      {requests.map((req) => (
+                        <div key={req.id} className="px-3 py-2 space-y-0.5">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="text-xs text-muted-foreground">
+                                {req.createdAt ? formatISTTimestamp(req.createdAt) : "—"}
+                              </p>
+                              <Badge variant="outline" className="text-[10px]">
+                                {REQUEST_LABELS[req.requestType]}
+                              </Badge>
+                            </div>
+                            <button
+                              onClick={() => handleDeleteRequest(req.id)}
+                              disabled={deletingRequestId === req.id}
+                              className="shrink-0 text-muted-foreground hover:text-destructive transition-colors disabled:opacity-40"
+                              aria-label="Delete request"
+                            >
+                              {deletingRequestId === req.id
+                                ? <Loader2 className="size-3 animate-spin" />
+                                : <Trash2 className="size-3" />}
+                            </button>
+                          </div>
+                          {req.description && <p className="text-sm">"{req.description}"</p>}
                         </div>
-                        {req.description && <p className="text-sm">"{req.description}"</p>}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
 
             {/* Tiffin History */}
             <div className="rounded-2xl border border-border bg-card shadow-soft overflow-hidden">
@@ -943,7 +957,6 @@ function StudentMessPage() {
             </div>
           </>
         )}
-      </div>
 
       {/* Dialogs */}
       {dnwOpen && myAdmission && (
@@ -981,6 +994,6 @@ function StudentMessPage() {
           existing={editingRequest ?? undefined}
         />
       )}
-    </div>
+    </StudentShell>
   );
 }

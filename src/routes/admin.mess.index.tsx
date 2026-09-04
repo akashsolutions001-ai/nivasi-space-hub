@@ -62,15 +62,18 @@ interface MessFormProps {
 function MessFormDialog({ open, onClose, existing }: MessFormProps) {
   const qc = useQueryClient();
   const [messName, setMessName] = useState(existing?.messName ?? "");
+  const [serialNumber, setSerialNumber] = useState(existing?.serialNumber?.toString() ?? "");
   const [ownerName, setOwnerName] = useState(existing?.ownerName ?? "");
   const [ownerPhone, setOwnerPhone] = useState(existing?.ownerPhone ?? "");
   const [messDescription, setMessDescription] = useState((existing as any)?.messDescription ?? "");
   const [saving, setSaving] = useState(false);
-  const [errors, setErrors] = useState<{ messName?: string; ownerPhone?: string }>({});
+  const [errors, setErrors] = useState<{ messName?: string; ownerPhone?: string; serialNumber?: string }>({});
 
   function validate() {
     const e: typeof errors = {};
     if (!messName.trim()) e.messName = "Mess name is required.";
+    if (serialNumber.trim() && (isNaN(Number(serialNumber)) || Number(serialNumber) < 1))
+      e.serialNumber = "Serial number must be a positive number.";
     if (ownerPhone.trim() && !isValidIndianMobile(ownerPhone))
       e.ownerPhone = "Enter a valid 10-digit Indian mobile number.";
     setErrors(e);
@@ -83,11 +86,12 @@ function MessFormDialog({ open, onClose, existing }: MessFormProps) {
     setSaving(true);
     try {
       const phone = ownerPhone.replace(/\D/g, "");
+      const sn = serialNumber.trim() ? Number(serialNumber.trim()) : undefined;
       if (existing) {
-        await updateMess(existing.id, { messName: messName.trim(), ownerName: ownerName.trim(), ownerPhone: phone, messDescription: messDescription.trim() } as any);
+        await updateMess(existing.id, { messName: messName.trim(), ownerName: ownerName.trim(), ownerPhone: phone, messDescription: messDescription.trim(), serialNumber: sn } as any);
         toast.success("Mess updated.");
       } else {
-        await createMess({ messId: "", messName: messName.trim(), ownerName: ownerName.trim(), ownerPhone: phone, status: "active", messDescription: messDescription.trim() } as any);
+        await createMess({ messId: "", messName: messName.trim(), ownerName: ownerName.trim(), ownerPhone: phone, status: "active", messDescription: messDescription.trim(), serialNumber: sn } as any);
         toast.success("Mess created.");
       }
       await qc.invalidateQueries({ queryKey: ["messes"] });
@@ -110,6 +114,19 @@ function MessFormDialog({ open, onClose, existing }: MessFormProps) {
           <DialogTitle>{existing ? "Edit Mess" : "Create Mess"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-3">
+          <div className="space-y-1">
+            <Label htmlFor="serialNumber">Serial Number</Label>
+            <Input
+              id="serialNumber"
+              value={serialNumber}
+              onChange={(e) => { setSerialNumber(e.target.value.replace(/\D/g, "")); setErrors((p) => ({ ...p, serialNumber: undefined })); }}
+              placeholder="e.g. 1"
+              inputMode="numeric"
+              className={errors.serialNumber ? "border-destructive" : ""}
+            />
+            {errors.serialNumber && <p className="text-[11px] text-destructive">{errors.serialNumber}</p>}
+            <p className="text-[11px] text-muted-foreground">Shown to students instead of the mess name.</p>
+          </div>
           <div className="space-y-1">
             <Label htmlFor="messName">Mess Name *</Label>
             <Input id="messName" value={messName} onChange={(e) => { setMessName(e.target.value); setErrors((p) => ({ ...p, messName: undefined })); }} placeholder="e.g. Shree Ganesh Mess" className={errors.messName ? "border-destructive" : ""} />
@@ -296,7 +313,14 @@ function MessIndexPage() {
               {/* Header */}
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
-                  <h3 className="truncate font-display text-base font-bold">{m.messName}</h3>
+                  <div className="flex items-center gap-2">
+                    {m.serialNumber != null && (
+                      <span className="inline-flex items-center justify-center size-6 rounded-full bg-primary/10 text-primary text-[11px] font-bold shrink-0">
+                        {m.serialNumber}
+                      </span>
+                    )}
+                    <h3 className="truncate font-display text-base font-bold">{m.messName}</h3>
+                  </div>
                   <Badge
                     variant={m.status === "active" ? "default" : "secondary"}
                     className={`mt-1 text-[11px] ${m.status === "active" ? "bg-success/15 text-success border-success/30" : ""}`}

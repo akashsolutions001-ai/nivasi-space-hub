@@ -109,6 +109,8 @@ export interface Mess {
   id: string;
   messId: string;
   messName: string;
+  /** Admin-assigned serial number for display to students instead of the mess name */
+  serialNumber?: number;
   /** References the ownerName stored in properties/rooms — no separate owner collection */
   ownerName: string;
   ownerPhone: string;

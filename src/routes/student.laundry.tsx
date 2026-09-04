@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  ArrowLeft, WashingMachine, Loader2, CheckCircle2,
+  WashingMachine, Loader2, CheckCircle2,
   Clock, Package, ChevronDown, ChevronUp, CalendarDays,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StudentShell } from "@/components/nivasi/student-shell";
 import { useStudentAuth } from "@/lib/studentAuth";
 import { useLaundries, useStudentLaundryRecords } from "@/lib/hooks";
 import {
@@ -106,68 +107,62 @@ function CurrentWeekCard({ record, loading, onMarkPickup, onMarkReceived, saving
       </div>
 
       {/* Pickup row */}
-      <div className="rounded-xl bg-muted/30 p-3 space-y-2">
-        <div className="flex items-center justify-between gap-2">
-          <div className="space-y-0.5">
-            <p className="text-sm font-medium flex items-center gap-1.5">
-              <Package className="size-3.5 text-muted-foreground" />
-              Laundry Pickup
+      <div className="rounded-xl bg-muted/30 p-4 space-y-3">
+        <div className="flex items-center gap-1.5">
+          <Package className="size-4 text-muted-foreground" />
+          <p className="text-sm font-semibold">Laundry Pickup</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <PickupBadge status={pickup} />
+          {pickupDone && record?.pickupAt && (
+            <p className="text-[11px] text-muted-foreground">
+              {formatISTTimestamp(record.pickupAt)}
             </p>
-            <PickupBadge status={pickup} />
-            {pickupDone && record?.pickupAt && (
-              <p className="text-[11px] text-muted-foreground">
-                {formatISTTimestamp(record.pickupAt)}
-              </p>
-            )}
-          </div>
-          {!pickupDone && (
-            <Button
-              size="sm"
-              onClick={onMarkPickup}
-              disabled={saving === "pickup"}
-              className="shrink-0 gradient-brand text-primary-foreground shadow-soft text-xs"
-            >
-              {saving === "pickup"
-                ? <Loader2 className="mr-1.5 size-3.5 animate-spin" />
-                : <CheckCircle2 className="mr-1.5 size-3.5" />}
-              Mark Pickup
-            </Button>
           )}
         </div>
+        {!pickupDone && (
+          <Button
+            onClick={onMarkPickup}
+            disabled={saving === "pickup"}
+            className="w-full h-11 gradient-brand text-primary-foreground shadow-soft text-sm font-semibold"
+          >
+            {saving === "pickup"
+              ? <Loader2 className="mr-2 size-4 animate-spin" />
+              : <CheckCircle2 className="mr-2 size-4" />}
+            Mark Pickup
+          </Button>
+        )}
       </div>
 
       {/* Received row */}
-      <div className="rounded-xl bg-muted/30 p-3 space-y-2">
-        <div className="flex items-center justify-between gap-2">
-          <div className="space-y-0.5">
-            <p className="text-sm font-medium flex items-center gap-1.5">
-              <WashingMachine className="size-3.5 text-muted-foreground" />
-              Laundry Received
+      <div className="rounded-xl bg-muted/30 p-4 space-y-3">
+        <div className="flex items-center gap-1.5">
+          <WashingMachine className="size-4 text-muted-foreground" />
+          <p className="text-sm font-semibold">Laundry Received</p>
+        </div>
+        <div className="flex items-center gap-2">
+          {pickupDone
+            ? <ReceivedBadge status={received} />
+            : <Badge variant="outline" className="text-[11px] bg-muted text-muted-foreground border-border">Awaiting Pickup</Badge>}
+          {receivedDone && record?.receivedAt && (
+            <p className="text-[11px] text-muted-foreground">
+              {formatISTTimestamp(record.receivedAt)}
             </p>
-            {pickupDone
-              ? <ReceivedBadge status={received} />
-              : <Badge variant="outline" className="text-[11px] bg-muted text-muted-foreground border-border">Awaiting Pickup</Badge>}
-            {receivedDone && record?.receivedAt && (
-              <p className="text-[11px] text-muted-foreground">
-                {formatISTTimestamp(record.receivedAt)}
-              </p>
-            )}
-          </div>
-          {pickupDone && !receivedDone && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={onMarkReceived}
-              disabled={saving === "received"}
-              className="shrink-0 border-success/40 text-success hover:bg-success/10 text-xs"
-            >
-              {saving === "received"
-                ? <Loader2 className="mr-1.5 size-3.5 animate-spin" />
-                : <CheckCircle2 className="mr-1.5 size-3.5" />}
-              Mark Received
-            </Button>
           )}
         </div>
+        {pickupDone && !receivedDone && (
+          <Button
+            variant="outline"
+            onClick={onMarkReceived}
+            disabled={saving === "received"}
+            className="w-full h-11 border-success/40 text-success hover:bg-success/10 text-sm font-semibold"
+          >
+            {saving === "received"
+              ? <Loader2 className="mr-2 size-4 animate-spin" />
+              : <CheckCircle2 className="mr-2 size-4" />}
+            Mark Received
+          </Button>
+        )}
       </div>
 
       {/* Flow hint */}
@@ -335,24 +330,7 @@ function StudentLaundryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-16">
-      {/* Header */}
-      <header className="sticky top-0 z-30 border-b border-border bg-background/85 px-4 py-3 backdrop-blur">
-        <div className="mx-auto flex max-w-lg items-center gap-3">
-          <Button asChild variant="ghost" size="icon" aria-label="Back">
-            <Link to="/student/dashboard"><ArrowLeft className="size-4" /></Link>
-          </Button>
-          <div className="flex items-center gap-2">
-            <div className="flex size-7 items-center justify-center rounded-lg gradient-brand">
-              <WashingMachine className="size-3.5 text-primary-foreground" />
-            </div>
-            <span className="font-display font-bold">My Laundry</span>
-          </div>
-        </div>
-      </header>
-
-      <div className="mx-auto max-w-lg space-y-4 px-4 pt-4">
-
+    <StudentShell title="My Laundry" backTo="/student/dashboard">
         {/* No admission */}
         {!myAdmission && (
           <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center">
@@ -361,7 +339,6 @@ function StudentLaundryPage() {
             <p className="mt-1 text-sm text-muted-foreground">Contact your administrator.</p>
           </div>
         )}
-
         {/* No laundry assigned */}
         {myAdmission && !laundryId && (
           <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center">
@@ -370,7 +347,6 @@ function StudentLaundryPage() {
             <p className="mt-1 text-sm text-muted-foreground">Please contact administration.</p>
           </div>
         )}
-
         {myAdmission && laundryId && (
           <>
             {/* Laundry service info */}
@@ -379,7 +355,6 @@ function StudentLaundryPage() {
               <p className="mt-1 font-display font-bold">{laundry?.laundryName ?? "—"}</p>
               <p className="text-xs text-muted-foreground mt-0.5">Weekly service</p>
             </div>
-
             {/* Current week */}
             <CurrentWeekCard
               record={record}
@@ -388,12 +363,10 @@ function StudentLaundryPage() {
               onMarkReceived={handleMarkReceived}
               saving={saving}
             />
-
             {/* History */}
             <LaundryHistoryCard records={allRecords} />
           </>
         )}
-      </div>
-    </div>
+    </StudentShell>
   );
 }
