@@ -41,6 +41,7 @@ function mapAdmission(snap: QueryDocumentSnapshot<DocumentData>): Admission {
     fullName: d.fullName ?? "",
     phoneNumber: d.phoneNumber ?? "",
     email: d.email ?? "",
+    address: d.address ?? "",
     gender: d.gender ?? "",
     dateOfBirth: d.dateOfBirth ?? "",
     collegeId: d.collegeId ?? "",

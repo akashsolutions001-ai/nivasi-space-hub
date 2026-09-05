@@ -697,6 +697,7 @@ function AdmissionDetailPage() {
             <Row label="Full Name"    value={data.fullName} />
             <Row label="Phone Number" value={data.phoneNumber} />
             <Row label="Email"        value={data.email} />
+            <Row label="Address"      value={(data as any).address} />
             <Row label="Gender"       value={data.gender} />
             <Row label="Date of Birth" value={formatDate(data.dateOfBirth)} />
           </Section>

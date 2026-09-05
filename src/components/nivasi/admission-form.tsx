@@ -36,6 +36,7 @@ interface FormState {
   fullName: string;
   phoneNumber: string;
   email: string;
+  address: string;
   gender: string;
   dateOfBirth: string;
   parentName: string;
@@ -75,6 +76,7 @@ function toForm(a?: Admission | null): FormState {
     fullName: a?.fullName ?? "",
     phoneNumber: a?.phoneNumber ?? "",
     email: a?.email ?? "",
+    address: a?.address ?? "",
     gender: a?.gender ?? "",
     dateOfBirth: a?.dateOfBirth ?? "",
     parentName: a?.parentName ?? "",
@@ -315,6 +317,7 @@ export function AdmissionForm({ existing }: { existing?: Admission | null }) {
         fullName: form.fullName.trim(),
         phoneNumber: form.phoneNumber.replace(/\D/g, ""),
         email: form.email.trim(),
+        address: form.address.trim(),
         gender: form.gender,
         dateOfBirth: form.dateOfBirth,
         parentName: form.parentName.trim(),
@@ -468,6 +471,13 @@ export function AdmissionForm({ existing }: { existing?: Admission | null }) {
               value={form.email}
               onChange={(e) => set("email", e.target.value)}
               placeholder="student@example.com"
+            />
+          </Field>
+          <Field label="Address">
+            <Input
+              value={form.address}
+              onChange={(e) => set("address", e.target.value)}
+              placeholder="e.g. 12, Main Road, Pune, Maharashtra"
             />
           </Field>
           <Field label="Gender">

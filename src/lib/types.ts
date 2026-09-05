@@ -16,6 +16,7 @@ export interface Admission {
   fullName: string;
   phoneNumber: string;
   email?: string;
+  address?: string;
   gender?: string;
   dateOfBirth?: string;
   // Parent / Guardian info
