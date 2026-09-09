@@ -284,6 +284,7 @@ import {
   fetchLaundryEmployeeByUid,
   fetchLaundryPickupsForDate,
   fetchLaundryPickupSummaryForDate,
+  fetchLaundryPickupsForStudent,
 } from "@/lib/db";
 
 export function useLaundries() {
@@ -327,6 +328,14 @@ export function useLaundryPickupSummary(laundryId: string | null, date?: string)
     queryKey: ["laundryPickupSummary", laundryId, d],
     queryFn: () => fetchLaundryPickupSummaryForDate(laundryId!, d),
     enabled: isFirebaseConfigured && !!laundryId,
+  });
+}
+
+export function useLaundryPickupsForStudent(studentId: string | null) {
+  return useQuery({
+    queryKey: ["laundryPickups", "student", studentId],
+    queryFn: () => fetchLaundryPickupsForStudent(studentId!),
+    enabled: isFirebaseConfigured && !!studentId,
   });
 }
 

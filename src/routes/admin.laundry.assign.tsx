@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAdmissions, useLaundries } from "@/lib/hooks";
-import { assignStudentToLaundry } from "@/lib/db";
+import { assignStudentToLaundry, unassignStudentFromLaundry, updateStudentLaundryStatus } from "@/lib/db";
 import type { LaundrySubscriptionStatus } from "@/lib/types";
 
 export const Route = createFileRoute("/admin/laundry/assign")({
@@ -31,6 +31,7 @@ function LaundryAssignPage() {
   const [bulkStatus, setBulkStatus] = useState<LaundrySubscriptionStatus>("active");
   const [assigning, setAssigning] = useState(false);
   const [singleAssigning, setSingleAssigning] = useState<string | null>(null);
+  const [unassigning, setUnassigning] = useState<string | null>(null);
 
   const activeLaundries = laundries.filter((l) => l.status === "active");
 
@@ -62,14 +63,46 @@ function LaundryAssignPage() {
   function selectAll() { setSelectedIds(new Set(filtered.map((a) => a.id))); }
   function clearSelection() { setSelectedIds(new Set()); }
 
-  async function assignSingle(studentId: string, laundryId: string, laundryName: string, status: LaundrySubscriptionStatus = "active") {
+  async function assignSingle(studentId: string, laundryId: string, laundryName: string, status?: LaundrySubscriptionStatus) {
     setSingleAssigning(studentId);
     try {
-      await assignStudentToLaundry(studentId, laundryId, laundryName, status);
+      const finalStatus = status || "active";
+      await assignStudentToLaundry(studentId, laundryId, laundryName, finalStatus);
       await qc.invalidateQueries({ queryKey: ["admissions"] });
-      toast.success("Student assigned.");
+      await qc.invalidateQueries({ queryKey: ["admission"] });
+      await qc.invalidateQueries({ queryKey: ["laundries"] });
+      toast.success(`Assigned to ${laundryName}`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not assign student.");
+    } finally {
+      setSingleAssigning(null);
+    }
+  }
+
+  async function unassignSingle(studentId: string) {
+    setUnassigning(studentId);
+    try {
+      await unassignStudentFromLaundry(studentId);
+      await qc.invalidateQueries({ queryKey: ["admissions"] });
+      await qc.invalidateQueries({ queryKey: ["admission"] });
+      await qc.invalidateQueries({ queryKey: ["laundries"] });
+      toast.success("Student unassigned from laundry.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not unassign student.");
+    } finally {
+      setUnassigning(null);
+    }
+  }
+
+  async function updateStatusSingle(studentId: string, status: LaundrySubscriptionStatus) {
+    setSingleAssigning(studentId);
+    try {
+      await updateStudentLaundryStatus(studentId, status);
+      await qc.invalidateQueries({ queryKey: ["admissions"] });
+      await qc.invalidateQueries({ queryKey: ["admission"] });
+      toast.success(`Laundry subscription set to ${status}.`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not update status.");
     } finally {
       setSingleAssigning(null);
     }
@@ -82,8 +115,10 @@ function LaundryAssignPage() {
     if (!laundry) return;
     setAssigning(true);
     try {
-      await Promise.all([...selectedIds].map((id) => assignStudentToLaundry(id, bulkLaundryId, laundry.laundryName, bulkStatus)));
+      await Promise.all([...selectedIds].map((id) => assignStudentToLaundry(id, bulkLaundryId, laundry.laundryName, bulkStatus || "active")));
       await qc.invalidateQueries({ queryKey: ["admissions"] });
+      await qc.invalidateQueries({ queryKey: ["admission"] });
+      await qc.invalidateQueries({ queryKey: ["laundries"] });
       toast.success(`${selectedIds.size} student${selectedIds.size > 1 ? "s" : ""} assigned to ${laundry.laundryName}.`);
       setSelectedIds(new Set());
       setBulkLaundryId("");
@@ -174,7 +209,9 @@ function LaundryAssignPage() {
         ) : (
           filtered.map((student) => {
             const currentLaundryId = (student as any).laundryId ?? "";
-            const laundryStatus: LaundrySubscriptionStatus = (student as any).laundryStatus ?? "active";
+            const rawStatus = (student as any).laundryStatus;
+            const laundryStatus: LaundrySubscriptionStatus =
+              rawStatus === "paused" || rawStatus === "cancelled" ? rawStatus : "active";
             const currentLaundry = laundries.find((l) => l.id === currentLaundryId);
             const isSelected = selectedIds.has(student.id);
 
@@ -190,14 +227,31 @@ function LaundryAssignPage() {
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-semibold">{student.fullName}</span>
                     {currentLaundry ? (
-                      <Badge variant="outline" className="text-[11px] border-success/30 bg-success/10 text-success">{currentLaundry.laundryName}</Badge>
+                      <Badge variant="outline" className="text-[11px] border-success/30 bg-success/10 text-success">
+                        {currentLaundry.laundryName}
+                      </Badge>
                     ) : (
                       <Badge variant="outline" className="text-[11px] text-muted-foreground">Not Assigned</Badge>
                     )}
                     {currentLaundryId && (
-                      <Badge variant="outline" className={`text-[11px] capitalize ${laundryStatus === "active" ? "border-success/30 text-success" : laundryStatus === "paused" ? "border-warning/30 text-warning-foreground" : "border-destructive/20 text-destructive"}`}>
-                        Laundry: {laundryStatus}
-                      </Badge>
+                      <div className="flex items-center gap-1">
+                        <Select
+                          value={laundryStatus}
+                          onValueChange={(v) => updateStatusSingle(student.id, v as LaundrySubscriptionStatus)}
+                          disabled={singleAssigning === student.id}
+                        >
+                          <SelectTrigger className={`h-6 w-28 text-[11px] font-medium capitalize border ${
+                            laundryStatus === "active" ? "border-success/30 bg-success/10 text-success" : laundryStatus === "paused" ? "border-warning/30 bg-warning/10 text-warning-foreground" : "border-destructive/20 bg-destructive/10 text-destructive"
+                          }`}>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="active">Active</SelectItem>
+                            <SelectItem value="paused">Paused</SelectItem>
+                            <SelectItem value="cancelled">Cancelled</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     )}
                   </div>
                   <p className="mt-0.5 text-sm text-muted-foreground">
@@ -210,13 +264,25 @@ function LaundryAssignPage() {
                       key={l.id}
                       variant={l.id === currentLaundryId ? "default" : "outline"}
                       size="sm" className="h-7 text-xs"
-                      disabled={singleAssigning === student.id}
+                      disabled={singleAssigning === student.id || unassigning === student.id}
                       onClick={() => assignSingle(student.id, l.id, l.laundryName, laundryStatus)}
                     >
-                      {singleAssigning === student.id && l.id !== currentLaundryId ? <Loader2 className="size-3 animate-spin" /> : null}
+                      {singleAssigning === student.id && l.id !== currentLaundryId ? <Loader2 className="size-3 animate-spin mr-1" /> : null}
                       {l.laundryName}
                     </Button>
                   ))}
+                  {currentLaundryId && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-xs border-destructive/40 text-destructive hover:bg-destructive/10"
+                      disabled={unassigning === student.id || singleAssigning === student.id}
+                      onClick={() => unassignSingle(student.id)}
+                    >
+                      {unassigning === student.id ? <Loader2 className="size-3 animate-spin mr-1" /> : null}
+                      Unassign
+                    </Button>
+                  )}
                 </div>
               </div>
             );

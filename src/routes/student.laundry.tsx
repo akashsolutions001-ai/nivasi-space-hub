@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   WashingMachine, Loader2, CheckCircle2,
   Clock, Package, ChevronDown, ChevronUp, CalendarDays,
+  Scale, StickyNote,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -12,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StudentShell } from "@/components/nivasi/student-shell";
 import { useStudentAuth } from "@/lib/studentAuth";
-import { useLaundries, useStudentLaundryRecords } from "@/lib/hooks";
+import { useLaundries, useStudentLaundryRecords, useLaundryPickupsForStudent } from "@/lib/hooks";
 import {
   getOrCreateStudentLaundryRecord,
   updateStudentLaundryRecord,
@@ -20,7 +21,7 @@ import {
   getWeekId,
   getWeekBounds,
 } from "@/lib/db";
-import type { StudentLaundryRecord } from "@/lib/types";
+import type { StudentLaundryRecord, LaundryPickup } from "@/lib/types";
 
 export const Route = createFileRoute("/student/laundry")({
   head: () => ({ meta: [{ title: "My Laundry — NivasiSpace" }] }),
@@ -222,6 +223,82 @@ function LaundryHistoryCard({ records }: { records: StudentLaundryRecord[] }) {
   );
 }
 
+// ── Daily Laundry Logs & Clothes Weight card ───────────────────────────────────
+
+function DailyLaundryLogsCard({ pickups }: { pickups: LaundryPickup[] }) {
+  const [open, setOpen] = useState(true);
+  if (pickups.length === 0) return null;
+
+  // Group pickups by date
+  const byDate = pickups.reduce<Record<string, { pickup?: LaundryPickup; delivery?: LaundryPickup }>>((acc, p) => {
+    const entry = acc[p.date] ?? {};
+    if (p.type === "pickup") entry.pickup = p;
+    else entry.delivery = p;
+    acc[p.date] = entry;
+    return acc;
+  }, {});
+
+  const dates = Object.keys(byDate).sort((a, b) => b.localeCompare(a));
+
+  return (
+    <div className="rounded-2xl border border-border bg-card shadow-soft overflow-hidden">
+      <button
+        className="flex w-full items-center justify-between px-5 py-3.5"
+        onClick={() => setOpen((v) => !v)}
+      >
+        <div className="flex items-center gap-2">
+          <Scale className="size-4 text-primary" />
+          <span className="text-sm font-semibold">Daily Laundry & Clothes Weight</span>
+        </div>
+        {open ? <ChevronUp className="size-4 text-muted-foreground" /> : <ChevronDown className="size-4 text-muted-foreground" />}
+      </button>
+      {open && (
+        <div className="border-t border-border divide-y divide-border">
+          {dates.map((d) => {
+            const row = byDate[d];
+            const p = row?.pickup;
+            const del = row?.delivery;
+            const weight = p?.clothesWeight || del?.clothesWeight;
+            const notes = p?.notes || del?.notes;
+
+            return (
+              <div key={d} className="px-5 py-3 space-y-1.5">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <p className="text-xs font-semibold text-foreground">{d}</p>
+                  <div className="flex gap-1.5 flex-wrap">
+                    {p && (
+                      <Badge variant="outline" className={`text-[10px] capitalize ${p.status === "picked_up" ? "bg-success/10 text-success border-success/30" : "bg-warning/10 text-warning-foreground border-warning/30"}`}>
+                        Pickup: {p.status}
+                      </Badge>
+                    )}
+                    {del && (
+                      <Badge variant="outline" className={`text-[10px] capitalize ${del.status === "picked_up" ? "bg-success/10 text-success border-success/30" : "bg-muted text-muted-foreground"}`}>
+                        Delivery: {del.status === "picked_up" ? "Delivered" : del.status}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+                {weight && (
+                  <p className="text-xs font-bold text-primary flex items-center gap-1.5">
+                    <Scale className="size-3.5" />
+                    Weight of Clothes: {weight}
+                  </p>
+                )}
+                {notes && (
+                  <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                    <StickyNote className="size-3.5 shrink-0" />
+                    {notes}
+                  </p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 function StudentLaundryPage() {
@@ -243,6 +320,7 @@ function StudentLaundryPage() {
   const [saving, setSaving] = useState<string | null>(null);
 
   const { data: allRecords = [] } = useStudentLaundryRecords(myAdmission?.id ?? null);
+  const { data: dailyPickups = [] } = useLaundryPickupsForStudent(myAdmission?.id ?? null);
 
   // Auth guard
   useEffect(() => {
@@ -363,6 +441,8 @@ function StudentLaundryPage() {
               onMarkReceived={handleMarkReceived}
               saving={saving}
             />
+            {/* Daily Clothes Weight & Details logged by Laundry */}
+            <DailyLaundryLogsCard pickups={dailyPickups} />
             {/* History */}
             <LaundryHistoryCard records={allRecords} />
           </>

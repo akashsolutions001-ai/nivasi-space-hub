@@ -57,7 +57,7 @@ function LaundryFormDialog({ open, onClose, existing }: LaundryFormProps) {
   const [ownerName, setOwnerName] = useState(existing?.ownerName ?? "");
   const [ownerPhone, setOwnerPhone] = useState(existing?.ownerPhone ?? "");
   const [saving, setSaving] = useState(false);
-  const [errors, setErrors] = useState<{ laundryName?: string; ownerPhone?: string }>({});
+  const [errors, setErrors] = useState<{ laundryName?: string | undefined; ownerPhone?: string | undefined }>({});
 
   function validate() {
     const e: typeof errors = {};

@@ -19,7 +19,7 @@ export function downloadReceiptPDF(a: Admission): void {
     doc.setDrawColor(220, 220, 220);
     doc.line(lm, yPos, rm, yPos);
   };
-  const rect  = (x: number, yPos: number, w: number, h: number, fill: number[]) => {
+  const rect  = (x: number, yPos: number, w: number, h: number, fill: [number, number, number]) => {
     doc.setFillColor(fill[0], fill[1], fill[2]);
     doc.roundedRect(x, yPos, w, h, 3, 3, "F");
   };

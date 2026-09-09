@@ -893,6 +893,34 @@ var RotateCcw = createLucideIcon("rotate-ccw", [["path", {
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var Scale = createLucideIcon("scale", [
+	["path", {
+		d: "M12 3v18",
+		key: "108xh3"
+	}],
+	["path", {
+		d: "m19 8 3 8a5 5 0 0 1-6 0zV7",
+		key: "zcdpyk"
+	}],
+	["path", {
+		d: "M3 7h1a17 17 0 0 0 8-2 17 17 0 0 0 8 2h1",
+		key: "1yorad"
+	}],
+	["path", {
+		d: "m5 8 3 8a5 5 0 0 1-6 0zV7",
+		key: "eua70x"
+	}],
+	["path", {
+		d: "M7 21h10",
+		key: "1b0cd5"
+	}]
+]);
+/**
+* @license lucide-react v0.575.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var Search = createLucideIcon("search", [["path", {
 	d: "m21 21-4.34-4.34",
 	key: "14j7rj"
@@ -1047,6 +1075,19 @@ var Stethoscope = createLucideIcon("stethoscope", [
 		key: "ts1r5v"
 	}]
 ]);
+/**
+* @license lucide-react v0.575.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var StickyNote = createLucideIcon("sticky-note", [["path", {
+	d: "M21 9a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 15 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2z",
+	key: "1dfntj"
+}], ["path", {
+	d: "M15 3v5a1 1 0 0 0 1 1h5",
+	key: "6s6qgf"
+}]]);
 /**
 * @license lucide-react v0.575.0 - ISC
 *
@@ -1346,4 +1387,4 @@ var Zap = createLucideIcon("zap", [["path", {
 	key: "1xq2db"
 }]]);
 //#endregion
-export { ChevronUp as $, Package as A, History as B, Search as C, Plus as D, Receipt as E, Lock as F, ExternalLink as G, FileText as H, LoaderCircle as I, CircleX as J, Download as K, LayoutDashboard as L, Menu as M, MapPin as N, Phone as O, LogOut as P, ChevronsUpDown as Q, IndianRupee as R, Settings as S, RefreshCw as T, Eye as U, GraduationCap as V, EyeOff as W, CircleArrowDown as X, CircleCheck as Y, CircleAlert as Z, Square as _, Wallet as a, CalendarDays as at, ShieldAlert as b, User as c, BookOpen as ct, TriangleAlert as d, ChevronRight as et, TrendingUp as f, Stethoscope as g, ToggleLeft as h, WashingMachine as i, Calendar as it, MessageSquare as j, Pencil as k, UserPlus as l, BedDouble as lt, ToggleRight as m, X as n, ChevronDown as nt, UtensilsCrossed as o, Building2 as ot, Trash2 as p, Clock as q, Wrench as r, Check as rt, Users as s, Briefcase as st, Zap as t, ChevronLeft as tt, UserCheck as u, ArrowLeft as ut, SquareCheckBig as v, RotateCcw as w, Share2 as x, SkipForward as y, House as z };
+export { CircleAlert as $, Phone as A, IndianRupee as B, Settings as C, RefreshCw as D, RotateCcw as E, MapPin as F, Eye as G, History as H, LogOut as I, Download as J, EyeOff as K, Lock as L, Package as M, MessageSquare as N, Receipt as O, Menu as P, CircleArrowDown as Q, LoaderCircle as R, Share2 as S, Scale as T, GraduationCap as U, House as V, FileText as W, CircleX as X, Clock as Y, CircleCheck as Z, Stethoscope as _, Wallet as a, Check as at, SkipForward as b, User as c, Building2 as ct, TriangleAlert as d, BedDouble as dt, ChevronsUpDown as et, TrendingUp as f, ArrowLeft as ft, StickyNote as g, ToggleLeft as h, WashingMachine as i, ChevronDown as it, Pencil as j, Plus as k, UserPlus as l, Briefcase as lt, ToggleRight as m, X as n, ChevronRight as nt, UtensilsCrossed as o, Calendar as ot, Trash2 as p, ExternalLink as q, Wrench as r, ChevronLeft as rt, Users as s, CalendarDays as st, Zap as t, ChevronUp as tt, UserCheck as u, BookOpen as ut, Square as v, Search as w, ShieldAlert as x, SquareCheckBig as y, LayoutDashboard as z };

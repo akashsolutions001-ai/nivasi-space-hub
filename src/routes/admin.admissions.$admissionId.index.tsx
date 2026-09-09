@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Eye, EyeOff, Pencil, Share2, ShieldAlert, Trash2, UtensilsCrossed, Loader2 } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Pencil, Share2, ShieldAlert, Trash2, UtensilsCrossed, WashingMachine, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { AdminShell } from "@/components/nivasi/admin-shell";
@@ -23,16 +23,25 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { deleteAdmission, fetchAdmission, assignStudentToMess, updateStudentTiffinStatus, updateAdmission } from "@/lib/db";
+import {
+  deleteAdmission,
+  fetchAdmission,
+  assignStudentToMess,
+  updateStudentTiffinStatus,
+  updateAdmission,
+  assignStudentToLaundry,
+  unassignStudentFromLaundry,
+  updateStudentLaundryStatus,
+} from "@/lib/db";
 import { useIsGlobalAdmin } from "@/lib/auth";
 import { isFirebaseConfigured } from "@/lib/firebase";
 import { formatDate, formatINR } from "@/lib/format";
-import { useMesses } from "@/lib/hooks";
+import { useMesses, useLaundries } from "@/lib/hooks";
 import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import type { Admission, TiffinStatus } from "@/lib/types";
+import type { Admission, TiffinStatus, LaundrySubscriptionStatus } from "@/lib/types";
 
 // Global admin credentials for delete confirmation
 const GLOBAL_EMAIL    = "Globaladmin@nivasispace.com";
@@ -589,6 +598,137 @@ function MessSection({ data }: { data: Admission }) {
   );
 }
 
+/* ── Laundry assignment section ── */
+
+function LaundrySection({ data }: { data: Admission }) {
+  const qc = useQueryClient();
+  const { data: laundries = [] } = useLaundries();
+  const [saving, setSaving] = useState(false);
+
+  const currentLaundryId: string = (data as any).laundryId ?? "";
+  const rawStatus = (data as any).laundryStatus;
+  const currentStatus: LaundrySubscriptionStatus =
+    rawStatus === "paused" || rawStatus === "cancelled" ? rawStatus : "active";
+  const currentLaundry = laundries.find((l) => l.id === currentLaundryId);
+
+  async function handleLaundryChange(laundryId: string) {
+    if (laundryId === "unassign") {
+      setSaving(true);
+      try {
+        await unassignStudentFromLaundry(data.id);
+        await qc.invalidateQueries({ queryKey: ["admission", data.admissionId] });
+        await qc.invalidateQueries({ queryKey: ["admissions"] });
+        await qc.invalidateQueries({ queryKey: ["laundries"] });
+        toast.success("Student unassigned from laundry.");
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Could not unassign laundry.");
+      } finally {
+        setSaving(false);
+      }
+      return;
+    }
+
+    const laundry = laundries.find((l) => l.id === laundryId);
+    if (!laundry) return;
+    setSaving(true);
+    try {
+      await assignStudentToLaundry(data.id, laundryId, laundry.laundryName, currentStatus || "active");
+      await qc.invalidateQueries({ queryKey: ["admission", data.admissionId] });
+      await qc.invalidateQueries({ queryKey: ["admissions"] });
+      await qc.invalidateQueries({ queryKey: ["laundries"] });
+      toast.success(`Assigned to ${laundry.laundryName}`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not assign laundry.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleStatusChange(status: LaundrySubscriptionStatus) {
+    setSaving(true);
+    try {
+      await updateStudentLaundryStatus(data.id, status);
+      await qc.invalidateQueries({ queryKey: ["admission", data.admissionId] });
+      await qc.invalidateQueries({ queryKey: ["admissions"] });
+      toast.success(`Laundry status set to ${status}.`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not update laundry status.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const statusColor = currentStatus === "active"
+    ? "border-success/30 bg-success/10 text-success"
+    : currentStatus === "paused"
+    ? "border-warning/30 bg-warning/10 text-warning-foreground"
+    : "border-destructive/20 bg-destructive/10 text-destructive";
+
+  return (
+    <section className="rounded-2xl border border-border bg-card p-5 shadow-soft">
+      <div className="mb-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <WashingMachine className="size-4 text-primary" />
+          <h2 className="font-display text-base font-bold">Laundry Service</h2>
+        </div>
+        {saving && <Loader2 className="size-4 animate-spin text-muted-foreground" />}
+      </div>
+
+      {currentLaundry ? (
+        <div className="mb-3 rounded-xl border border-success/30 bg-success/5 px-3 py-2.5">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-sm font-semibold text-success">{currentLaundry.laundryName}</p>
+            <Badge variant="outline" className={`text-[11px] capitalize ${statusColor}`}>
+              Laundry: {currentStatus}
+            </Badge>
+          </div>
+          {currentLaundry.ownerName && (
+            <p className="mt-0.5 text-xs text-muted-foreground">Owner: {currentLaundry.ownerName}</p>
+          )}
+          {currentLaundry.ownerPhone && (
+            <p className="text-xs text-muted-foreground">Phone: {currentLaundry.ownerPhone}</p>
+          )}
+        </div>
+      ) : (
+        <p className="mb-3 text-sm text-muted-foreground italic">Not assigned to any laundry service yet.</p>
+      )}
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="space-y-1">
+          <p className="text-xs font-medium text-muted-foreground">Assign to Laundry</p>
+          <Select value={currentLaundryId || "none"} onValueChange={handleLaundryChange} disabled={saving}>
+            <SelectTrigger className="h-9 text-sm">
+              <SelectValue placeholder="Select laundry…" />
+            </SelectTrigger>
+            <SelectContent>
+              {currentLaundryId && <SelectItem value="unassign">Unassign from Laundry</SelectItem>}
+              {laundries.filter((l) => l.status === "active").map((l) => (
+                <SelectItem key={l.id} value={l.id}>{l.laundryName}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {currentLaundryId && (
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-muted-foreground">Subscription Status</p>
+            <Select value={currentStatus} onValueChange={(v) => handleStatusChange(v as LaundrySubscriptionStatus)} disabled={saving}>
+              <SelectTrigger className="h-9 text-sm capitalize">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="paused">Paused</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
 /* ---------------------------------- page --------------------------------- */
 
 function AdmissionDetailPage() {
@@ -736,6 +876,9 @@ function AdmissionDetailPage() {
 
           {/* Mess & Tiffin assignment */}
           <MessSection data={data} />
+
+          {/* Laundry assignment */}
+          <LaundrySection data={data} />
 
           {/* Payment — role-aware component */}
           <PaymentSection data={data} isGlobalAdmin={isGlobalAdmin} />

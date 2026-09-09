@@ -3,7 +3,9 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   LogOut, Phone, MapPin, WashingMachine, Loader2, Search,
-  CheckCircle2, Clock, XCircle, SkipForward, ChevronDown, Receipt,
+  CheckCircle2, Clock, XCircle, SkipForward, Receipt,
+  StickyNote, ChevronLeft, ChevronRight as ChevronRightIcon,
+  Calendar, Scale, Check,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -11,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StudentLaundryDialog } from "@/components/nivasi/student-laundry-dialog";
 import { useAuth } from "@/lib/auth";
 import {
   useLaundryEmployeeByUid, useAdmissions, useLaundryPickupsForDate,
@@ -92,6 +95,15 @@ function LaundryEmployeeDashboardPage() {
   const qc = useQueryClient();
   const today = todayDateString();
 
+  const [selectedDate, setSelectedDate] = useState<string>(today);
+  const [search, setSearch] = useState("");
+  const [updatingKey, setUpdatingKey] = useState<string | null>(null);
+  const [dialogStudent, setDialogStudent] = useState<Admission | null>(null);
+
+  // notes & weight keyed by `${studentId}-${type}`
+  const [notesMap, setNotesMap] = useState<Record<string, string>>({});
+  const [weightMap, setWeightMap] = useState<Record<string, string>>({});
+
   const { data: employee } = useLaundryEmployeeByUid(user?.uid);
 
   const assignedLaundryIds: string[] = employee?.laundryIds ?? [];
@@ -104,11 +116,8 @@ function LaundryEmployeeDashboardPage() {
   const { data: properties = [] } = useProperties();
 
   const { data: admissions = [], isLoading: admLoading } = useAdmissions();
-  const { data: pickups = [] } = useLaundryPickupsForDate(resolvedLaundryId || null, today);
-  const { data: summary } = useLaundryPickupSummary(resolvedLaundryId || null, today);
-
-  const [search, setSearch] = useState("");
-  const [updatingKey, setUpdatingKey] = useState<string | null>(null);
+  const { data: pickups = [] } = useLaundryPickupsForDate(resolvedLaundryId || null, selectedDate);
+  const { data: summary } = useLaundryPickupSummary(resolvedLaundryId || null, selectedDate);
 
   // Guard: only laundry employees may view this page
   useEffect(() => {
@@ -119,9 +128,30 @@ function LaundryEmployeeDashboardPage() {
 
   useEffect(() => {
     if (!activeLaundryId && assignedLaundryIds.length > 0) {
-      setActiveLaundryId(assignedLaundryIds[0]);
+      setActiveLaundryId(assignedLaundryIds[0] ?? "");
     }
   }, [assignedLaundryIds, activeLaundryId]);
+
+  // Sync existing pickup notes and clothesWeight into state when pickups load
+  useEffect(() => {
+    if (pickups.length === 0) return;
+    setNotesMap((prev) => {
+      const next = { ...prev };
+      for (const p of pickups) {
+        const key = `${p.studentId}-${p.type}`;
+        if (p.notes !== undefined) next[key] = p.notes;
+      }
+      return next;
+    });
+    setWeightMap((prev) => {
+      const next = { ...prev };
+      for (const p of pickups) {
+        const key = `${p.studentId}-${p.type}`;
+        if (p.clothesWeight !== undefined) next[key] = p.clothesWeight;
+      }
+      return next;
+    });
+  }, [pickups]);
 
   const students = useMemo(
     () =>
@@ -158,14 +188,44 @@ function LaundryEmployeeDashboardPage() {
         admissionId: student.admissionId,
         laundryId: resolvedLaundryId,
         employeeId: employee.id,
-        date: today,
+        date: selectedDate,
         type,
         status,
+        clothesWeight: weightMap[key] ?? "",
+        notes: notesMap[key] ?? "",
       });
-      await qc.invalidateQueries({ queryKey: ["laundryPickups", resolvedLaundryId, today] });
-      await qc.invalidateQueries({ queryKey: ["laundryPickupSummary", resolvedLaundryId, today] });
+      await qc.invalidateQueries({ queryKey: ["laundryPickups"] });
+      await qc.invalidateQueries({ queryKey: ["laundryPickupSummary"] });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not update status.");
+    } finally {
+      setUpdatingKey(null);
+    }
+  }
+
+  async function saveDetails(student: Admission, type: "pickup" | "delivery") {
+    if (!resolvedLaundryId || !employee) return;
+    const key = `${student.id}-${type}`;
+    const existingPickup = pickups.find((p) => p.studentId === student.id && p.type === type);
+    const status = existingPickup?.status ?? "pending";
+    setUpdatingKey(key + "-details");
+    try {
+      await upsertLaundryPickup({
+        studentId: student.id,
+        admissionId: student.admissionId,
+        laundryId: resolvedLaundryId,
+        employeeId: employee.id,
+        date: selectedDate,
+        type,
+        status,
+        clothesWeight: weightMap[key] ?? "",
+        notes: notesMap[key] ?? "",
+      });
+      await qc.invalidateQueries({ queryKey: ["laundryPickups"] });
+      await qc.invalidateQueries({ queryKey: ["laundryPickupSummary"] });
+      toast.success(`${type === "pickup" ? "Pickup" : "Delivery"} details saved for ${student.fullName}.`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not save details.");
     } finally {
       setUpdatingKey(null);
     }
@@ -256,11 +316,42 @@ function LaundryEmployeeDashboardPage() {
           </div>
         </div>
 
-        {/* ── Date ── */}
-        <p className="text-center text-xs font-medium uppercase tracking-widest text-muted-foreground">
-          Today —{" "}
-          {new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
-        </p>
+        {/* ── Date picker ── */}
+        <div className="flex items-center justify-between gap-2 rounded-2xl border border-border bg-card px-4 py-2.5 shadow-soft">
+          <button
+            onClick={() => {
+              const d = new Date(selectedDate);
+              d.setDate(d.getDate() - 1);
+              setSelectedDate(d.toISOString().slice(0, 10));
+            }}
+            className="flex size-8 items-center justify-center rounded-lg hover:bg-muted transition-colors"
+            aria-label="Previous day"
+          >
+            <ChevronLeft className="size-4" />
+          </button>
+          <div className="text-center">
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="cursor-pointer bg-transparent text-center text-sm font-semibold outline-none"
+            />
+            {selectedDate === today && (
+              <p className="text-[11px] text-primary font-medium">Today</p>
+            )}
+          </div>
+          <button
+            onClick={() => {
+              const d = new Date(selectedDate);
+              d.setDate(d.getDate() + 1);
+              setSelectedDate(d.toISOString().slice(0, 10));
+            }}
+            className="flex size-8 items-center justify-center rounded-lg hover:bg-muted transition-colors"
+            aria-label="Next day"
+          >
+            <ChevronRightIcon className="size-4" />
+          </button>
+        </div>
 
         {/* ── Search ── */}
         <div className="relative">
@@ -309,6 +400,15 @@ function LaundryEmployeeDashboardPage() {
                     )}
                   </div>
                   <div className="flex shrink-0 items-center gap-1.5">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="shrink-0 h-8 text-xs gap-1 border-primary/30 text-primary hover:bg-primary/10"
+                      onClick={() => setDialogStudent(student)}
+                    >
+                      <Calendar className="size-3.5" />
+                      <span>Date & History</span>
+                    </Button>
                     {student.phoneNumber && (
                       <Button asChild variant="outline" size="sm" className="shrink-0 border-green-500 bg-green-50 text-green-600 hover:bg-green-100 hover:text-green-700">
                         <a href={`tel:${student.phoneNumber}`} aria-label={`Call ${student.fullName}`}>
@@ -372,11 +472,72 @@ function LaundryEmployeeDashboardPage() {
                     );
                   })}
                 </div>
+
+                {/* ── Notes / Weight per type ── */}
+                <div className="mt-3 grid grid-cols-2 gap-2 border-t border-border pt-3">
+                  {(["pickup", "delivery"] as const).map((type) => {
+                    const key = `${student.id}-${type}`;
+                    const isSavingDetails = updatingKey === key + "-details";
+                    return (
+                      <div key={type} className="space-y-2 rounded-xl border border-border/70 bg-muted/20 p-2.5">
+                        <p className="text-xs font-semibold capitalize flex items-center gap-1 text-foreground">
+                          {type === "pickup" ? <Clock className="size-3 text-warning-foreground" /> : <CheckCircle2 className="size-3 text-success" />}
+                          {type} Details
+                        </p>
+
+                        <div className="space-y-1">
+                          <label className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground">
+                            <Scale className="size-3 text-primary" /> Weight of Clothes
+                          </label>
+                          <Input
+                            placeholder="e.g. 2.5 kg"
+                            value={weightMap[key] ?? ""}
+                            onChange={(e) => setWeightMap((prev) => ({ ...prev, [key]: e.target.value }))}
+                            className="h-7 text-xs bg-background"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground">
+                            <StickyNote className="size-3 text-primary" /> Description / Notes
+                          </label>
+                          <textarea
+                            rows={2}
+                            value={notesMap[key] ?? ""}
+                            onChange={(e) => setNotesMap((prev) => ({ ...prev, [key]: e.target.value }))}
+                            placeholder={`e.g. ${type === "pickup" ? "3 shirts, 2 pants, wash & iron" : "delivered clean & folded"}`}
+                            className="w-full resize-none rounded-lg border border-input bg-background px-2.5 py-1.5 text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                          />
+                        </div>
+
+                        <button
+                          onClick={() => saveDetails(student, type)}
+                          disabled={isSavingDetails}
+                          className="flex items-center justify-center gap-1 rounded-lg bg-primary/10 text-primary border border-primary/20 px-2.5 py-1 text-[11px] font-semibold hover:bg-primary/20 transition-colors disabled:opacity-50 w-full"
+                        >
+                          {isSavingDetails ? <Loader2 className="size-3 animate-spin mr-1" /> : <Check className="size-3 mr-1" />}
+                          Save {type} details
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             );
           })
         )}
       </div>
+
+      {/* ── Student Calendar Date / History Dialog ── */}
+      <StudentLaundryDialog
+        open={!!dialogStudent}
+        onClose={() => setDialogStudent(null)}
+        student={dialogStudent}
+        laundryId={resolvedLaundryId}
+        laundryName={activeLaundryName}
+        employeeId={employee?.id}
+        initialDate={selectedDate}
+      />
     </div>
   );
 }

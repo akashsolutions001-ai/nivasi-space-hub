@@ -67,7 +67,7 @@ function MessFormDialog({ open, onClose, existing }: MessFormProps) {
   const [ownerPhone, setOwnerPhone] = useState(existing?.ownerPhone ?? "");
   const [messDescription, setMessDescription] = useState((existing as any)?.messDescription ?? "");
   const [saving, setSaving] = useState(false);
-  const [errors, setErrors] = useState<{ messName?: string; ownerPhone?: string; serialNumber?: string }>({});
+  const [errors, setErrors] = useState<{ messName?: string | undefined; ownerPhone?: string | undefined; serialNumber?: string | undefined }>({});
 
   function validate() {
     const e: typeof errors = {};

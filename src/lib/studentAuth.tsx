@@ -334,6 +334,7 @@ function buildAdmission(id: string, d: Record<string, unknown>): Admission {
     ...(d["tiffinStatus"] !== undefined ? { tiffinStatus: d["tiffinStatus"] } : {}),
     ...(d["laundryId"] !== undefined ? { laundryId: String(d["laundryId"]) } : {}),
     ...(d["laundryName"] !== undefined ? { laundryName: String(d["laundryName"]) } : {}),
+    ...(d["laundryStatus"] !== undefined ? { laundryStatus: d["laundryStatus"] as any } : {}),
     createdAt: toDate(d["createdAt"]),
     updatedAt: toDate(d["updatedAt"]),
   } as Admission;

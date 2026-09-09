@@ -25,6 +25,8 @@ function EmployeeLoginPage() {
     if (!loading && user) {
       if (userRole === "mess_employee") {
         navigate({ to: "/employee/dashboard", replace: true });
+      } else if (userRole === "laundry_employee") {
+        navigate({ to: "/employee/laundry", replace: true });
       } else if (userRole === "admin") {
         navigate({ to: "/admin/dashboard", replace: true });
       }

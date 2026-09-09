@@ -51,6 +51,14 @@ export interface Admission {
   mattressPaymentCollected: boolean;
   mealPreference?: "veg" | "non-veg";
   notes?: string;
+  // Mess & Tiffin
+  messId?: string;
+  messName?: string;
+  tiffinStatus?: TiffinStatus | string;
+  // Laundry
+  laundryId?: string;
+  laundryName?: string;
+  laundryStatus?: LaundrySubscriptionStatus | string;
   createdAt?: Date | null;
   updatedAt?: Date | null;
 }
@@ -287,6 +295,8 @@ export interface LaundryPickup {
   date: string;           // YYYY-MM-DD
   type: LaundryPickupType;
   status: LaundryPickupStatus;
+  notes?: string;         // e.g. description of clothes
+  clothesWeight?: string; // e.g. weight of clothes like 2.5 kg
   pickedUpAt?: Date | null;
   createdAt?: Date | null;
   updatedAt?: Date | null;

@@ -15,7 +15,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useAdmissions, useMesses } from "@/lib/hooks";
-import { assignStudentToMess, updateStudentTiffinStatus } from "@/lib/db";
+import { assignStudentToMess, updateStudentTiffinStatus, unassignStudentFromMess } from "@/lib/db";
 import type { TiffinStatus } from "@/lib/types";
 
 export const Route = createFileRoute("/admin/mess/assign")({

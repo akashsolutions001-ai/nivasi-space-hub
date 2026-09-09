@@ -66,7 +66,7 @@ function EmployeeDeliveryPage() {
   // Reset when employee loads
   useEffect(() => {
     if (!activeMessId && assignedMessIds.length > 0) {
-      setActiveMessId(assignedMessIds[0]);
+      setActiveMessId(assignedMessIds[0] ?? "");
     }
   }, [assignedMessIds, activeMessId]);
 

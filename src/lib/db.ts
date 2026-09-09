@@ -81,6 +81,10 @@ function mapAdmission(snap: QueryDocumentSnapshot<DocumentData>): Admission {
     messId: d.messId ?? "",
     messName: d.messName ?? "",
     tiffinStatus: d.tiffinStatus ?? "",
+    // Laundry fields
+    laundryId: d.laundryId ?? "",
+    laundryName: d.laundryName ?? "",
+    laundryStatus: d.laundryStatus ?? "",
   } as any;
 }
 
@@ -406,7 +410,7 @@ export interface Room {
   title: string;
   rooms?: string;
   roomType?: string;
-  gender?: string;
+  gender?: string | undefined;
   city?: string;
   address?: string;
   location?: string;
@@ -968,6 +972,20 @@ export async function assignStudentToMess(
   }
 }
 
+export async function unassignStudentFromMess(admissionDocId: string): Promise<void> {
+  try {
+    await updateDoc(doc(getDb(), "admissions", admissionDocId), {
+      messId: "",
+      messName: "",
+      tiffinStatus: "",
+      updatedAt: serverTimestamp(),
+    });
+  } catch (error) {
+    console.error("[firestore] unassignStudentFromMess", error);
+    throw new Error("Unable to unassign student from mess. Please check your connection and try again.");
+  }
+}
+
 export async function updateStudentTiffinStatus(
   admissionDocId: string,
   tiffinStatus: TiffinStatus,
@@ -1261,8 +1279,8 @@ export async function updatePayoutStatus(
       updatedAt: serverTimestamp(),
     };
     if (status === "PAID" || status === "PROCESSING") {
-      patch.processedBy  = processedBy;
-      patch.processedAt  = serverTimestamp();
+      patch["processedBy"] = processedBy;
+      patch["processedAt"] = serverTimestamp();
     }
     await updateDoc(doc(getDb(), "payouts", id), patch);
   } catch (error) {
@@ -1344,6 +1362,8 @@ function mapLaundryPickup(snap: QueryDocumentSnapshot<DocumentData>): LaundryPic
     status: (["pending", "picked_up", "not_available", "skipped"].includes(d.status)
       ? d.status
       : "pending") as LaundryPickup["status"],
+    notes: d.notes ?? d.description ?? "",
+    clothesWeight: d.clothesWeight ?? d.weight ?? "",
     pickedUpAt: toDate(d.pickedUpAt),
     createdAt: toDate(d.createdAt),
     updatedAt: toDate(d.updatedAt),
@@ -1526,12 +1546,26 @@ export async function assignStudentToLaundry(
     await updateDoc(doc(getDb(), "admissions", admissionDocId), {
       laundryId,
       laundryName,
-      laundryStatus,
+      laundryStatus: laundryStatus || "active",
       updatedAt: serverTimestamp(),
     });
   } catch (error) {
     console.error("[firestore] assignStudentToLaundry", error);
     throw new Error("Unable to assign student to laundry. Please check your connection and try again.");
+  }
+}
+
+export async function unassignStudentFromLaundry(admissionDocId: string): Promise<void> {
+  try {
+    await updateDoc(doc(getDb(), "admissions", admissionDocId), {
+      laundryId: "",
+      laundryName: "",
+      laundryStatus: "",
+      updatedAt: serverTimestamp(),
+    });
+  } catch (error) {
+    console.error("[firestore] unassignStudentFromLaundry", error);
+    throw new Error("Unable to unassign student from laundry. Please check your connection and try again.");
   }
 }
 
@@ -1541,7 +1575,7 @@ export async function updateStudentLaundryStatus(
 ): Promise<void> {
   try {
     await updateDoc(doc(getDb(), "admissions", admissionDocId), {
-      laundryStatus,
+      laundryStatus: laundryStatus || "active",
       updatedAt: serverTimestamp(),
     });
   } catch (error) {
@@ -1568,6 +1602,24 @@ export async function fetchLaundryPickupsForDate(laundryId: string, date: string
   }
 }
 
+/** Fetch all laundry pickups & deliveries for a specific student across all dates */
+export async function fetchLaundryPickupsForStudent(studentId: string): Promise<LaundryPickup[]> {
+  try {
+    const snap = await getDocs(
+      query(
+        collection(getDb(), "laundryPickups"),
+        where("studentId", "==", studentId),
+      ),
+    );
+    return snap.docs
+      .map(mapLaundryPickup)
+      .sort((a, b) => b.date.localeCompare(a.date));
+  } catch (error) {
+    console.error("[firestore] fetchLaundryPickupsForStudent", error);
+    return [];
+  }
+}
+
 /** Upsert a laundry pickup record — creates if not present, updates if already exists */
 export async function upsertLaundryPickup(input: LaundryPickupInput): Promise<string> {
   try {
@@ -1582,13 +1634,17 @@ export async function upsertLaundryPickup(input: LaundryPickupInput): Promise<st
       ),
     );
 
+    const status = input.status || "pending";
+
     if (!existing.empty) {
       const existingDoc = existing.docs[0];
       if (existingDoc) {
         await updateDoc(existingDoc.ref, {
-          status: input.status,
+          status,
           employeeId: input.employeeId,
-          pickedUpAt: input.status === "picked_up" ? serverTimestamp() : null,
+          pickedUpAt: status === "picked_up" ? serverTimestamp() : null,
+          ...(input.notes !== undefined ? { notes: input.notes } : {}),
+          ...(input.clothesWeight !== undefined ? { clothesWeight: input.clothesWeight } : {}),
           updatedAt: serverTimestamp(),
         });
         return existingDoc.id;
@@ -1598,7 +1654,10 @@ export async function upsertLaundryPickup(input: LaundryPickupInput): Promise<st
     const ref = doc(collection(db, "laundryPickups"));
     await setDoc(ref, {
       ...input,
-      pickedUpAt: input.status === "picked_up" ? serverTimestamp() : null,
+      status,
+      notes: input.notes ?? "",
+      clothesWeight: input.clothesWeight ?? "",
+      pickedUpAt: status === "picked_up" ? serverTimestamp() : null,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     });
