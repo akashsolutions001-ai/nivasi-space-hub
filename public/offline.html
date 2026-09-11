@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Offline — NivasiSpace</title>
+    <meta name="theme-color" content="#c2692a" />
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      body {
+        font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+        display: grid;
+        place-items: center;
+        min-height: 100dvh;
+        margin: 0;
+        background: #faf8f4;
+        color: #3d2e1a;
+        padding: 1.5rem;
+      }
+
+      .card {
+        text-align: center;
+        max-width: 360px;
+        width: 100%;
+      }
+
+      .icon {
+        width: 72px;
+        height: 72px;
+        border-radius: 20px;
+        background: linear-gradient(135deg, #9b4a18 0%, #c2692a 52%, #d4963e 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        box-shadow: 0 8px 24px -8px rgba(155,74,24,0.45);
+      }
+
+      .icon svg { width: 36px; height: 36px; }
+
+      h1 {
+        font-family: "Outfit", system-ui, sans-serif;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0 0 0.5rem;
+        letter-spacing: -0.02em;
+      }
+
+      p {
+        color: #7a5c3a;
+        font-size: 0.9rem;
+        line-height: 1.55;
+        margin: 0 0 1.75rem;
+      }
+
+      button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.65rem 1.5rem;
+        border-radius: 0.875rem;
+        border: none;
+        background: linear-gradient(135deg, #9b4a18 0%, #c2692a 52%, #d4963e 100%);
+        color: #fff;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 4px 14px -4px rgba(155,74,24,0.5);
+        transition: opacity 0.15s;
+      }
+
+      button:hover { opacity: 0.88; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="icon">
+        <!-- Simplified N lettermark -->
+        <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="6" y="6" width="5" height="24" rx="1" fill="white"/>
+          <rect x="25" y="6" width="5" height="24" rx="1" fill="white"/>
+          <path d="M11 6 L25 30" stroke="white" stroke-width="5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h1>You're offline</h1>
+      <p>NivasiSpace needs an internet connection to load. Check your network and try again.</p>
+      <button onclick="location.reload()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+          <path d="M21 3v5h-5"/>
+          <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+          <path d="M8 16H3v5"/>
+        </svg>
+        Try again
+      </button>
+    </div>
+  </body>
+</html>

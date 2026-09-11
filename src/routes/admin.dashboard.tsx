@@ -20,7 +20,7 @@ import { PaymentBadge } from "@/components/nivasi/badges";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { computeStats, filterByPeriod, useAdmissions } from "@/lib/hooks";
+import { computeStats, filterByPeriod, useAdmissions, useAllPayouts } from "@/lib/hooks";
 import { useIsGlobalAdmin, useAuth } from "@/lib/auth";
 import { formatDate, formatINR } from "@/lib/format";
 
@@ -48,6 +48,7 @@ const PERIODS = [
 
 function DashboardPage() {
   const { data: admissions = [], isLoading } = useAdmissions();
+  const { data: allPayouts = [], isLoading: payoutsLoading } = useAllPayouts();
   const isGlobalAdmin = useIsGlobalAdmin();
   const { collegeFilter } = useAuth();
   const [period, setPeriod] = useState("all");
@@ -63,6 +64,28 @@ function DashboardPage() {
   const scoped  = useMemo(() => filterByPeriod(filteredAdmissions, period), [filteredAdmissions, period]);
   const stats   = useMemo(() => computeStats(scoped), [scoped]);
   const recent  = useMemo(() => filteredAdmissions.slice(0, 6), [filteredAdmissions]);
+
+  // Payouts filtered by period (payouts don't have a college field, filter by date only)
+  const scopedPayouts = useMemo(() => {
+    if (period === "all") return allPayouts;
+    const now = new Date();
+    const start = new Date(now);
+    start.setHours(0, 0, 0, 0);
+    if (period === "week") start.setDate(start.getDate() - start.getDay());
+    if (period === "month") start.setDate(1);
+    return allPayouts.filter((p) => {
+      const d = p.createdAt ?? p.processedAt ?? null;
+      return d ? d.getTime() >= start.getTime() : false;
+    });
+  }, [allPayouts, period]);
+
+  const totalPayouts = useMemo(
+    () => scopedPayouts.filter((p) => p.status === "completed").reduce((sum, p) => sum + p.amount, 0),
+    [scopedPayouts],
+  );
+
+  // Net collected = amount collected from students minus what was paid out
+  const netAfterPayouts = Math.max(0, stats.collected - totalPayouts);
 
   return (
     <AdminShell
@@ -89,7 +112,7 @@ function DashboardPage() {
         </TabsList>
       </Tabs>
 
-      {isLoading ? (
+      {isLoading || payoutsLoading ? (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {Array.from({ length: 8 }).map((_, i) => (
             <Skeleton key={i} className="h-20 rounded-2xl" />
@@ -133,10 +156,29 @@ function DashboardPage() {
               </div>
 
               {showMoney ? (
-                <div className="grid gap-4 lg:grid-cols-3">
-                  <MoneyCard label="Total Package Value"  value={formatINR(stats.totalValue)} />
-                  <MoneyCard label="Amount Collected"     value={formatINR(stats.collected)}  accent />
-                  <MoneyCard label="Balance Outstanding"  value={formatINR(stats.outstanding)} />
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                  <MoneyCard
+                    label="Total Package Value"
+                    value={formatINR(stats.totalValue)}
+                    hint="Sum of all admission packages"
+                  />
+                  <MoneyCard
+                    label="Amount Collected"
+                    value={formatINR(stats.collected)}
+                    accent
+                    hint="Payments received from students"
+                  />
+                  <MoneyCard
+                    label="Total Payouts"
+                    value={formatINR(totalPayouts)}
+                    tone="warning"
+                    hint="Completed payouts in this period"
+                  />
+                  <MoneyCard
+                    label="Net Balance"
+                    value={formatINR(netAfterPayouts)}
+                    hint="Collected minus total payouts"
+                  />
                 </div>
               ) : (
                 <div className="rounded-2xl border border-dashed border-border bg-muted/30 px-5 py-4 text-sm text-muted-foreground">
@@ -201,17 +243,38 @@ function DashboardPage() {
   );
 }
 
-function MoneyCard({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+function MoneyCard({
+  label,
+  value,
+  hint,
+  accent,
+  tone,
+}: {
+  label: string;
+  value: string;
+  hint?: string;
+  accent?: boolean;
+  tone?: "warning";
+}) {
+  const base = "rounded-2xl p-5 shadow-soft";
+  let className: string;
+  if (accent) {
+    className = `${base} gradient-brand text-primary-foreground shadow-lift`;
+  } else if (tone === "warning") {
+    className = `${base} border border-warning/30 bg-warning/10`;
+  } else {
+    className = `${base} border border-border bg-card`;
+  }
+
   return (
-    <div
-      className={
-        accent
-          ? "gradient-brand rounded-2xl p-5 text-primary-foreground shadow-lift"
-          : "rounded-2xl border border-border bg-card p-5 shadow-soft"
-      }
-    >
-      <p className="text-[11px] font-semibold tracking-wide uppercase opacity-80">{label}</p>
+    <div className={className}>
+      <p className="text-[11px] font-semibold tracking-wide uppercase opacity-70">{label}</p>
       <p className="mt-1 font-display text-2xl font-bold tabular-nums">{value}</p>
+      {hint && (
+        <p className={`mt-1.5 text-[11px] ${accent ? "opacity-70" : "text-muted-foreground"}`}>
+          {hint}
+        </p>
+      )}
     </div>
   );
 }

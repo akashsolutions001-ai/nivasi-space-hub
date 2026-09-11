@@ -11,10 +11,10 @@ import { t as Toaster } from "../_libs/sonner.mjs";
 import { t as Route$27 } from "./admin.admissions._admissionId.index-C8yL1snt.mjs";
 import { t as Route$28 } from "./admin.laundry._laundryId-BsZQtiUO.mjs";
 import { t as Route$29 } from "./admin.mess._messId-DhBIrj-7.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/router-BbsIBIah.js
+//#region node_modules/.nitro/vite/services/ssr/assets/router-DFxgQlBT.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
-var styles_default = "/assets/styles-KxA8qDMP.css";
+var styles_default = "/assets/styles-BhUNGS83.css";
 function reportLovableError(error, context = {}) {
 	if (typeof window === "undefined") return;
 	window.__lovableEvents?.captureException?.(error, {
@@ -120,28 +120,60 @@ var Route$25 = createRootRouteWithContext()({
 			{ charSet: "utf-8" },
 			{
 				name: "viewport",
-				content: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+				content: "width=device-width, initial-scale=1, viewport-fit=cover"
 			},
-			{ title: "NivasiSpace Admission Management" },
+			{ title: "NivasiSpace" },
 			{
 				name: "description",
-				content: "Internal admission management system for NivasiSpace student accommodation."
+				content: "Admission management, mess, laundry & tiffin — all in one place."
 			},
 			{
 				name: "robots",
 				content: "noindex, nofollow"
 			},
 			{
+				name: "theme-color",
+				content: "#c2692a"
+			},
+			{
+				name: "apple-mobile-web-app-capable",
+				content: "yes"
+			},
+			{
+				name: "apple-mobile-web-app-status-bar-style",
+				content: "black-translucent"
+			},
+			{
+				name: "apple-mobile-web-app-title",
+				content: "NivasiSpace"
+			},
+			{
+				name: "msapplication-TileColor",
+				content: "#c2692a"
+			},
+			{
+				name: "msapplication-tap-highlight",
+				content: "no"
+			},
+			{
+				name: "format-detection",
+				content: "telephone=no"
+			},
+			{
 				property: "og:title",
-				content: "NivasiSpace Admission Management"
+				content: "NivasiSpace"
 			},
 			{
 				property: "og:description",
-				content: "Internal admission management system for NivasiSpace student accommodation."
+				content: "Admission management, mess, laundry & tiffin — all in one place."
 			},
 			{
 				property: "og:type",
 				content: "website"
+			},
+			{
+				property: "og:image",
+				content: "/icons/icon-512.png"
 			},
 			{
 				name: "twitter:card",
@@ -170,6 +202,19 @@ var Route$25 = createRootRouteWithContext()({
 				rel: "icon",
 				href: "/favicon.ico",
 				type: "image/x-icon"
+			},
+			{
+				rel: "manifest",
+				href: "/manifest.json"
+			},
+			{
+				rel: "apple-touch-icon",
+				href: "/icons/apple-touch-icon.png"
+			},
+			{
+				rel: "apple-touch-icon",
+				sizes: "192x192",
+				href: "/icons/icon-192.png"
 			}
 		]
 	}),
@@ -179,6 +224,9 @@ var Route$25 = createRootRouteWithContext()({
 	errorComponent: ErrorComponent
 });
 function RootShell({ children }) {
+	(0, import_react.useEffect)(() => {
+		if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch((err) => console.warn("[SW] Registration failed:", err));
+	}, []);
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("html", {
 		lang: "en",
 		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("head", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(HeadContent, {}) }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("body", { children: [children, /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Scripts, {})] })]
@@ -201,7 +249,7 @@ var Route$24 = createFileRoute("/")({
 	},
 	component: lazyRouteComponent($$splitComponentImporter$24, "component")
 });
-var $$splitComponentImporter$23 = () => import("./admin.dashboard-D-6eDVQ-.mjs");
+var $$splitComponentImporter$23 = () => import("./admin.dashboard-Bk30Dyev.mjs");
 var Route$23 = createFileRoute("/admin/dashboard")({
 	head: () => ({ meta: [
 		{ title: "Dashboard — NivasiSpace Admin" },

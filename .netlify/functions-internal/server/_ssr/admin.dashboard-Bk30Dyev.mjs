@@ -5,14 +5,14 @@ import { F as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+
 import { r as cn, t as Button } from "./button-CCQEfgNs.mjs";
 import { n as useAuth, r as useIsGlobalAdmin } from "./auth-D8HbqhQ8.mjs";
 import { B as IndianRupee, G as Eye, K as EyeOff, a as Wallet, dt as BedDouble, f as TrendingUp, k as Plus, lt as Briefcase, o as UtensilsCrossed, s as Users } from "../_libs/lucide-react.mjs";
-import { C as filterByPeriod, a as computeStats, et as useAdmissions } from "./hooks-CicQrMaL.mjs";
+import { C as filterByPeriod, a as computeStats, et as useAdmissions, tt as useAllPayouts } from "./hooks-CicQrMaL.mjs";
 import { t as Skeleton } from "./skeleton-DLRLwmh_.mjs";
 import { t as AdminShell } from "./admin-shell-HKDYrhq4.mjs";
 import { n as formatDate, r as formatINR } from "./format-CWXVlUmU.mjs";
 import { n as StatCard, t as EmptyState } from "./stat-card-GZrf7Gbg.mjs";
 import { n as PaymentBadge, r as ProfileAvatar } from "./badges-BnuszMg2.mjs";
 import { i as Trigger, n as List, r as Root2, t as Content } from "../_libs/radix-ui__react-tabs.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/admin.dashboard-D-6eDVQ-.js
+//#region node_modules/.nitro/vite/services/ssr/assets/admin.dashboard-Bk30Dyev.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var Tabs = Root2;
@@ -54,6 +54,7 @@ var PERIODS = [
 ];
 function DashboardPage() {
 	const { data: admissions = [], isLoading } = useAdmissions();
+	const { data: allPayouts = [], isLoading: payoutsLoading } = useAllPayouts();
 	const isGlobalAdmin = useIsGlobalAdmin();
 	const { collegeFilter } = useAuth();
 	const [period, setPeriod] = (0, import_react.useState)("all");
@@ -69,6 +70,19 @@ function DashboardPage() {
 	const scoped = (0, import_react.useMemo)(() => filterByPeriod(filteredAdmissions, period), [filteredAdmissions, period]);
 	const stats = (0, import_react.useMemo)(() => computeStats(scoped), [scoped]);
 	const recent = (0, import_react.useMemo)(() => filteredAdmissions.slice(0, 6), [filteredAdmissions]);
+	const scopedPayouts = (0, import_react.useMemo)(() => {
+		if (period === "all") return allPayouts;
+		const start = /* @__PURE__ */ new Date(/* @__PURE__ */ new Date());
+		start.setHours(0, 0, 0, 0);
+		if (period === "week") start.setDate(start.getDate() - start.getDay());
+		if (period === "month") start.setDate(1);
+		return allPayouts.filter((p) => {
+			const d = p.createdAt ?? p.processedAt ?? null;
+			return d ? d.getTime() >= start.getTime() : false;
+		});
+	}, [allPayouts, period]);
+	const totalPayouts = (0, import_react.useMemo)(() => scopedPayouts.filter((p) => p.status === "completed").reduce((sum, p) => sum + p.amount, 0), [scopedPayouts]);
+	const netAfterPayouts = Math.max(0, stats.collected - totalPayouts);
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(AdminShell, {
 		title: "Dashboard",
 		subtitle: isGlobalAdmin && collegeFilter.college ? `Showing data for: ${collegeFilter.college}` : "A live view of admissions, payments and provided items.",
@@ -87,7 +101,7 @@ function DashboardPage() {
 				value: p.value,
 				children: p.label
 			}, p.value)) })
-		}), isLoading ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+		}), isLoading || payoutsLoading ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 			className: "grid gap-4 sm:grid-cols-2 xl:grid-cols-4",
 			children: Array.from({ length: 8 }).map((_, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Skeleton, { className: "h-20 rounded-2xl" }, i))
 		}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
@@ -157,20 +171,29 @@ function DashboardPage() {
 						children: showMoney ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(EyeOff, { className: "size-4" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Eye, { className: "size-4" })
 					})]
 				}), showMoney ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "grid gap-4 lg:grid-cols-3",
+					className: "grid gap-4 sm:grid-cols-2 xl:grid-cols-4",
 					children: [
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MoneyCard, {
 							label: "Total Package Value",
-							value: formatINR(stats.totalValue)
+							value: formatINR(stats.totalValue),
+							hint: "Sum of all admission packages"
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MoneyCard, {
 							label: "Amount Collected",
 							value: formatINR(stats.collected),
-							accent: true
+							accent: true,
+							hint: "Payments received from students"
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MoneyCard, {
-							label: "Balance Outstanding",
-							value: formatINR(stats.outstanding)
+							label: "Total Payouts",
+							value: formatINR(totalPayouts),
+							tone: "warning",
+							hint: "Completed payouts in this period"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MoneyCard, {
+							label: "Net Balance",
+							value: formatINR(netAfterPayouts),
+							hint: "Collected minus total payouts"
 						})
 					]
 				}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
@@ -243,16 +266,28 @@ function DashboardPage() {
 		] })]
 	});
 }
-function MoneyCard({ label, value, accent }) {
+function MoneyCard({ label, value, hint, accent, tone }) {
+	const base = "rounded-2xl p-5 shadow-soft";
+	let className;
+	if (accent) className = `${base} gradient-brand text-primary-foreground shadow-lift`;
+	else if (tone === "warning") className = `${base} border border-warning/30 bg-warning/10`;
+	else className = `${base} border border-border bg-card`;
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-		className: accent ? "gradient-brand rounded-2xl p-5 text-primary-foreground shadow-lift" : "rounded-2xl border border-border bg-card p-5 shadow-soft",
-		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-			className: "text-[11px] font-semibold tracking-wide uppercase opacity-80",
-			children: label
-		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-			className: "mt-1 font-display text-2xl font-bold tabular-nums",
-			children: value
-		})]
+		className,
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "text-[11px] font-semibold tracking-wide uppercase opacity-70",
+				children: label
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "mt-1 font-display text-2xl font-bold tabular-nums",
+				children: value
+			}),
+			hint && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: `mt-1.5 text-[11px] ${accent ? "opacity-70" : "text-muted-foreground"}`,
+				children: hint
+			})
+		]
 	});
 }
 //#endregion

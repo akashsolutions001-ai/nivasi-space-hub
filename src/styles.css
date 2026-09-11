@@ -140,6 +140,8 @@
     color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+    /* Prevent pull-to-refresh gesture in installed PWA and mobile browsers */
+    overscroll-behavior-y: none;
   }
 
   h1,

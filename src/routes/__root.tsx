@@ -79,19 +79,35 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" },
-      { title: "NivasiSpace Admission Management" },
+      // Viewport: allow normal scaling (accessibility), viewport-fit=cover fills notch on iOS
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
+      { title: "NivasiSpace" },
       {
         name: "description",
-        content: "Internal admission management system for NivasiSpace student accommodation.",
+        content: "Admission management, mess, laundry & tiffin — all in one place.",
       },
       { name: "robots", content: "noindex, nofollow" },
-      { property: "og:title", content: "NivasiSpace Admission Management" },
+
+      // PWA — theme color (matches brand primary #c2692a)
+      { name: "theme-color", content: "#c2692a" },
+      // iOS standalone webapp
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+      { name: "apple-mobile-web-app-title", content: "NivasiSpace" },
+      // Windows / Edge tiles
+      { name: "msapplication-TileColor", content: "#c2692a" },
+      { name: "msapplication-tap-highlight", content: "no" },
+      // Disable automatic phone-number detection
+      { name: "format-detection", content: "telephone=no" },
+
+      // Open Graph
+      { property: "og:title", content: "NivasiSpace" },
       {
         property: "og:description",
-        content: "Internal admission management system for NivasiSpace student accommodation.",
+        content: "Admission management, mess, laundry & tiffin — all in one place.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:image", content: "/icons/icon-512.png" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
@@ -102,7 +118,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap",
       },
+      // Standard favicon
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      // PWA manifest
+      { rel: "manifest", href: "/manifest.json" },
+      // Apple touch icon (180px)
+      { rel: "apple-touch-icon", href: "/icons/apple-touch-icon.png" },
+      // Pinned icon sizes for older devices
+      { rel: "apple-touch-icon", sizes: "192x192", href: "/icons/icon-192.png" },
     ],
   }),
   shellComponent: RootShell,
@@ -112,6 +135,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: ReactNode }) {
+  useEffect(() => {
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker
+        .register("/sw.js", { scope: "/" })
+        .catch((err) => console.warn("[SW] Registration failed:", err));
+    }
+  }, []);
+
   return (
     <html lang="en">
       <head>
