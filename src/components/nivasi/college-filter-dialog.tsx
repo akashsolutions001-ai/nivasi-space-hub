@@ -42,22 +42,45 @@ function FilterForm({
   const [city, setCity] = useState(collegeFilter.city);
   const [college, setCollege] = useState(collegeFilter.college);
 
-  const activeColleges = colleges.filter((c) => c.active);
+  // Keep state in sync if collegeFilter updates
+  useEffect(() => {
+    if (collegeFilter.type) setType(collegeFilter.type);
+    if (collegeFilter.city) setCity(collegeFilter.city);
+    if (collegeFilter.college) setCollege(collegeFilter.college);
+  }, [collegeFilter.type, collegeFilter.city, collegeFilter.college]);
+
+  const activeColleges = colleges.filter((c) => c.active !== false && Boolean(c.collegeName?.trim()));
 
   const typeMatchedColleges = activeColleges.filter((c) => {
     if (!type) return true;
-    return !c.collegeType || c.collegeType === "other" || c.collegeType === type;
+    const ct = (c.collegeType ?? "").toLowerCase().trim();
+    return !ct || ct === "other" || ct === type;
   });
 
   const relevantCities: string[] = Array.from(
-    new Set(typeMatchedColleges.map((c) => c.city?.trim() || "Kolhapur")),
+    new Set(typeMatchedColleges.map((c) => (c.city?.trim() || "Kolhapur"))),
   ).sort((a, b) => a.localeCompare(b));
 
   const effectiveCity = city || relevantCities[0] || "";
 
   const filteredColleges = typeMatchedColleges.filter(
-    (c) => !effectiveCity || (c.city?.trim() || "Kolhapur") === effectiveCity,
+    (c) =>
+      !effectiveCity ||
+      (c.city?.trim() || "Kolhapur").toLowerCase() === effectiveCity.toLowerCase(),
   );
+
+  // Auto-select college when filtered list changes if none is selected or current selection is no longer valid
+  useEffect(() => {
+    if (filteredColleges.length > 0) {
+      const exists = filteredColleges.some((c) => c.collegeName === college);
+      const first = filteredColleges[0];
+      if ((!college || !exists) && first) {
+        setCollege(first.collegeName);
+      }
+    } else {
+      setCollege("");
+    }
+  }, [filteredColleges, college]);
 
   function handleTypeChange(v: "engineering" | "medical") {
     setType(v);
@@ -174,7 +197,7 @@ function FilterForm({
                 <SelectTrigger style={{ width: "100%", height: 48, fontSize: 14 }}>
                   <SelectValue placeholder="Select a city" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-[100005]">
                   {relevantCities.map((c) => (
                     <SelectItem key={c} value={c} style={{ fontSize: 14 }}>{c}</SelectItem>
                   ))}
@@ -197,11 +220,13 @@ function FilterForm({
             ) : (
               <Select value={college || ""} onValueChange={setCollege}>
                 <SelectTrigger style={{ width: "100%", height: "auto", minHeight: 48, fontSize: 13, textAlign: "left", whiteSpace: "normal", padding: "10px 14px", overflow: "hidden" }}>
-                  <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, minWidth: 0 }}>
-                    <SelectValue placeholder="Select a college" />
-                  </div>
+                  <span style={{ display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, minWidth: 0 }}>
+                    <SelectValue placeholder="Select a college">
+                      {college || undefined}
+                    </SelectValue>
+                  </span>
                 </SelectTrigger>
-                <SelectContent style={{ maxHeight: 240, width: "var(--radix-select-trigger-width)", maxWidth: "var(--radix-select-trigger-width)" }}>
+                <SelectContent className="z-[100005]" style={{ maxHeight: 260, width: "var(--radix-select-trigger-width)", maxWidth: "var(--radix-select-trigger-width)" }}>
                   {filteredColleges.map((c) => (
                     <SelectItem
                       key={c.id}
@@ -320,7 +345,7 @@ function FilterPortal({
     setHost(h);
     return () => {
       // Leave the host node in DOM for reuse; just hide it
-      h.dataset.open = "false";
+      h.dataset["open"] = "false";
     };
   }, []);
 
@@ -328,12 +353,13 @@ function FilterPortal({
   useEffect(() => {
     if (!host) return;
     if (open) {
-      host.dataset.open = "true";
+      host.dataset["open"] = "true";
       requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)));
+      return undefined;
     } else {
       setVisible(false);
       const t = setTimeout(() => {
-        if (host) host.dataset.open = "false";
+        if (host) host.dataset["open"] = "false";
       }, D + 40);
       return () => clearTimeout(t);
     }

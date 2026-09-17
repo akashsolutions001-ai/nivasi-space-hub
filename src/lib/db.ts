@@ -299,12 +299,13 @@ export async function fetchColleges(): Promise<College[]> {
         return {
           id: s.id,
           collegeId: d.collegeId ?? s.id,
-          collegeName: d.collegeName ?? "",
-          collegeType: d.collegeType ?? "other",
-          city: d.city ?? "",
+          collegeName: ((d.collegeName || d.name || "") as string).trim(),
+          collegeType: (d.collegeType || d.type as string | undefined)?.toLowerCase().trim() as College["collegeType"] ?? "other",
+          city: ((d.city || d.cityName || "") as string).trim(),
           active: d.active !== false,
         } satisfies College;
       })
+      .filter((c) => Boolean(c.collegeName))
       .sort((a, b) => a.collegeName.localeCompare(b.collegeName));
   } catch (error) {
     console.error("[firestore] fetchColleges", error);

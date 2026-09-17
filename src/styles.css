@@ -160,10 +160,5 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
-
-  /* The full-name tooltip Radix shows outside the select — hide it */
-  [data-radix-select-item-text-wrapper] {
-    display: none !important;
-  }
 }
 

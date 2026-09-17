@@ -80,7 +80,7 @@ function DashboardPage() {
   }, [allPayouts, period]);
 
   const totalPayouts = useMemo(
-    () => scopedPayouts.filter((p) => p.status === "completed").reduce((sum, p) => sum + p.amount, 0),
+    () => scopedPayouts.filter((p) => p.status === "PAID").reduce((sum, p) => sum + p.amount, 0),
     [scopedPayouts],
   );
 

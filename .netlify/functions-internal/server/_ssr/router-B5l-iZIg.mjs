@@ -11,10 +11,10 @@ import { t as Toaster } from "../_libs/sonner.mjs";
 import { t as Route$27 } from "./admin.admissions._admissionId.index-DY2tQuSq.mjs";
 import { t as Route$28 } from "./admin.laundry._laundryId-D_ykDVeV.mjs";
 import { t as Route$29 } from "./admin.mess._messId-CSwRoXYZ.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/router-CXw07QxH.js
+//#region node_modules/.nitro/vite/services/ssr/assets/router-B5l-iZIg.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
-var styles_default = "/assets/styles-BNlW4Def.css";
+var styles_default = "/assets/styles-wuvJjL8Y.css";
 function reportLovableError(error, context = {}) {
 	if (typeof window === "undefined") return;
 	window.__lovableEvents?.captureException?.(error, {
