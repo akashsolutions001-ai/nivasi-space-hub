@@ -151,5 +151,19 @@
     font-family: var(--font-display);
     letter-spacing: -0.015em;
   }
+
+  /* Suppress Radix Select's overflow label tooltip — clips the full-text
+     bubble that appears when a SelectItem is truncated in the trigger */
+  [data-radix-select-viewport] [data-radix-collection-item],
+  [data-radix-select-content] span {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* The full-name tooltip Radix shows outside the select — hide it */
+  [data-radix-select-item-text-wrapper] {
+    display: none !important;
+  }
 }
 

@@ -111,7 +111,7 @@ function SidebarInner({ onNavigate }: { onNavigate?: (() => void) | undefined })
     <div className="flex h-full flex-col gap-4 p-4">
       <NivasiLogo className="px-1" />
       {/* College filter chip — global admin only */}
-      {isGlobalAdmin && <CollegeFilterChip />}
+      {isGlobalAdmin && <CollegeFilterChip onNavigate={onNavigate} />}
       <div className="flex-1">
         <NavLinks onNavigate={onNavigate} />
       </div>
@@ -131,18 +131,15 @@ export function AdminShell({
   action?: ReactNode;
   children: ReactNode;
 }) {
-  const { user, loading, configured, needsCollegeFilter, userRole } = useAuth();
+  const { user, loading, configured, needsCollegeFilter, userRole, filterDialogOpen, setFilterDialogOpen } = useAuth();
   const isGlobalAdmin = useIsGlobalAdmin();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  const [filterOpen, setFilterOpen] = useState(false);
 
-  // Show the college filter popup as soon as global admin lands on any protected page
+  // Close sidebar sheet whenever the college filter dialog opens
   useEffect(() => {
-    if (isGlobalAdmin && needsCollegeFilter) {
-      setFilterOpen(true);
-    }
-  }, [isGlobalAdmin, needsCollegeFilter]);
+    if (filterDialogOpen) setOpen(false);
+  }, [filterDialogOpen]);
 
   // Redirect to login if not authenticated or not a recognized staff role.
   // We wait for loading to finish AND for userRole to be resolved (not "unknown")
@@ -231,7 +228,7 @@ export function AdminShell({
 
       {/* College filter dialog — global admin only */}
       {isGlobalAdmin && (
-        <CollegeFilterDialog open={filterOpen} onOpenChange={setFilterOpen} />
+        <CollegeFilterDialog open={filterDialogOpen} onOpenChange={setFilterDialogOpen} />
       )}
     </div>
   );

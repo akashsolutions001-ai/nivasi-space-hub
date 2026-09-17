@@ -44,6 +44,10 @@ interface AuthState {
   collegeFilter: CollegeFilter;
   setCollegeFilter: (f: CollegeFilter) => void;
   needsCollegeFilter: boolean;
+  /** Whether the college-filter dialog is currently open (lives here so it
+   *  survives AdminShell navigation re-mounts). */
+  filterDialogOpen: boolean;
+  setFilterDialogOpen: (v: boolean) => void;
 }
 
 const AuthContext = createContext<AuthState | null>(null);
@@ -117,6 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [employeeLaundryIds, setEmployeeLaundryIds] = useState<string[]>([]);
   const [employeeLaundryNames, setEmployeeLaundryNames] = useState<string[]>([]);
   const [collegeFilter, setCollegeFilterState] = useState<CollegeFilter>(loadFilter);
+  const [filterDialogOpen, setFilterDialogOpen] = useState(false);
 
   function setCollegeFilter(f: CollegeFilter) {
     setCollegeFilterState(f);
@@ -188,6 +193,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isGlobalAdminUser = user?.email?.toLowerCase() === GLOBAL_ADMIN_EMAIL;
   const needsCollegeFilter = isGlobalAdminUser && !collegeFilter.college;
 
+  // Open the college-filter dialog exactly once after auth resolves,
+  // if the global admin hasn't chosen a college yet.
+  useEffect(() => {
+    if (!loading && needsCollegeFilter) {
+      setFilterDialogOpen(true);
+    }
+  }, [loading, needsCollegeFilter]);
+
   return (
     <AuthContext.Provider value={{
       user, loading, configured: isFirebaseConfigured,
@@ -195,6 +208,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       employeeLaundryIds, employeeLaundryNames,
       login, loginWithGoogle, logout,
       collegeFilter, setCollegeFilter, needsCollegeFilter,
+      filterDialogOpen, setFilterDialogOpen,
     }}>
       {children}
     </AuthContext.Provider>
