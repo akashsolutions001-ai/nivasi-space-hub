@@ -21,8 +21,8 @@ import {
   useLaundryPickupSummary, useRooms, useProperties,
   useLaundryPickupsForDateRange,
 } from "@/lib/hooks";
-import { upsertLaundryPickup, todayDateString, getWeekId, getWeekBounds } from "@/lib/db";
-import { buildExportRows, exportLaundryBillingExcel } from "@/lib/laundry-export";
+import { upsertLaundryPickup, todayDateString, getWeekId, getWeekBounds, fetchLaundryPickupsForDateRange } from "@/lib/db";
+import { buildExportRows, exportLaundryBillingExcel, exportAllWeeksLaundryBillingExcel } from "@/lib/laundry-export";
 import type { Admission, LaundryPickupStatus } from "@/lib/types";
 
 export const Route = createFileRoute("/admin/laundry/$laundryId")({
@@ -116,21 +116,23 @@ function LaundryStudentsPage() {
   // ── Export state ──
   const [showExportPanel, setShowExportPanel] = useState(false);
   const [exporting, setExporting] = useState(false);
+  type ExportMode = "current" | "select" | "all";
+  const [exportMode, setExportMode] = useState<ExportMode>("current");
   // Export week selection defaults to the current week based on selectedDate
   const currentWeekBounds = useMemo(() => getWeekBounds(selectedDate), [selectedDate]);
   const [exportStart, setExportStart] = useState<string>(currentWeekBounds.weekStart);
   const [exportEnd, setExportEnd] = useState<string>(currentWeekBounds.weekEnd);
 
-  // Auto-sync export range when selected date changes (only if panel is closed)
+  // Auto-sync export range when selected date changes (only if panel is closed or mode is "current")
   useEffect(() => {
-    if (!showExportPanel) {
+    if (!showExportPanel || exportMode === "current") {
       setExportStart(currentWeekBounds.weekStart);
       setExportEnd(currentWeekBounds.weekEnd);
     }
-  }, [currentWeekBounds, showExportPanel]);
+  }, [currentWeekBounds, showExportPanel, exportMode]);
 
   const { data: exportPickups = [], isFetching: exportFetching } = useLaundryPickupsForDateRange(
-    showExportPanel ? laundryId : null,
+    showExportPanel && exportMode !== "all" ? laundryId : null,
     exportStart,
     exportEnd,
   );
@@ -154,16 +156,22 @@ function LaundryStudentsPage() {
     setNotesMap((prev) => {
       const next = { ...prev };
       for (const p of pickups) {
-        const key = `${p.studentId}-${p.type}`;
-        if (p.notes !== undefined) next[key] = p.notes;
+        if (p.notes !== undefined && p.notes !== "") {
+          next[p.studentId] = p.notes;
+          next[`${p.studentId}-pickup`] = p.notes;
+          next[`${p.studentId}-delivery`] = p.notes;
+        }
       }
       return next;
     });
     setWeightMap((prev) => {
       const next = { ...prev };
       for (const p of pickups) {
-        const key = `${p.studentId}-${p.type}`;
-        if (p.clothesWeight !== undefined) next[key] = p.clothesWeight;
+        if (p.clothesWeight !== undefined && p.clothesWeight !== "") {
+          next[p.studentId] = p.clothesWeight;
+          next[`${p.studentId}-pickup`] = p.clothesWeight;
+          next[`${p.studentId}-delivery`] = p.clothesWeight;
+        }
       }
       return next;
     });
@@ -184,11 +192,8 @@ function LaundryStudentsPage() {
 
   async function setPickupStatus(student: Admission, type: "pickup" | "delivery", status: LaundryPickupStatus) {
     const key = `${student.id}-${type}`;
-    const pickupKey = `${student.id}-pickup`;
-    // Delivery weight always mirrors pickup weight
-    const clothesWeight = type === "delivery"
-      ? (weightMap[pickupKey] ?? "")
-      : (weightMap[key] ?? "");
+    const weight = weightMap[student.id] ?? weightMap[`${student.id}-pickup`] ?? "";
+    const notes = notesMap[student.id] ?? notesMap[`${student.id}-pickup`] ?? "";
     setUpdatingKey(key);
     try {
       await upsertLaundryPickup({
@@ -199,43 +204,58 @@ function LaundryStudentsPage() {
         date: selectedDate,
         type,
         status,
-        clothesWeight,
-        notes: notesMap[key] ?? "",
+        clothesWeight: weight,
+        notes,
       });
       await qc.invalidateQueries({ queryKey: ["laundryPickups"] });
       await qc.invalidateQueries({ queryKey: ["laundryPickupSummary"] });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not update pickup status.");
+      toast.error(err instanceof Error ? err.message : "Could not update status.");
     } finally {
       setUpdatingKey(null);
     }
   }
 
-  async function saveDetails(student: Admission, type: "pickup" | "delivery") {
-    const key = `${student.id}-${type}`;
-    const pickupKey = `${student.id}-pickup`;
-    const existingPickup = pickups.find((p) => p.studentId === student.id && p.type === type);
-    const status = existingPickup?.status ?? "pending";
-    // Delivery weight always mirrors pickup weight
-    const clothesWeight = type === "delivery"
-      ? (weightMap[pickupKey] ?? "")
-      : (weightMap[key] ?? "");
-    setUpdatingKey(key + "-details");
+  async function saveStudentDetails(student: Admission) {
+    const key = `${student.id}-details`;
+    const weight = weightMap[student.id] ?? weightMap[`${student.id}-pickup`] ?? "";
+    const notes = notesMap[student.id] ?? notesMap[`${student.id}-pickup`] ?? "";
+
+    const pRecord = getPickup(student.id, "pickup");
+    const dRecord = getPickup(student.id, "delivery");
+
+    const pickupStatus = pRecord?.status ?? "pending";
+    const deliveryStatus = dRecord?.status ?? "pending";
+
+    setUpdatingKey(key);
     try {
-      await upsertLaundryPickup({
-        studentId: student.id,
-        admissionId: student.admissionId,
-        laundryId,
-        employeeId: "admin",
-        date: selectedDate,
-        type,
-        status,
-        clothesWeight,
-        notes: notesMap[key] ?? "",
-      });
+      await Promise.all([
+        upsertLaundryPickup({
+          studentId: student.id,
+          admissionId: student.admissionId,
+          laundryId,
+          employeeId: "admin",
+          date: selectedDate,
+          type: "pickup",
+          status: pickupStatus,
+          clothesWeight: weight,
+          notes,
+        }),
+        upsertLaundryPickup({
+          studentId: student.id,
+          admissionId: student.admissionId,
+          laundryId,
+          employeeId: "admin",
+          date: selectedDate,
+          type: "delivery",
+          status: deliveryStatus,
+          clothesWeight: weight,
+          notes,
+        }),
+      ]);
       await qc.invalidateQueries({ queryKey: ["laundryPickups"] });
       await qc.invalidateQueries({ queryKey: ["laundryPickupSummary"] });
-      toast.success(`${type === "pickup" ? "Pickup" : "Delivery"} details saved for ${student.fullName}.`);
+      toast.success(`Laundry details saved for ${student.fullName}`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not save details.");
     } finally {
@@ -251,7 +271,25 @@ function LaundryStudentsPage() {
 
   const isLoading = laundryLoading || admLoading;
 
-  // ── Export handler ────────────────────────────────────────────────────────────
+  // ── Student name map (memoized) ──────────────────────────────────────────────
+  const studentNameMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const a of admissions) {
+      map[a.id] = a.fullName;
+    }
+    return map;
+  }, [admissions]);
+
+  // ── Export preview rows (memoized) ──────────────────────────────────────────
+  const exportPreviewRows = useMemo(() => {
+    return buildExportRows(exportPickups, studentNameMap, "");
+  }, [exportPickups, studentNameMap]);
+
+  const exportRowsWithWeight = useMemo(() => {
+    return exportPreviewRows.filter((r) => r.weightKg > 0).length;
+  }, [exportPreviewRows]);
+
+  // ── Export handler (Current Week / Select Week) ──────────────────────────────
   const handleExport = useCallback(async () => {
     if (exporting) return;
     if (exportPickups.length === 0 && !exportFetching) {
@@ -260,10 +298,6 @@ function LaundryStudentsPage() {
     }
     setExporting(true);
     try {
-      const studentNameMap: Record<string, string> = {};
-      for (const a of admissions) {
-        studentNameMap[a.id] = a.fullName;
-      }
       const weekId = getWeekId(exportStart);
       const weekNum = weekId.split("-W")[1] ?? "";
       const weekLabel = `Week ${weekNum}`;
@@ -271,7 +305,7 @@ function LaundryStudentsPage() {
       const rows = buildExportRows(exportPickups, studentNameMap, weekLabel);
 
       if (rows.length === 0) {
-        toast.warning("No records with weight data found for the selected period. Enter weights first.");
+        toast.warning("No laundry records found for the selected period.");
         return;
       }
 
@@ -288,7 +322,68 @@ function LaundryStudentsPage() {
     } finally {
       setExporting(false);
     }
-  }, [exporting, exportPickups, exportFetching, admissions, exportStart, exportEnd, laundry?.laundryName]);
+  }, [exporting, exportPickups, exportFetching, studentNameMap, exportStart, exportEnd, laundry?.laundryName]);
+
+  // ── Export ALL weeks handler ─────────────────────────────────────────────────
+  const handleExportAllWeeks = useCallback(async () => {
+    if (exporting) return;
+    setExporting(true);
+    try {
+      // Fetch last 12 weeks of data
+      const allWeeks: { weekLabel: string; weekDateRange: string; weekStart: string; weekEnd: string }[] = [];
+      for (let i = 11; i >= 0; i--) {
+        const d = new Date(today);
+        d.setDate(d.getDate() - i * 7);
+        const { weekStart, weekEnd } = getWeekBounds(d.toISOString().slice(0, 10));
+        const wId = getWeekId(weekStart);
+        const wNum = wId.split("-W")[1] ?? "";
+        // Avoid duplicate weeks
+        if (!allWeeks.some((w) => w.weekStart === weekStart)) {
+          allWeeks.push({
+            weekLabel: `Week ${wNum}`,
+            weekDateRange: formatWeekRange(weekStart, weekEnd),
+            weekStart,
+            weekEnd,
+          });
+        }
+      }
+
+      // Fetch all pickups for this laundry across the whole 12-week span in one query
+      const minDate = allWeeks[allWeeks.length - 1]?.weekStart ?? "";
+      const maxDate = allWeeks[0]?.weekEnd ?? "";
+      const allPickups = await fetchLaundryPickupsForDateRange(laundryId, minDate, maxDate);
+
+      const weekGroups = allWeeks
+        .map((w) => {
+          const pickups = allPickups.filter((p) => p.date >= w.weekStart && p.date <= w.weekEnd);
+          return {
+            weekLabel: w.weekLabel,
+            weekDateRange: w.weekDateRange,
+            rows: buildExportRows(pickups, studentNameMap, w.weekLabel),
+          };
+        })
+        .filter((g) => g.rows.length > 0);
+
+      if (weekGroups.length === 0) {
+        toast.warning("No laundry records found across any weeks for this provider.");
+        return;
+      }
+
+      await exportAllWeeksLaundryBillingExcel({
+        weekGroups,
+        laundryName: laundry?.laundryName ?? "Laundry",
+      });
+
+      const totalRecords = weekGroups.reduce((acc, g) => acc + g.rows.length, 0);
+      toast.success(`Exported ${totalRecords} record(s) across ${weekGroups.length} week(s) to Excel!`);
+    } catch (err) {
+      console.error("[export] all weeks laundry billing", err);
+      toast.error(err instanceof Error ? err.message : "Export failed. Please try again.");
+    } finally {
+      setExporting(false);
+    }
+  }, [exporting, today, laundryId, studentNameMap, laundry?.laundryName]);
+
 
   return (
     <AdminShell
@@ -321,104 +416,233 @@ function LaundryStudentsPage() {
           <div className="flex items-center gap-2">
             <FileSpreadsheet className="size-5 text-primary" />
             <div>
-              <h3 className="font-semibold text-sm">Export Weekly Laundry Billing</h3>
-              <p className="text-xs text-muted-foreground">Generates a formatted Excel sheet matching the NIVASI SPACE billing template. Rate is fixed at ₹80/Kg.</p>
+              <h3 className="font-semibold text-sm">Export Laundry Billing</h3>
+              <p className="text-xs text-muted-foreground">Generates a professionally formatted Excel sheet matching the NIVASI SPACE billing template. Rate: ₹80/Kg.</p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-muted-foreground">Week Start Date</label>
-              <input
-                type="date"
-                value={exportStart}
-                onChange={(e) => {
-                  setExportStart(e.target.value);
-                  // Auto-set end to 6 days after start
-                  if (e.target.value) {
-                    const d = new Date(e.target.value);
-                    d.setDate(d.getDate() + 6);
-                    setExportEnd(d.toISOString().slice(0, 10));
+          {/* Export mode tabs */}
+          <div className="flex rounded-xl border border-border overflow-hidden">
+            {([
+              { key: "current" as ExportMode, label: "Current Week" },
+              { key: "select" as ExportMode, label: "Select Week" },
+              { key: "all" as ExportMode, label: "All Weeks" },
+            ]).map(({ key, label }) => (
+              <button
+                key={key}
+                onClick={() => {
+                  setExportMode(key);
+                  if (key === "current") {
+                    setExportStart(currentWeekBounds.weekStart);
+                    setExportEnd(currentWeekBounds.weekEnd);
                   }
                 }}
-                className="w-full h-9 rounded-lg border border-input bg-background px-3 text-sm cursor-pointer outline-none focus:ring-1 focus:ring-ring"
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-muted-foreground">Week End Date</label>
-              <input
-                type="date"
-                value={exportEnd}
-                min={exportStart}
-                onChange={(e) => setExportEnd(e.target.value)}
-                className="w-full h-9 rounded-lg border border-input bg-background px-3 text-sm cursor-pointer outline-none focus:ring-1 focus:ring-ring"
-              />
-            </div>
+                className={`flex-1 px-3 py-2 text-xs font-semibold transition-colors ${
+                  exportMode === key
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted/30 text-muted-foreground hover:bg-muted/60"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
           </div>
 
-          {/* Week shortcuts */}
-          <div className="flex flex-wrap gap-1.5">
-            {[-2, -1, 0].map((offset) => {
-              const d = new Date(today);
-              d.setDate(d.getDate() + offset * 7);
-              const { weekStart, weekEnd } = getWeekBounds(d.toISOString().slice(0, 10));
-              const wId = getWeekId(weekStart);
-              const wNum = wId.split("-W")[1] ?? "";
-              const label = offset === 0 ? "This week" : offset === -1 ? "Last week" : `2 weeks ago`;
-              const isActive = exportStart === weekStart && exportEnd === weekEnd;
-              return (
-                <button
-                  key={offset}
-                  onClick={() => { setExportStart(weekStart); setExportEnd(weekEnd); }}
-                  className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold border transition-colors ${
-                    isActive
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-muted/40 text-muted-foreground border-border hover:bg-muted"
-                  }`}
-                >
-                  {label} (W{wNum})
-                </button>
-              );
-            })}
-          </div>
+          {/* Current Week mode */}
+          {exportMode === "current" && (
+            <div className="space-y-3">
+              <div className="rounded-xl bg-muted/30 border border-border/60 px-3 py-2.5 text-xs space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Week:</span>
+                  <span className="font-semibold">
+                    Week {getWeekId(currentWeekBounds.weekStart).split("-W")[1] ?? ""}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Period:</span>
+                  <span className="font-semibold">{formatWeekRange(currentWeekBounds.weekStart, currentWeekBounds.weekEnd)}</span>
+                </div>
+                {!exportFetching && (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Pickups in week:</span>
+                      <span className="font-semibold">{exportPreviewRows.length}</span>
+                    </div>
+                    {exportPreviewRows.length > 0 && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">With weight recorded:</span>
+                        <span className="font-semibold">
+                          {exportRowsWithWeight} of {exportPreviewRows.length}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Fixed Rate:</span>
+                      <span className="font-semibold text-primary">₹80 / Kg</span>
+                    </div>
+                  </>
+                )}
+                {exportFetching && (
+                  <div className="flex items-center gap-2 text-muted-foreground pt-1">
+                    <Loader2 className="size-3.5 animate-spin" />
+                    Loading records...
+                  </div>
+                )}
+              </div>
 
-          {/* Export summary preview */}
-          {exportFetching ? (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Loader2 className="size-3.5 animate-spin" />
-              Loading records...
-            </div>
-          ) : (
-            <div className="rounded-xl bg-muted/30 border border-border/60 px-3 py-2.5 text-xs space-y-1">
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Period:</span>
-                <span className="font-semibold">{formatWeekRange(exportStart, exportEnd)}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Records with weight data:</span>
-                <span className="font-semibold">
-                  {buildExportRows(exportPickups, Object.fromEntries(admissions.map((a) => [a.id, a.fullName])), "").length}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Fixed Rate:</span>
-                <span className="font-semibold text-primary">₹80 / Kg</span>
-              </div>
+              <Button
+                id="export-laundry-billing-current-btn"
+                onClick={handleExport}
+                disabled={exporting || exportFetching}
+                className="w-full"
+              >
+                {exporting ? (
+                  <><Loader2 className="mr-2 size-4 animate-spin" /> Generating Excel…</>
+                ) : (
+                  <><Download className="mr-2 size-4" /> Export Current Week</>
+                )}
+              </Button>
             </div>
           )}
 
-          <Button
-            id="export-laundry-billing-btn"
-            onClick={handleExport}
-            disabled={exporting || exportFetching}
-            className="w-full"
-          >
-            {exporting ? (
-              <><Loader2 className="mr-2 size-4 animate-spin" /> Generating Excel…</>
-            ) : (
-              <><Download className="mr-2 size-4" /> Download Excel Billing Sheet</>
-            )}
-          </Button>
+          {/* Select Week mode */}
+          {exportMode === "select" && (
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-muted-foreground">Week Start Date</label>
+                  <input
+                    type="date"
+                    value={exportStart}
+                    onChange={(e) => {
+                      setExportStart(e.target.value);
+                      if (e.target.value) {
+                        const d = new Date(e.target.value);
+                        d.setDate(d.getDate() + 6);
+                        setExportEnd(d.toISOString().slice(0, 10));
+                      }
+                    }}
+                    className="w-full h-9 rounded-lg border border-input bg-background px-3 text-sm cursor-pointer outline-none focus:ring-1 focus:ring-ring"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-muted-foreground">Week End Date</label>
+                  <input
+                    type="date"
+                    value={exportEnd}
+                    min={exportStart}
+                    onChange={(e) => setExportEnd(e.target.value)}
+                    className="w-full h-9 rounded-lg border border-input bg-background px-3 text-sm cursor-pointer outline-none focus:ring-1 focus:ring-ring"
+                  />
+                </div>
+              </div>
+
+              {/* Week shortcuts */}
+              <div className="flex flex-wrap gap-1.5">
+                {[-3, -2, -1, 0].map((offset) => {
+                  const d = new Date(today);
+                  d.setDate(d.getDate() + offset * 7);
+                  const { weekStart, weekEnd } = getWeekBounds(d.toISOString().slice(0, 10));
+                  const wId = getWeekId(weekStart);
+                  const wNum = wId.split("-W")[1] ?? "";
+                  const label = offset === 0 ? "This week" : offset === -1 ? "Last week" : `${Math.abs(offset)} weeks ago`;
+                  const isActive = exportStart === weekStart && exportEnd === weekEnd;
+                  return (
+                    <button
+                      key={offset}
+                      onClick={() => { setExportStart(weekStart); setExportEnd(weekEnd); }}
+                      className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold border transition-colors ${
+                        isActive
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-muted/40 text-muted-foreground border-border hover:bg-muted"
+                      }`}
+                    >
+                      {label} (W{wNum})
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Summary preview */}
+              {exportFetching ? (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Loader2 className="size-3.5 animate-spin" />
+                  Loading records...
+                </div>
+              ) : (
+                <div className="rounded-xl bg-muted/30 border border-border/60 px-3 py-2.5 text-xs space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Period:</span>
+                    <span className="font-semibold">{formatWeekRange(exportStart, exportEnd)}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Pickups in range:</span>
+                    <span className="font-semibold">{exportPreviewRows.length}</span>
+                  </div>
+                  {exportPreviewRows.length > 0 && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">With weight recorded:</span>
+                      <span className="font-semibold">
+                        {exportRowsWithWeight} of {exportPreviewRows.length}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Fixed Rate:</span>
+                    <span className="font-semibold text-primary">₹80 / Kg</span>
+                  </div>
+                </div>
+              )}
+
+              <Button
+                id="export-laundry-billing-select-btn"
+                onClick={handleExport}
+                disabled={exporting || exportFetching}
+                className="w-full"
+              >
+                {exporting ? (
+                  <><Loader2 className="mr-2 size-4 animate-spin" /> Generating Excel…</>
+                ) : (
+                  <><Download className="mr-2 size-4" /> Export Selected Week</>
+                )}
+              </Button>
+            </div>
+          )}
+
+          {/* All Weeks mode */}
+          {exportMode === "all" && (
+            <div className="space-y-3">
+              <div className="rounded-xl bg-muted/30 border border-border/60 px-3 py-2.5 text-xs space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Range:</span>
+                  <span className="font-semibold">Last 12 weeks</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Format:</span>
+                  <span className="font-semibold">One sheet per week</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Fixed Rate:</span>
+                  <span className="font-semibold text-primary">₹80 / Kg</span>
+                </div>
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                Exports all weeks with recorded billing data into a single Excel workbook. Each week gets its own sheet with the standard NIVASI SPACE billing format.
+              </p>
+              <Button
+                id="export-laundry-billing-all-btn"
+                onClick={handleExportAllWeeks}
+                disabled={exporting}
+                className="w-full"
+              >
+                {exporting ? (
+                  <><Loader2 className="mr-2 size-4 animate-spin" /> Generating All Weeks…</>
+                ) : (
+                  <><Download className="mr-2 size-4" /> Export All Weeks</>
+                )}
+              </Button>
+            </div>
+          )}
         </div>
       )}
 
@@ -595,62 +819,73 @@ function LaundryStudentsPage() {
                 </div>
 
                 {/* ── Pickup & Delivery status row ── */}
-                <div className="mt-3 grid grid-cols-2 gap-2 border-t border-border pt-3">
-                  {(["pickup", "delivery"] as const).map((type) => {
-                    const record = type === "pickup" ? pickupRecord : deliveryRecord;
-                    const rawStatus = record?.status ?? "pending";
-                    const currentStatus: LaundryPickupStatus =
-                      rawStatus === "picked_up" || (rawStatus as string) === "delivered"
-                        ? "picked_up"
-                        : "pending";
-                    const key = `${student.id}-${type}`;
-                    const isUpdating = updatingKey === key;
-                    const isDelivery = type === "delivery";
+                <div className="mt-3 grid grid-cols-2 gap-3 border-t border-border pt-3">
+                  <div className="space-y-1.5">
+                    <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                      <Clock className="size-3.5 text-warning-foreground" />
+                      Pickup Status
+                    </p>
+                    <Select
+                      value={pickupRecord?.status === "picked_up" ? "picked_up" : "pending"}
+                      onValueChange={(v) => setPickupStatus(student, "pickup", v as LaundryPickupStatus)}
+                      disabled={updatingKey === `${student.id}-pickup` || lStatus === "cancelled"}
+                    >
+                      <SelectTrigger className={`h-9 text-xs font-semibold ${STATUS_COLORS[pickupRecord?.status === "picked_up" ? "picked_up" : "pending"]}`}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="picked_up">Picked Up</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                    return (
-                      <div key={type} className="space-y-1.5">
-                        <p className="text-xs font-medium capitalize text-muted-foreground">{type} Status</p>
-                        <Select
-                          value={currentStatus}
-                          onValueChange={(v) => setPickupStatus(student, type, v as LaundryPickupStatus)}
-                          disabled={isUpdating || lStatus === "cancelled"}
-                        >
-                          <SelectTrigger className={`h-8 text-xs ${STATUS_COLORS[currentStatus]}`}>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="pending">Pending</SelectItem>
-                            <SelectItem value="picked_up">
-                              {isDelivery ? "Delivered" : "Picked Up"}
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    );
-                  })}
+                  <div className="space-y-1.5">
+                    <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                      <CheckCircle2 className="size-3.5 text-success" />
+                      Delivery Status
+                    </p>
+                    <Select
+                      value={deliveryRecord?.status === "picked_up" || (deliveryRecord?.status as string) === "delivered" ? "picked_up" : "pending"}
+                      onValueChange={(v) => setPickupStatus(student, "delivery", v as LaundryPickupStatus)}
+                      disabled={updatingKey === `${student.id}-delivery` || lStatus === "cancelled"}
+                    >
+                      <SelectTrigger className={`h-9 text-xs font-semibold ${STATUS_COLORS[deliveryRecord?.status === "picked_up" || (deliveryRecord?.status as string) === "delivered" ? "picked_up" : "pending"]}`}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="picked_up">Delivered</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
-                {/* ── Clothes Weight & Description per type ── */}
-                <div className="mt-3 grid grid-cols-2 gap-2 border-t border-border pt-3">
-                  {(["pickup", "delivery"] as const).map((type) => {
-                    const key = `${student.id}-${type}`;
-                    const pickupKey = `${student.id}-pickup`;
-                    const isSavingDetails = updatingKey === key + "-details";
-                    const isDeliveryType = type === "delivery";
-                    // Delivery weight is always mirrored from pickup weight
-                    const displayWeight = isDeliveryType
-                      ? (weightMap[pickupKey] ?? "")
-                      : (weightMap[key] ?? "");
+                {/* ── Unified Laundry Order Details ── */}
+                {(() => {
+                  const currentWeight = weightMap[student.id] ?? weightMap[`${student.id}-pickup`] ?? pickupRecord?.clothesWeight ?? deliveryRecord?.clothesWeight ?? "";
+                  const currentNotes = notesMap[student.id] ?? notesMap[`${student.id}-pickup`] ?? pickupRecord?.notes ?? deliveryRecord?.notes ?? "";
+                  const isSavingDetails = updatingKey === `${student.id}-details`;
+                  const weightNum = parseFloat(currentWeight);
+                  const estimatedCost = !isNaN(weightNum) && weightNum > 0 ? (weightNum * 80).toFixed(2) : null;
 
-                    return (
-                      <div key={type} className="space-y-2 rounded-xl border border-border/70 bg-muted/20 p-2.5">
-                        <p className="text-xs font-semibold capitalize flex items-center gap-1 text-foreground">
-                          {type === "pickup" ? <Clock className="size-3 text-warning-foreground" /> : <CheckCircle2 className="size-3 text-success" />}
-                          {type} Details
-                        </p>
+                  return (
+                    <div className="mt-3.5 rounded-xl border border-border/80 bg-muted/20 p-3.5 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                          <Scale className="size-3.5 text-primary" />
+                          Order Details ({selectedDate})
+                        </span>
+                        {estimatedCost && (
+                          <span className="text-xs font-semibold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full border border-primary/20">
+                            {weightNum} kg · ₹{estimatedCost} (@ ₹80/kg)
+                          </span>
+                        )}
+                      </div>
 
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="space-y-1">
-                          <label className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground">
+                          <label className="text-[11px] font-medium text-muted-foreground flex items-center gap-1">
                             <Scale className="size-3 text-primary" /> Weight of Clothes
                           </label>
                           <div className="relative flex items-center">
@@ -658,53 +893,67 @@ function LaundryStudentsPage() {
                               type="number"
                               min="0"
                               step="0.1"
-                              placeholder="2.5"
-                              value={displayWeight}
-                              readOnly={isDeliveryType}
-                              onChange={isDeliveryType ? undefined : (e) =>
-                                setWeightMap((prev) => ({ ...prev, [key]: e.target.value }))
-                              }
-                              className={`h-7 text-xs bg-background pr-8 ${isDeliveryType ? "opacity-70 cursor-not-allowed" : ""}`}
+                              placeholder="e.g. 2.5"
+                              value={currentWeight}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setWeightMap((prev) => ({
+                                  ...prev,
+                                  [student.id]: val,
+                                  [`${student.id}-pickup`]: val,
+                                  [`${student.id}-delivery`]: val,
+                                }));
+                              }}
+                              className="h-9 text-xs sm:text-sm bg-background pr-10 font-medium"
                             />
-                            <span className="pointer-events-none absolute right-2.5 text-[11px] font-medium text-muted-foreground">kg</span>
+                            <span className="pointer-events-none absolute right-3 text-xs font-semibold text-muted-foreground">kg</span>
                           </div>
-                          {isDeliveryType && (
-                            <p className="text-[10px] text-muted-foreground italic">Auto-filled from pickup weight</p>
-                          )}
                         </div>
 
                         <div className="space-y-1">
-                          <label className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground">
-                            <StickyNote className="size-3 text-primary" /> Description / Notes
+                          <label className="text-[11px] font-medium text-muted-foreground flex items-center gap-1">
+                            <StickyNote className="size-3 text-primary" /> Clothes Count / Notes
                           </label>
-                          <textarea
-                            rows={2}
-                            value={notesMap[key] ?? ""}
-                            onChange={(e) => setNotesMap((prev) => ({ ...prev, [key]: e.target.value }))}
-                            placeholder={`e.g. ${type === "pickup" ? "3 shirts, 2 pants, wash & iron" : "delivered clean & folded"}`}
-                            className="w-full resize-none rounded-lg border border-input bg-background px-2.5 py-1.5 text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                          <Input
+                            type="text"
+                            placeholder="e.g. 5 clothes (3 shirts, 2 pants)"
+                            value={currentNotes}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setNotesMap((prev) => ({
+                                ...prev,
+                                [student.id]: val,
+                                [`${student.id}-pickup`]: val,
+                                [`${student.id}-delivery`]: val,
+                              }));
+                            }}
+                            className="h-9 text-xs sm:text-sm bg-background"
                           />
                         </div>
-
-                        <button
-                          onClick={() => {
-                            // Sync delivery weight from pickup before saving
-                            if (isDeliveryType) {
-                              const pickupWeight = weightMap[pickupKey] ?? "";
-                              setWeightMap((prev) => ({ ...prev, [key]: pickupWeight }));
-                            }
-                            saveDetails(student, type);
-                          }}
-                          disabled={isSavingDetails}
-                          className="flex items-center justify-center gap-1 rounded-lg bg-primary/10 text-primary border border-primary/20 px-2.5 py-1 text-[11px] font-semibold hover:bg-primary/20 transition-colors disabled:opacity-50 w-full"
-                        >
-                          {isSavingDetails ? <Loader2 className="size-3 animate-spin mr-1" /> : <Check className="size-3 mr-1" />}
-                          Save {type} details
-                        </button>
                       </div>
-                    );
-                  })}
-                </div>
+
+                      {/* Large prominent Save Details button */}
+                      <Button
+                        size="default"
+                        onClick={() => saveStudentDetails(student)}
+                        disabled={isSavingDetails || lStatus === "cancelled"}
+                        className="w-full h-11 font-semibold text-sm shadow-sm gap-2 mt-1 bg-primary text-primary-foreground hover:bg-primary/90"
+                      >
+                        {isSavingDetails ? (
+                          <>
+                            <Loader2 className="size-4 animate-spin" />
+                            Saving Details...
+                          </>
+                        ) : (
+                          <>
+                            <Check className="size-4" />
+                            Save Details
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  );
+                })()}
               </div>
             );
           })

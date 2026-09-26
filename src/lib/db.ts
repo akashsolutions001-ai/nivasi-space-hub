@@ -2,6 +2,7 @@
 import {
   addDoc,
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -1621,48 +1622,67 @@ export async function fetchLaundryPickupsForStudent(studentId: string): Promise<
   }
 }
 
-/** Upsert a laundry pickup record — creates if not present, updates if already exists */
+/** Upsert a laundry pickup record — creates if not present, updates if already exists. Guarantees no duplicates. */
 export async function upsertLaundryPickup(input: LaundryPickupInput): Promise<string> {
   try {
     const db = getDb();
+    const deterministicId = `${input.studentId}_${input.date}_${input.type}`;
+    const status = input.status || "pending";
+
+    // 1. Search for any existing documents matching studentId + date + type
     const existing = await getDocs(
       query(
         collection(db, "laundryPickups"),
         where("studentId", "==", input.studentId),
         where("date", "==", input.date),
         where("type", "==", input.type),
-        limit(1),
       ),
     );
 
-    const status = input.status || "pending";
-
-    if (!existing.empty) {
-      const existingDoc = existing.docs[0];
-      if (existingDoc) {
-        await updateDoc(existingDoc.ref, {
-          status,
-          employeeId: input.employeeId,
-          pickedUpAt: status === "picked_up" ? serverTimestamp() : null,
-          ...(input.notes !== undefined ? { notes: input.notes } : {}),
-          ...(input.clothesWeight !== undefined ? { clothesWeight: input.clothesWeight } : {}),
-          updatedAt: serverTimestamp(),
-        });
-        return existingDoc.id;
-      }
-    }
-
-    const ref = doc(collection(db, "laundryPickups"));
-    await setDoc(ref, {
+    const updatePayload: Record<string, any> = {
       ...input,
       status,
-      notes: input.notes ?? "",
-      clothesWeight: input.clothesWeight ?? "",
+      employeeId: input.employeeId,
       pickedUpAt: status === "picked_up" ? serverTimestamp() : null,
-      createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
-    });
-    return ref.id;
+    };
+    if (input.notes !== undefined) updatePayload["notes"] = input.notes;
+    if (input.clothesWeight !== undefined) updatePayload["clothesWeight"] = input.clothesWeight;
+
+    if (!existing.empty) {
+      // Update the primary matching document
+      const primaryDoc = existing.docs[0]!;
+      await updateDoc(primaryDoc.ref, updatePayload);
+
+      // Clean up any extra duplicate documents for this student + date + type
+      if (existing.docs.length > 1) {
+        for (let i = 1; i < existing.docs.length; i++) {
+          try {
+            await deleteDoc(existing.docs[i]!.ref);
+          } catch (delErr) {
+            console.warn("[firestore] duplicate cleanup warning:", delErr);
+          }
+        }
+      }
+      return primaryDoc.id;
+    }
+
+    // 2. If no existing doc was found, write to deterministic ID with setDoc(..., { merge: true })
+    const ref = doc(db, "laundryPickups", deterministicId);
+    await setDoc(
+      ref,
+      {
+        ...input,
+        status,
+        notes: input.notes ?? "",
+        clothesWeight: input.clothesWeight ?? "",
+        pickedUpAt: status === "picked_up" ? serverTimestamp() : null,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true },
+    );
+    return deterministicId;
   } catch (error) {
     console.error("[firestore] upsertLaundryPickup", error);
     throw new Error("Unable to save laundry pickup status. Please check your connection and try again.");
@@ -1689,21 +1709,38 @@ export async function fetchLaundryPickupsForDateRange(
   startDate: string,
   endDate: string,
 ): Promise<LaundryPickup[]> {
+  if (!laundryId) return [];
   try {
+    // Query by laundryId only (single-field index, never requires composite index in Firestore)
     const snap = await getDocs(
       query(
         collection(getDb(), "laundryPickups"),
         where("laundryId", "==", laundryId),
-        where("date", ">=", startDate),
-        where("date", "<=", endDate),
       ),
     );
     return snap.docs
       .map(mapLaundryPickup)
+      .filter((p) => (!startDate || p.date >= startDate) && (!endDate || p.date <= endDate))
       .sort((a, b) => a.date.localeCompare(b.date));
   } catch (error) {
-    console.error("[firestore] fetchLaundryPickupsForDateRange", error);
-    return [];
+    console.warn("[firestore] fetchLaundryPickupsForDateRange query by laundryId failed, attempting fallback:", error);
+    try {
+      // Fallback: If date range is reasonable (<= 31 days), fetch day by day
+      const dates: string[] = [];
+      const curr = new Date(startDate + "T00:00:00");
+      const end = new Date(endDate + "T00:00:00");
+      while (curr <= end && dates.length <= 31) {
+        dates.push(curr.toISOString().slice(0, 10));
+        curr.setDate(curr.getDate() + 1);
+      }
+      const dayResults = await Promise.all(
+        dates.map((d) => fetchLaundryPickupsForDate(laundryId, d)),
+      );
+      return dayResults.flat().sort((a, b) => a.date.localeCompare(b.date));
+    } catch (fallbackError) {
+      console.error("[firestore] fetchLaundryPickupsForDateRange completely failed", fallbackError);
+      return [];
+    }
   }
 }
 

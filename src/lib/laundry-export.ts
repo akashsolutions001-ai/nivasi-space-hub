@@ -37,6 +37,16 @@ export interface LaundryExportOptions {
   laundryName: string;
 }
 
+/** Options for the "Export All Weeks" variant */
+export interface LaundryExportAllWeeksOptions {
+  weekGroups: {
+    weekLabel: string;
+    weekDateRange: string;
+    rows: LaundryExportRow[];
+  }[];
+  laundryName: string;
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 /** Parse a numeric weight from strings like "2.5 kg", "2.5", "2.5 Kg" etc. */
@@ -66,35 +76,80 @@ export function buildExportRows(
   studentNameMap: Record<string, string>,
   weekLabel: string,
 ): LaundryExportRow[] {
-  // Deduplicate by studentId — prefer pickup type; fallback to delivery if no pickup
-  const byStudent = new Map<string, LaundryPickup>();
+  // Group all records by `${studentId}_${date}` to strictly avoid duplicates for that day and date
+  const byStudentDate = new Map<string, LaundryPickup[]>();
   for (const p of pickups) {
-    if (p.type === "pickup") {
-      byStudent.set(p.studentId, p);
-    } else if (!byStudent.has(p.studentId)) {
-      byStudent.set(p.studentId, p);
-    }
+    const key = `${p.studentId}_${p.date}`;
+    const list = byStudentDate.get(key) ?? [];
+    list.push(p);
+    byStudentDate.set(key, list);
   }
 
-  // Filter to records that have weight data
-  const validPickups = [...byStudent.values()].filter((p) => {
-    const w = parseWeight(p.clothesWeight);
-    return w > 0;
+  // Merge records for each student-date into a single unified record
+  const merged: {
+    studentId: string;
+    date: string;
+    clothesWeight: string;
+    notes: string;
+    status: string;
+  }[] = [];
+
+  for (const [key, records] of byStudentDate.entries()) {
+    const [studentId, date] = key.split("_");
+
+    let bestWeight = "";
+    let bestWeightNum = 0;
+    let bestNotes = "";
+    let status = "pending";
+
+    for (const r of records) {
+      const w = parseWeight(r.clothesWeight);
+      if (w > 0 && w >= bestWeightNum) {
+        bestWeightNum = w;
+        bestWeight = r.clothesWeight ?? String(w);
+      } else if (!bestWeight && r.clothesWeight) {
+        bestWeight = r.clothesWeight;
+      }
+
+      if (r.notes && (!bestNotes || r.notes.length > bestNotes.length)) {
+        bestNotes = r.notes;
+      }
+
+      if (r.status === "picked_up" || (r.status as string) === "delivered") {
+        status = "picked_up";
+      }
+    }
+
+    merged.push({
+      studentId: studentId!,
+      date: date || "",
+      clothesWeight: bestWeight,
+      notes: bestNotes,
+      status,
+    });
+  }
+
+  // Filter to records that have weight data or were marked picked_up / delivered
+  const valid = merged.filter((item) => {
+    const w = parseWeight(item.clothesWeight);
+    return w > 0 || item.status === "picked_up" || item.status === "delivered";
   });
 
-  // Sort by date then studentId for deterministic ordering
-  validPickups.sort((a, b) => {
+  // Sort by date then student name for deterministic ordering
+  valid.sort((a, b) => {
     const d = a.date.localeCompare(b.date);
     if (d !== 0) return d;
-    return a.studentId.localeCompare(b.studentId);
+    const nameA = studentNameMap[a.studentId] ?? a.studentId;
+    const nameB = studentNameMap[b.studentId] ?? b.studentId;
+    return nameA.localeCompare(nameB);
   });
 
-  return validPickups.map((p, idx) => ({
+  return valid.map((item, idx) => ({
     weekLabel,
     orderNo: `T-${idx + 1}`,
-    studentName: studentNameMap[p.studentId] ?? "Unknown Student",
-    clothesCount: inferClothesCount(p.notes),
-    weightKg: parseWeight(p.clothesWeight),
+    studentName: studentNameMap[item.studentId] ?? "Unknown Student",
+    clothesCount: inferClothesCount(item.notes),
+    weightKg: parseWeight(item.clothesWeight),
   }));
 }
 
@@ -107,21 +162,35 @@ const THIN: Partial<ExcelJS.Borders> = {
   right: { style: "thin" },
 };
 
+/** Rupee currency format string for ExcelJS */
+const RUPEE_FMT = '[$₹-4009]#,##0.00';
+
+/** Column header names — must match reference exactly */
+const HEADERS = [
+  "Week",
+  "Order No.",
+  "Student Name",
+  "Clothes Count",
+  "Weight (Kg)",
+  "Rate / Kg (₹)",
+  "Total Amount (₹)",
+] as const;
+
 function applyAllBorders(row: ExcelJS.Row, colCount = 7) {
   for (let c = 1; c <= colCount; c++) {
     row.getCell(c).border = THIN;
   }
 }
 
-/** Generate and download the Excel file in the browser */
-export async function exportLaundryBillingExcel(opts: LaundryExportOptions): Promise<void> {
-  const { rows, weekLabel, weekDateRange, laundryName } = opts;
+/** Build a single "Weekly Billing" sheet from provided rows */
+function buildBillingSheet(
+  wb: ExcelJS.Workbook,
+  opts: LaundryExportOptions,
+  sheetName = "Weekly Billing",
+): void {
+  const { rows, weekLabel, weekDateRange } = opts;
 
-  const wb = new ExcelJS.Workbook();
-  wb.creator = "Nivasi Space";
-  wb.created = new Date();
-
-  const ws = wb.addWorksheet("Weekly Billing", {
+  const ws = wb.addWorksheet(sheetName, {
     views: [{ state: "frozen", ySplit: 6, showGridLines: true }],
     pageSetup: {
       orientation: "landscape",
@@ -129,6 +198,7 @@ export async function exportLaundryBillingExcel(opts: LaundryExportOptions): Pro
       fitToWidth: 1,
       fitToHeight: 0,
       margins: { left: 0.7, right: 0.7, top: 0.75, bottom: 0.75, header: 0.3, footer: 0.3 },
+      printTitlesRow: "6:6",
     },
   });
 
@@ -186,12 +256,19 @@ export async function exportLaundryBillingExcel(opts: LaundryExportOptions): Pro
     : 0;
   sWeightCell.numFmt = "0.00";
 
+  // Total Amount label + formula
+  const sAmtLabelCell = summaryRow.getCell(6);
+  // We place the amount formula at G3 and its label at the Weight cell label
+  // Actually, the reference has: A3=Week, B3=weekLabel, C3=Total Clothes, D3=formula,
+  // E3=Total Weight (Kg), F3=formula, G3=Total Amount (₹) formula
+  // But the label "Total Amount (₹)" is implied by column G header.
+  // Let's add "Total Amount (₹)" as a label in the summary by adjusting:
+  // We'll use the summary row exactly as the reference: E3 label, F3 value, then G3 is the amount formula.
   const sAmtCell = summaryRow.getCell(7);
   sAmtCell.value = rows.length > 0
     ? { formula: `SUM(G${DATA_START}:G${DATA_END})` }
     : 0;
-  // Rupee currency format
-  sAmtCell.numFmt = "[$\u20B9-4009]#,##0.00";
+  sAmtCell.numFmt = RUPEE_FMT;
 
   for (let c = 1; c <= 7; c++) {
     const cell = summaryRow.getCell(c);
@@ -205,24 +282,26 @@ export async function exportLaundryBillingExcel(opts: LaundryExportOptions): Pro
   applyAllBorders(ws.getRow(5));
 
   // ── ROW 6: Column Headers ─────────────────────────────────────────────────────
-  const HEADERS = [
-    "Week",
-    "Order No.",
-    "Student Name",
-    "Clothes Count",
-    "Weight (Kg)",
-    "Rate / Kg (\u20B9)",
-    "Total Amount (\u20B9)",
-  ];
   const headerRow = ws.getRow(6);
   headerRow.height = 20;
   HEADERS.forEach((h, i) => {
     const cell = headerRow.getCell(i + 1);
     cell.value = h;
     cell.font = { name: "Calibri", size: 11, bold: true };
-    cell.alignment = { horizontal: "center", vertical: "middle" };
+    cell.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
     cell.border = THIN;
+    cell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFD9E1F2" }, // Light blue header background
+    };
   });
+
+  // ── Auto-filter on header row ─────────────────────────────────────────────────
+  ws.autoFilter = {
+    from: { row: 6, column: 1 },
+    to: { row: DATA_END, column: 7 },
+  };
 
   // ── DATA ROWS ─────────────────────────────────────────────────────────────────
   if (rows.length === 0) {
@@ -237,10 +316,10 @@ export async function exportLaundryBillingExcel(opts: LaundryExportOptions): Pro
     ewCell.numFmt = "0.00";
     const erCell = emptyRow.getCell(6);
     erCell.value = LAUNDRY_RATE_PER_KG;
-    erCell.numFmt = "[$\u20B9-4009]#,##0.00";
+    erCell.numFmt = RUPEE_FMT;
     const eaCell = emptyRow.getCell(7);
     eaCell.value = 0;
-    eaCell.numFmt = "[$\u20B9-4009]#,##0.00";
+    eaCell.numFmt = RUPEE_FMT;
     for (let c = 1; c <= 7; c++) {
       const cell = emptyRow.getCell(c);
       cell.font = { name: "Calibri", size: 11 };
@@ -273,6 +352,7 @@ export async function exportLaundryBillingExcel(opts: LaundryExportOptions): Pro
 
       const cellD = row.getCell(4);
       cellD.value = item.clothesCount;
+      cellD.numFmt = "0"; // Integer format — no decimals
       cellD.alignment = { horizontal: "center", vertical: "middle" };
       cellD.border = THIN;
       cellD.font = { name: "Calibri", size: 11 };
@@ -286,14 +366,14 @@ export async function exportLaundryBillingExcel(opts: LaundryExportOptions): Pro
 
       const cellF = row.getCell(6);
       cellF.value = LAUNDRY_RATE_PER_KG;
-      cellF.numFmt = "[$\u20B9-4009]#,##0.00";
+      cellF.numFmt = RUPEE_FMT;
       cellF.alignment = { horizontal: "center", vertical: "middle" };
       cellF.border = THIN;
       cellF.font = { name: "Calibri", size: 11 };
 
       const cellG = row.getCell(7);
       cellG.value = { formula: `IF(E${r}="","",E${r}*F${r})` };
-      cellG.numFmt = "[$\u20B9-4009]#,##0.00";
+      cellG.numFmt = RUPEE_FMT;
       cellG.alignment = { horizontal: "center", vertical: "middle" };
       cellG.border = THIN;
       cellG.font = { name: "Calibri", size: 11 };
@@ -309,6 +389,7 @@ export async function exportLaundryBillingExcel(opts: LaundryExportOptions): Pro
   tRow.getCell(4).value = rows.length > 0
     ? { formula: `SUM(D${DATA_START}:D${DATA_END})` }
     : 0;
+  tRow.getCell(4).numFmt = "0";
   const tWeightCell = tRow.getCell(5);
   tWeightCell.value = rows.length > 0
     ? { formula: `SUM(E${DATA_START}:E${DATA_END})` }
@@ -319,28 +400,82 @@ export async function exportLaundryBillingExcel(opts: LaundryExportOptions): Pro
   tAmtCell.value = rows.length > 0
     ? { formula: `SUM(G${DATA_START}:G${DATA_END})` }
     : 0;
-  tAmtCell.numFmt = "[$\u20B9-4009]#,##0.00";
+  tAmtCell.numFmt = RUPEE_FMT;
 
   for (let c = 1; c <= 7; c++) {
     const cell = tRow.getCell(c);
     cell.font = { name: "Calibri", size: 11, bold: true };
     cell.alignment = { horizontal: "center", vertical: "middle" };
     cell.border = THIN;
+    cell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFF2F2F2" }, // Light grey for total row
+    };
   }
+}
 
-  // ── Trigger browser download ──────────────────────────────────────────────────
-  const buffer = await wb.xlsx.writeBuffer();
+/** Format a date as YYYY-MM-DD for filenames */
+function todayFileDate(): string {
+  return new Date().toLocaleDateString("en-CA"); // en-CA gives YYYY-MM-DD
+}
+
+/** Trigger browser download of an ArrayBuffer as an .xlsx file */
+function triggerDownload(buffer: ArrayBuffer, fileName: string): void {
   const blob = new Blob([buffer], {
     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
-  const safeLaundry = laundryName.replace(/[^a-zA-Z0-9]/g, "_").replace(/_+/g, "_");
-  const safeWeek = weekLabel.replace(/\s+/g, "_");
   anchor.href = url;
-  anchor.download = `Nivasi_Space_Laundry_Billing_${safeLaundry}_${safeWeek}.xlsx`;
+  anchor.download = fileName;
   document.body.appendChild(anchor);
   anchor.click();
   document.body.removeChild(anchor);
   setTimeout(() => URL.revokeObjectURL(url), 5_000);
+}
+
+/** Generate and download the Excel file for a single week in the browser */
+export async function exportLaundryBillingExcel(opts: LaundryExportOptions): Promise<void> {
+  const { weekLabel } = opts;
+
+  const wb = new ExcelJS.Workbook();
+  wb.creator = "Nivasi Space";
+  wb.created = new Date();
+
+  buildBillingSheet(wb, opts, "Weekly Billing");
+
+  const buffer = await wb.xlsx.writeBuffer();
+  const safeWeek = weekLabel.replace(/\s+/g, "_");
+  const fileName = `NIVASI_SPACE_Weekly_Laundry_Billing_${safeWeek}_${todayFileDate()}.xlsx`;
+  triggerDownload(buffer as ArrayBuffer, fileName);
+}
+
+/** Generate and download the Excel file for ALL weeks (one sheet per week) */
+export async function exportAllWeeksLaundryBillingExcel(
+  opts: LaundryExportAllWeeksOptions,
+): Promise<void> {
+  const { weekGroups, laundryName } = opts;
+
+  const wb = new ExcelJS.Workbook();
+  wb.creator = "Nivasi Space";
+  wb.created = new Date();
+
+  for (const group of weekGroups) {
+    // Sheet name limited to 31 chars in Excel
+    const sheetName = group.weekLabel.length > 31
+      ? group.weekLabel.slice(0, 31)
+      : group.weekLabel;
+
+    buildBillingSheet(wb, {
+      rows: group.rows,
+      weekLabel: group.weekLabel,
+      weekDateRange: group.weekDateRange,
+      laundryName,
+    }, sheetName);
+  }
+
+  const buffer = await wb.xlsx.writeBuffer();
+  const fileName = `NIVASI_SPACE_Weekly_Laundry_Billing_All_Weeks_${todayFileDate()}.xlsx`;
+  triggerDownload(buffer as ArrayBuffer, fileName);
 }
