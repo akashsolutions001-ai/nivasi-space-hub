@@ -4,7 +4,7 @@ import { _ as useNavigate, g as Link, l as useRouterState } from "../_libs/@tans
 import { F as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
 import { r as cn, t as Button } from "./button-CCQEfgNs.mjs";
 import { r as useStudentAuth } from "./studentAuth-is6bqiDx.mjs";
-import { I as LogOut, P as Menu, ft as ArrowLeft, i as WashingMachine, nt as ChevronRight, o as UtensilsCrossed, z as LayoutDashboard } from "../_libs/lucide-react.mjs";
+import { I as LogOut, P as Menu, i as WashingMachine, o as UtensilsCrossed, pt as ArrowLeft, rt as ChevronRight, z as LayoutDashboard } from "../_libs/lucide-react.mjs";
 import { i as SheetTitle, n as SheetContent, t as Sheet } from "./sheet-CtxyGEjc.mjs";
 //#region node_modules/.nitro/vite/services/ssr/assets/student-shell-7uf-Blpu.js
 var import_react = /* @__PURE__ */ __toESM(require_react());

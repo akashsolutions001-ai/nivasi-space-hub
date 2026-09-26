@@ -1683,6 +1683,30 @@ export async function fetchLaundryPickupSummaryForDate(
   return result;
 }
 
+/** Fetch all laundry pickups for a laundry within an inclusive date range (YYYY-MM-DD) */
+export async function fetchLaundryPickupsForDateRange(
+  laundryId: string,
+  startDate: string,
+  endDate: string,
+): Promise<LaundryPickup[]> {
+  try {
+    const snap = await getDocs(
+      query(
+        collection(getDb(), "laundryPickups"),
+        where("laundryId", "==", laundryId),
+        where("date", ">=", startDate),
+        where("date", "<=", endDate),
+      ),
+    );
+    return snap.docs
+      .map(mapLaundryPickup)
+      .sort((a, b) => a.date.localeCompare(b.date));
+  } catch (error) {
+    console.error("[firestore] fetchLaundryPickupsForDateRange", error);
+    return [];
+  }
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // STUDENT MESS RECORDS — daily tiffin per student
 // ═══════════════════════════════════════════════════════════════════════════

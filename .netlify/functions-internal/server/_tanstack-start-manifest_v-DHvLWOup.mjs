@@ -1,0 +1,648 @@
+//#region node_modules/.nitro/vite/services/ssr/assets/_tanstack-start-manifest_v-DHvLWOup.js
+var tsrStartManifest = () => ({ routes: {
+	__root__: {
+		filePath: "D:/BUSINEES/Nivasi/Admission Mangement System/nivasi-space-hub-main/src/routes/__root.tsx",
+		children: [
+			"/",
+			"/admin/dashboard",
+			"/admin/login",
+			"/admin/packages",
+			"/admin/payouts",
+			"/admin/properties",
+			"/admin/settings",
+			"/employee/dashboard",
+			"/employee/delivery",
+			"/employee/laundry",
+			"/employee/login",
+			"/student/dashboard",
+			"/student/laundry",
+			"/student/login",
+			"/student/mess",
+			"/admin/admissions/new",
+			"/admin/laundry/$laundryId",
+			"/admin/laundry/assign",
+			"/admin/laundry/employees",
+			"/admin/mess/$messId",
+			"/admin/mess/assign",
+			"/admin/mess/employees",
+			"/employee/mess/payouts",
+			"/admin/admissions/",
+			"/admin/laundry/",
+			"/admin/mess/",
+			"/admin/admissions/$admissionId/edit",
+			"/admin/admissions/$admissionId/"
+		],
+		preloads: [
+			"/assets/index-sWrEp6WK.js",
+			"/assets/rolldown-runtime-Dd_uD5pT.js",
+			"/assets/firebase-W-6gkk_7.js",
+			"/assets/QueryClientProvider-BwHG4dGO.js",
+			"/assets/lazyRouteComponent-BwtoVN2g.js",
+			"/assets/useMatch-B2IYN_jZ.js",
+			"/assets/auth-CbFOEUbb.js",
+			"/assets/preload-helper-Czpn1I53.js",
+			"/assets/studentAuth-CB6lpd9y.js",
+			"/assets/dist-XDiLBSkx.js",
+			"/assets/admin.laundry._laundryId-Dv6KYueF.js",
+			"/assets/admin.mess._messId-BGuztz-L.js",
+			"/assets/admin.admissions._admissionId.index-Dcfs1Uyb.js",
+			"/assets/admin.admissions._admissionId.edit-BKwlSHYT.js"
+		],
+		scripts: [{ attrs: {
+			type: "module",
+			async: !0,
+			src: "/assets/index-sWrEp6WK.js"
+		} }]
+	},
+	"/": {
+		filePath: "D:/BUSINEES/Nivasi/Admission Mangement System/nivasi-space-hub-main/src/routes/index.tsx",
+		children: void 0,
+		preloads: ["/assets/routes-DJ7LAi8J.js"]
+	},
+	"/admin/dashboard": {
+		filePath: "D:/BUSINEES/Nivasi/Admission Mangement System/nivasi-space-hub-main/src/routes/admin.dashboard.tsx",
+		children: void 0,
+		preloads: [
+			"/assets/admin.dashboard-CyiWxnVT.js",
+			"/assets/hooks-CkILeImP.js",
+			"/assets/button-XcBGSBI-.js",
+			"/assets/badges-BdIDHfiG.js",
+			"/assets/admin-shell-CUiXPupp.js",
+			"/assets/eye-off-DXmUziJH.js",
+			"/assets/eye-B8Y7cH9r.js",
+			"/assets/skeleton-BNirAIe9.js",
+			"/assets/plus-CjBHmLX_.js",
+			"/assets/utensils-crossed-8AMKJ-Py.js",
+			"/assets/dist-Bh-uSssQ.js",
+			"/assets/select-Bu_aINvx.js",
+			"/assets/dist-Ck05GEYK.js",
+			"/assets/format-Crgoi_5l.js",
+			"/assets/stat-card-D6cUZ5eA.js"
+		]
+	},
+	"/admin/login": {
+		filePath: "D:/BUSINEES/Nivasi/Admission Mangement System/nivasi-space-hub-main/src/routes/admin.login.tsx",
+		children: void 0,
+		preloads: [
+			"/assets/admin.login-C_wIEAYj.js",
+			"/assets/button-XcBGSBI-.js",
+			"/assets/admin-shell-CUiXPupp.js",
+			"/assets/loader-circle-D9UPfjsR.js",
+			"/assets/input-qHaXPiTk.js",
+			"/assets/label-D1Ff9teh.js"
+		]
+	},
+	"/admin/packages": {
+		filePath: "D:/BUSINEES/Nivasi/Admission Mangement System/nivasi-space-hub-main/src/routes/admin.packages.tsx",
+		children: void 0,
+		preloads: [
+			"/assets/admin.packages-CXglq3ZT.js",
+			"/assets/hooks-CkILeImP.js",
+			"/assets/button-XcBGSBI-.js",
+			"/assets/admin-shell-CUiXPupp.js",
+			"/assets/loader-circle-D9UPfjsR.js",
+			"/assets/switch-sGib0o1D.js",
+			"/assets/skeleton-BNirAIe9.js",
+			"/assets/package-CrzhyWnA.js",
+			"/assets/pencil-Dl159hK3.js",
+			"/assets/plus-CjBHmLX_.js",
+			"/assets/input-qHaXPiTk.js",
+			"/assets/label-D1Ff9teh.js",
+			"/assets/checkbox-D5kF0mvg.js",
+			"/assets/dialog-DGF2fUMk.js",
+			"/assets/format-Crgoi_5l.js",
+			"/assets/types-CjdsN2Om.js",
+			"/assets/stat-card-D6cUZ5eA.js"
+		]
+	},
+	"/admin/payouts": {
+		filePath: "D:/BUSINEES/Nivasi/Admission Mangement System/nivasi-space-hub-main/src/routes/admin.payouts.tsx",
+		children: void 0,
+		preloads: [
+			"/assets/admin.payouts-qFf-e6hZ.js",
+			"/assets/sheet-C9lCb-Ms.js",
+			"/assets/hooks-CkILeImP.js",
+			"/assets/button-XcBGSBI-.js",
+			"/assets/admin-shell-CUiXPupp.js",
+			"/assets/calendar-C6EnS_UM.js",
+			"/assets/chevron-up-CWgq8Rjf.js",
+			"/assets/chevron-left-BAXp0fcn.js",
+			"/assets/chevron-right-D4OfZPXQ.js",
+			"/assets/circle-check-D4zDTbMc.js",
+			"/assets/circle-x-BiWPZXps.js",
+			"/assets/clock-CTVDc2Dw.js",
+			"/assets/download-CggL9egQ.js",
+			"/assets/eye-B8Y7cH9r.js",
+			"/assets/file-text-Bs0E7Wip.js",
+			"/assets/loader-circle-D9UPfjsR.js",
+			"/assets/skeleton-BNirAIe9.js",
+			"/assets/pencil-Dl159hK3.js",
+			"/assets/plus-CjBHmLX_.js",
+			"/assets/search-K-l9TAyi.js",
+			"/assets/select-Bu_aINvx.js",
+			"/assets/input-qHaXPiTk.js",
+			"/assets/label-D1Ff9teh.js",
+			"/assets/textarea-IaXjsa0s.js",
+			"/assets/dialog-DGF2fUMk.js",
+			"/assets/popover-Dt3Y32sv.js",
+			"/assets/format-Crgoi_5l.js",
+			"/assets/stat-card-D6cUZ5eA.js",
+			"/assets/badge-B5yy4jvJ.js"
+		]
+	},
+	"/admin/properties": {
+		filePath: "D:/BUSINEES/Nivasi/Admission Mangement System/nivasi-space-hub-main/src/routes/admin.properties.tsx",
+		children: void 0,
+		preloads: [
+			"/assets/admin.properties-Cbhbd2eJ.js",
+			"/assets/hooks-CkILeImP.js",
+			"/assets/button-XcBGSBI-.js",
+			"/assets/badges-BdIDHfiG.js",
+			"/assets/admin-shell-CUiXPupp.js",
+			"/assets/chevron-up-CWgq8Rjf.js",
+			"/assets/skeleton-BNirAIe9.js",
+			"/assets/map-pin-DF-EyzPw.js",
+			"/assets/phone-T-ouSANZ.js",
+			"/assets/user-C0NeLpjD.js",
+			"/assets/input-qHaXPiTk.js",
+			"/assets/format-Crgoi_5l.js",
+			"/assets/badge-B5yy4jvJ.js"
+		]
+	},
+	"/admin/settings": {
+		filePath: "D:/BUSINEES/Nivasi/Admission Mangement System/nivasi-space-hub-main/src/routes/admin.settings.tsx",
+		children: void 0,
+		preloads: [
+			"/assets/admin.settings-Dk7Oxfqh.js",
+			"/assets/hooks-CkILeImP.js",
+			"/assets/button-XcBGSBI-.js",
+			"/assets/admin-shell-CUiXPupp.js",
+			"/assets/loader-circle-D9UPfjsR.js",
+			"/assets/switch-sGib0o1D.js",
+			"/assets/skeleton-BNirAIe9.js",
+			"/assets/map-pin-DF-EyzPw.js",
+			"/assets/plus-CjBHmLX_.js",
+			"/assets/select-Bu_aINvx.js",
+			"/assets/input-qHaXPiTk.js",
+			"/assets/format-Crgoi_5l.js"
+		]
+	},
+	"/employee/dashboard": {
+		filePath: "D:/BUSINEES/Nivasi/Admission Mangement System/nivasi-space-hub-main/src/routes/employee.dashboard.tsx",
+		children: void 0,
+		preloads: [
+			"/assets/employee.dashboard-CIG8d44K.js",
+			"/assets/hooks-CkILeImP.js",
+			"/assets/button-XcBGSBI-.js",
+			"/assets/chevron-up-CWgq8Rjf.js",
+			"/assets/rotate-ccw-m6GHzBAr.js",
+			"/assets/circle-check-D4zDTbMc.js",
+			"/assets/circle-x-BiWPZXps.js",
+			"/assets/clock-CTVDc2Dw.js",
+			"/assets/loader-circle-D9UPfjsR.js",
+			"/assets/skeleton-BNirAIe9.js",
+			"/assets/map-pin-DF-EyzPw.js",
+			"/assets/message-square-DSymxxw4.js",
+			"/assets/phone-T-ouSANZ.js",
+			"/assets/receipt-D2lDgX3N.js",
+			"/assets/search-K-l9TAyi.js",
+			"/assets/skip-forward-DkRQTvsG.js",
+			"/assets/utensils-crossed-8AMKJ-Py.js",
+			"/assets/input-qHaXPiTk.js",
+			"/assets/badge-B5yy4jvJ.js"
+		]
+	},
+	"/employee/delivery": {
+		filePath: "D:/BUSINEES/Nivasi/Admission Mangement System/nivasi-space-hub-main/src/routes/employee.delivery.tsx",
+		children: void 0,
+		preloads: [
+			"/assets/employee.delivery-ByEPlis6.js",
+			"/assets/hooks-CkILeImP.js",
+			"/assets/button-XcBGSBI-.js",
+			"/assets/arrow-left-CV-93utX.js",
+			"/assets/chevron-left-BAXp0fcn.js",
+			"/assets/chevron-right-D4OfZPXQ.js",
+			"/assets/circle-check-D4zDTbMc.js",
+			"/assets/circle-x-BiWPZXps.js",
+			"/assets/clock-CTVDc2Dw.js",
+			"/assets/map-pin-DF-EyzPw.js",
+			"/assets/phone-T-ouSANZ.js",
+			"/assets/skip-forward-DkRQTvsG.js",
+			"/assets/utensils-crossed-8AMKJ-Py.js",
+			"/assets/badge-B5yy4jvJ.js"
+		]
+	},
+	"/employee/laundry": {
+		filePath: "D:/BUSINEES/Nivasi/Admission Mangement System/nivasi-space-hub-main/src/routes/employee.laundry.tsx",
+		children: ["/employee/laundry/payouts"],
+		preloads: [
+			"/assets/employee.laundry-6j7SKFVf.js",
+			"/assets/hooks-CkILeImP.js",
+			"/assets/button-XcBGSBI-.js",
+			"/assets/calendar-C6EnS_UM.js",
+			"/assets/dist-Bp6zKgOA.js",
+			"/assets/chevron-left-BAXp0fcn.js",
+			"/assets/chevron-right-D4OfZPXQ.js",
+			"/assets/circle-check-D4zDTbMc.js",
+			"/assets/clock-CTVDc2Dw.js",
+			"/assets/loader-circle-D9UPfjsR.js",
+			"/assets/skeleton-BNirAIe9.js",
+			"/assets/map-pin-DF-EyzPw.js",
+			"/assets/phone-T-ouSANZ.js",
+			"/assets/receipt-D2lDgX3N.js",
+			"/assets/sticky-note-DkIUKQjJ.js",
+			"/assets/search-K-l9TAyi.js",
+			"/assets/dist-Bh-uSssQ.js",
+			"/assets/input-qHaXPiTk.js",
+			"/assets/badge-B5yy4jvJ.js",
+			"/assets/student-laundry-dialog-CTsi-p9l.js"
+		]
+	},
+	"/employee/login": {
+		filePath: "D:/BUSINEES/Nivasi/Admission Mangement System/nivasi-space-hub-main/src/routes/employee.login.tsx",
+		children: void 0,
+		preloads: [
+			"/assets/employee.login-BS1XH1_Y.js",
+			"/assets/button-XcBGSBI-.js",
+			"/assets/loader-circle-D9UPfjsR.js",
+			"/assets/utensils-crossed-8AMKJ-Py.js",
+			"/assets/input-qHaXPiTk.js",
+			"/assets/label-D1Ff9teh.js"
+		]
+	},
+	"/student/dashboard": {
+		filePath: "D:/BUSINEES/Nivasi/Admission Mangement System/nivasi-space-hub-main/src/routes/student.dashboard.tsx",
+		children: void 0,
+		preloads: [
+			"/assets/student.dashboard-Dib-kb6H.js",
+			"/assets/hooks-CkILeImP.js",
+			"/assets/button-XcBGSBI-.js",
+			"/assets/student-shell-CCjPBBxZ.js",
+			"/assets/circle-check-D4zDTbMc.js",
+			"/assets/circle-x-BiWPZXps.js",
+			"/assets/clock-CTVDc2Dw.js",
+			"/assets/loader-circle-D9UPfjsR.js",
+			"/assets/skeleton-BNirAIe9.js",
+			"/assets/map-pin-DF-EyzPw.js",
+			"/assets/phone-T-ouSANZ.js",
+			"/assets/skip-forward-DkRQTvsG.js",
+			"/assets/utensils-crossed-8AMKJ-Py.js",
+			"/assets/badge-B5yy4jvJ.js"
+		]
+	},
+	"/student/laundry": {
+		filePath: "D:/BUSINEES/Nivasi/Admission Mangement System/nivasi-space-hub-main/src/routes/student.laundry.tsx",
+		children: void 0,
+		preloads: [
+			"/assets/student.laundry-CT1TkWEk.js",
+			"/assets/hooks-CkILeImP.js",
+			"/assets/button-XcBGSBI-.js",
+			"/assets/student-shell-CCjPBBxZ.js",
+			"/assets/chevron-up-CWgq8Rjf.js",
+			"/assets/circle-check-D4zDTbMc.js",
+			"/assets/loader-circle-D9UPfjsR.js",
+			"/assets/skeleton-BNirAIe9.js",
+			"/assets/package-CrzhyWnA.js",
+			"/assets/sticky-note-DkIUKQjJ.js",
+			"/assets/dist-Bh-uSssQ.js",
+			"/assets/badge-B5yy4jvJ.js"
+		]
+	},
+	"/student/login": {
+		filePath: "D:/BUSINEES/Nivasi/Admission Mangement System/nivasi-space-hub-main/src/routes/student.login.tsx",
+		children: void 0,
+		preloads: [
+			"/assets/student.login-DhEwEz82.js",
+			"/assets/button-XcBGSBI-.js",
+			"/assets/loader-circle-D9UPfjsR.js",
+			"/assets/input-qHaXPiTk.js",
+			"/assets/label-D1Ff9teh.js"
+		]
+	},
+	"/student/mess": {
+		filePath: "D:/BUSINEES/Nivasi/Admission Mangement System/nivasi-space-hub-main/src/routes/student.mess.tsx",
+		children: void 0,
+		preloads: [
+			"/assets/student.mess-DkCU1Ajw.js",
+			"/assets/hooks-CkILeImP.js",
+			"/assets/button-XcBGSBI-.js",
+			"/assets/student-shell-CCjPBBxZ.js",
+			"/assets/chevron-up-CWgq8Rjf.js",
+			"/assets/rotate-ccw-m6GHzBAr.js",
+			"/assets/circle-check-D4zDTbMc.js",
+			"/assets/circle-x-BiWPZXps.js",
+			"/assets/clock-CTVDc2Dw.js",
+			"/assets/history-Dxl9oy7X.js",
+			"/assets/loader-circle-D9UPfjsR.js",
+			"/assets/skeleton-BNirAIe9.js",
+			"/assets/pencil-Dl159hK3.js",
+			"/assets/trash-2-cohkHnuC.js",
+			"/assets/utensils-crossed-8AMKJ-Py.js",
+			"/assets/label-D1Ff9teh.js",
+			"/assets/textarea-IaXjsa0s.js",
+			"/assets/checkbox-D5kF0mvg.js",
+			"/assets/dialog-DGF2fUMk.js",
+			"/assets/badge-B5yy4jvJ.js"
+		]
+	},
+	"/admin/admissions/new": {
+		filePath: "D:/BUSINEES/Nivasi/Admission Mangement System/nivasi-space-hub-main/src/routes/admin.admissions.new.tsx",
+		children: void 0,
+		preloads: [
+			"/assets/admin.admissions.new-DyqJ8Jq1.js",
+			"/assets/admin-shell-CUiXPupp.js",
+			"/assets/admission-form-CvXfBdRE.js"
+		]
+	},
+	"/admin/laundry/$laundryId": {
+		filePath: "D:/BUSINEES/Nivasi/Admission Mangement System/nivasi-space-hub-main/src/routes/admin.laundry.$laundryId.tsx",
+		children: void 0,
+		preloads: [
+			"/assets/admin.laundry._laundryId-BexaQ2Ne.js",
+			"/assets/hooks-CkILeImP.js",
+			"/assets/button-XcBGSBI-.js",
+			"/assets/arrow-left-CV-93utX.js",
+			"/assets/admin-shell-CUiXPupp.js",
+			"/assets/calendar-C6EnS_UM.js",
+			"/assets/dist-Bp6zKgOA.js",
+			"/assets/chevron-left-BAXp0fcn.js",
+			"/assets/chevron-right-D4OfZPXQ.js",
+			"/assets/circle-check-D4zDTbMc.js",
+			"/assets/clock-CTVDc2Dw.js",
+			"/assets/download-CggL9egQ.js",
+			"/assets/loader-circle-D9UPfjsR.js",
+			"/assets/skeleton-BNirAIe9.js",
+			"/assets/map-pin-DF-EyzPw.js",
+			"/assets/phone-T-ouSANZ.js",
+			"/assets/sticky-note-DkIUKQjJ.js",
+			"/assets/search-K-l9TAyi.js",
+			"/assets/user-check-TLuPP4DB.js",
+			"/assets/dist-Bh-uSssQ.js",
+			"/assets/select-Bu_aINvx.js",
+			"/assets/input-qHaXPiTk.js",
+			"/assets/badge-B5yy4jvJ.js",
+			"/assets/student-laundry-dialog-CTsi-p9l.js"
+		]
+	},
+	"/admin/laundry/assign": {
+		filePath: "D:/BUSINEES/Nivasi/Admission Mangement System/nivasi-space-hub-main/src/routes/admin.laundry.assign.tsx",
+		children: void 0,
+		preloads: [
+			"/assets/admin.laundry.assign-D_Nx_1ef.js",
+			"/assets/hooks-CkILeImP.js",
+			"/assets/button-XcBGSBI-.js",
+			"/assets/arrow-left-CV-93utX.js",
+			"/assets/admin-shell-CUiXPupp.js",
+			"/assets/loader-circle-D9UPfjsR.js",
+			"/assets/skeleton-BNirAIe9.js",
+			"/assets/search-K-l9TAyi.js",
+			"/assets/square-Uuokv5qw.js",
+			"/assets/user-check-TLuPP4DB.js",
+			"/assets/select-Bu_aINvx.js",
+			"/assets/input-qHaXPiTk.js",
+			"/assets/badge-B5yy4jvJ.js"
+		]
+	},
+	"/admin/laundry/employees": {
+		filePath: "D:/BUSINEES/Nivasi/Admission Mangement System/nivasi-space-hub-main/src/routes/admin.laundry.employees.tsx",
+		children: void 0,
+		preloads: [
+			"/assets/admin.laundry.employees-BV6_Q0O_.js",
+			"/assets/hooks-CkILeImP.js",
+			"/assets/button-XcBGSBI-.js",
+			"/assets/arrow-left-CV-93utX.js",
+			"/assets/admin-shell-CUiXPupp.js",
+			"/assets/loader-circle-D9UPfjsR.js",
+			"/assets/skeleton-BNirAIe9.js",
+			"/assets/pencil-Dl159hK3.js",
+			"/assets/plus-CjBHmLX_.js",
+			"/assets/search-K-l9TAyi.js",
+			"/assets/toggle-right-CstEtBTn.js",
+			"/assets/dist-Bh-uSssQ.js",
+			"/assets/select-Bu_aINvx.js",
+			"/assets/input-qHaXPiTk.js",
+			"/assets/label-D1Ff9teh.js",
+			"/assets/dialog-DGF2fUMk.js",
+			"/assets/format-Crgoi_5l.js",
+			"/assets/badge-B5yy4jvJ.js"
+		]
+	},
+	"/admin/mess/$messId": {
+		filePath: "D:/BUSINEES/Nivasi/Admission Mangement System/nivasi-space-hub-main/src/routes/admin.mess.$messId.tsx",
+		children: void 0,
+		preloads: [
+			"/assets/admin.mess._messId-BFCWq_5y.js",
+			"/assets/hooks-CkILeImP.js",
+			"/assets/button-XcBGSBI-.js",
+			"/assets/arrow-left-CV-93utX.js",
+			"/assets/admin-shell-CUiXPupp.js",
+			"/assets/chevron-up-CWgq8Rjf.js",
+			"/assets/rotate-ccw-m6GHzBAr.js",
+			"/assets/file-text-Bs0E7Wip.js",
+			"/assets/loader-circle-D9UPfjsR.js",
+			"/assets/skeleton-BNirAIe9.js",
+			"/assets/map-pin-DF-EyzPw.js",
+			"/assets/message-square-DSymxxw4.js",
+			"/assets/pencil-Dl159hK3.js",
+			"/assets/phone-T-ouSANZ.js",
+			"/assets/search-K-l9TAyi.js",
+			"/assets/utensils-crossed-8AMKJ-Py.js",
+			"/assets/select-Bu_aINvx.js",
+			"/assets/input-qHaXPiTk.js",
+			"/assets/label-D1Ff9teh.js",
+			"/assets/textarea-IaXjsa0s.js",
+			"/assets/dialog-DGF2fUMk.js",
+			"/assets/badge-B5yy4jvJ.js"
+		]
+	},
+	"/admin/mess/assign": {
+		filePath: "D:/BUSINEES/Nivasi/Admission Mangement System/nivasi-space-hub-main/src/routes/admin.mess.assign.tsx",
+		children: void 0,
+		preloads: [
+			"/assets/admin.mess.assign-j3YyKBam.js",
+			"/assets/hooks-CkILeImP.js",
+			"/assets/button-XcBGSBI-.js",
+			"/assets/arrow-left-CV-93utX.js",
+			"/assets/admin-shell-CUiXPupp.js",
+			"/assets/loader-circle-D9UPfjsR.js",
+			"/assets/skeleton-BNirAIe9.js",
+			"/assets/search-K-l9TAyi.js",
+			"/assets/square-Uuokv5qw.js",
+			"/assets/user-check-TLuPP4DB.js",
+			"/assets/select-Bu_aINvx.js",
+			"/assets/input-qHaXPiTk.js",
+			"/assets/badge-B5yy4jvJ.js"
+		]
+	},
+	"/admin/mess/employees": {
+		filePath: "D:/BUSINEES/Nivasi/Admission Mangement System/nivasi-space-hub-main/src/routes/admin.mess.employees.tsx",
+		children: void 0,
+		preloads: [
+			"/assets/admin.mess.employees-ClRasc8s.js",
+			"/assets/hooks-CkILeImP.js",
+			"/assets/button-XcBGSBI-.js",
+			"/assets/arrow-left-CV-93utX.js",
+			"/assets/admin-shell-CUiXPupp.js",
+			"/assets/loader-circle-D9UPfjsR.js",
+			"/assets/skeleton-BNirAIe9.js",
+			"/assets/pencil-Dl159hK3.js",
+			"/assets/plus-CjBHmLX_.js",
+			"/assets/search-K-l9TAyi.js",
+			"/assets/toggle-right-CstEtBTn.js",
+			"/assets/dist-Bh-uSssQ.js",
+			"/assets/select-Bu_aINvx.js",
+			"/assets/input-qHaXPiTk.js",
+			"/assets/label-D1Ff9teh.js",
+			"/assets/dialog-DGF2fUMk.js",
+			"/assets/format-Crgoi_5l.js",
+			"/assets/badge-B5yy4jvJ.js"
+		]
+	},
+	"/employee/laundry/payouts": {
+		filePath: "D:/BUSINEES/Nivasi/Admission Mangement System/nivasi-space-hub-main/src/routes/employee.laundry.payouts.tsx",
+		children: void 0,
+		preloads: [
+			"/assets/employee.laundry.payouts-lAeyVVtc.js",
+			"/assets/admin-shell-CUiXPupp.js",
+			"/assets/chevron-up-CWgq8Rjf.js",
+			"/assets/circle-x-BiWPZXps.js",
+			"/assets/select-Bu_aINvx.js",
+			"/assets/format-Crgoi_5l.js"
+		]
+	},
+	"/employee/mess/payouts": {
+		filePath: "D:/BUSINEES/Nivasi/Admission Mangement System/nivasi-space-hub-main/src/routes/employee.mess.payouts.tsx",
+		children: void 0,
+		preloads: [
+			"/assets/employee.mess.payouts-DVQ5uzLi.js",
+			"/assets/hooks-CkILeImP.js",
+			"/assets/admin-shell-CUiXPupp.js",
+			"/assets/chevron-up-CWgq8Rjf.js",
+			"/assets/circle-check-D4zDTbMc.js",
+			"/assets/circle-x-BiWPZXps.js",
+			"/assets/clock-CTVDc2Dw.js",
+			"/assets/skeleton-BNirAIe9.js",
+			"/assets/receipt-D2lDgX3N.js",
+			"/assets/select-Bu_aINvx.js",
+			"/assets/format-Crgoi_5l.js",
+			"/assets/badge-B5yy4jvJ.js"
+		]
+	},
+	"/admin/admissions/": {
+		filePath: "D:/BUSINEES/Nivasi/Admission Mangement System/nivasi-space-hub-main/src/routes/admin.admissions.index.tsx",
+		children: void 0,
+		preloads: [
+			"/assets/admin.admissions.index-DEHqodCS.js",
+			"/assets/hooks-CkILeImP.js",
+			"/assets/button-XcBGSBI-.js",
+			"/assets/badges-BdIDHfiG.js",
+			"/assets/admin-shell-CUiXPupp.js",
+			"/assets/download-CggL9egQ.js",
+			"/assets/skeleton-BNirAIe9.js",
+			"/assets/plus-CjBHmLX_.js",
+			"/assets/search-K-l9TAyi.js",
+			"/assets/select-Bu_aINvx.js",
+			"/assets/input-qHaXPiTk.js",
+			"/assets/format-Crgoi_5l.js",
+			"/assets/stat-card-D6cUZ5eA.js"
+		]
+	},
+	"/admin/laundry/": {
+		filePath: "D:/BUSINEES/Nivasi/Admission Mangement System/nivasi-space-hub-main/src/routes/admin.laundry.index.tsx",
+		children: void 0,
+		preloads: [
+			"/assets/admin.laundry.index-BVUOk-bs.js",
+			"/assets/hooks-CkILeImP.js",
+			"/assets/button-XcBGSBI-.js",
+			"/assets/admin-shell-CUiXPupp.js",
+			"/assets/loader-circle-D9UPfjsR.js",
+			"/assets/skeleton-BNirAIe9.js",
+			"/assets/pencil-Dl159hK3.js",
+			"/assets/phone-T-ouSANZ.js",
+			"/assets/plus-CjBHmLX_.js",
+			"/assets/search-K-l9TAyi.js",
+			"/assets/toggle-right-CstEtBTn.js",
+			"/assets/trash-2-cohkHnuC.js",
+			"/assets/user-check-TLuPP4DB.js",
+			"/assets/user-C0NeLpjD.js",
+			"/assets/dist-Bh-uSssQ.js",
+			"/assets/input-qHaXPiTk.js",
+			"/assets/label-D1Ff9teh.js",
+			"/assets/dialog-DGF2fUMk.js",
+			"/assets/format-Crgoi_5l.js",
+			"/assets/alert-dialog-CpTPY-5H.js",
+			"/assets/badge-B5yy4jvJ.js"
+		]
+	},
+	"/admin/mess/": {
+		filePath: "D:/BUSINEES/Nivasi/Admission Mangement System/nivasi-space-hub-main/src/routes/admin.mess.index.tsx",
+		children: void 0,
+		preloads: [
+			"/assets/admin.mess.index-Cj8w4YFY.js",
+			"/assets/hooks-CkILeImP.js",
+			"/assets/button-XcBGSBI-.js",
+			"/assets/admin-shell-CUiXPupp.js",
+			"/assets/loader-circle-D9UPfjsR.js",
+			"/assets/skeleton-BNirAIe9.js",
+			"/assets/pencil-Dl159hK3.js",
+			"/assets/phone-T-ouSANZ.js",
+			"/assets/plus-CjBHmLX_.js",
+			"/assets/search-K-l9TAyi.js",
+			"/assets/toggle-right-CstEtBTn.js",
+			"/assets/trash-2-cohkHnuC.js",
+			"/assets/user-check-TLuPP4DB.js",
+			"/assets/user-C0NeLpjD.js",
+			"/assets/utensils-crossed-8AMKJ-Py.js",
+			"/assets/input-qHaXPiTk.js",
+			"/assets/label-D1Ff9teh.js",
+			"/assets/dialog-DGF2fUMk.js",
+			"/assets/format-Crgoi_5l.js",
+			"/assets/alert-dialog-CpTPY-5H.js",
+			"/assets/badge-B5yy4jvJ.js"
+		]
+	},
+	"/admin/admissions/$admissionId/edit": {
+		filePath: "D:/BUSINEES/Nivasi/Admission Mangement System/nivasi-space-hub-main/src/routes/admin.admissions.$admissionId.edit.tsx",
+		children: void 0,
+		preloads: [
+			"/assets/admin.admissions._admissionId.edit-1Yoj0V0X.js",
+			"/assets/hooks-CkILeImP.js",
+			"/assets/firebase-config-BKIPcbEw.js",
+			"/assets/button-XcBGSBI-.js",
+			"/assets/admin-shell-CUiXPupp.js",
+			"/assets/admission-form-CvXfBdRE.js",
+			"/assets/skeleton-BNirAIe9.js",
+			"/assets/stat-card-D6cUZ5eA.js"
+		]
+	},
+	"/admin/admissions/$admissionId/": {
+		filePath: "D:/BUSINEES/Nivasi/Admission Mangement System/nivasi-space-hub-main/src/routes/admin.admissions.$admissionId.index.tsx",
+		children: void 0,
+		preloads: [
+			"/assets/admin.admissions._admissionId.index-mYVg66aT.js",
+			"/assets/hooks-CkILeImP.js",
+			"/assets/firebase-config-BKIPcbEw.js",
+			"/assets/button-XcBGSBI-.js",
+			"/assets/arrow-left-CV-93utX.js",
+			"/assets/badges-BdIDHfiG.js",
+			"/assets/admin-shell-CUiXPupp.js",
+			"/assets/eye-off-DXmUziJH.js",
+			"/assets/eye-B8Y7cH9r.js",
+			"/assets/loader-circle-D9UPfjsR.js",
+			"/assets/skeleton-BNirAIe9.js",
+			"/assets/pencil-Dl159hK3.js",
+			"/assets/trash-2-cohkHnuC.js",
+			"/assets/utensils-crossed-8AMKJ-Py.js",
+			"/assets/dist-Bh-uSssQ.js",
+			"/assets/select-Bu_aINvx.js",
+			"/assets/input-qHaXPiTk.js",
+			"/assets/label-D1Ff9teh.js",
+			"/assets/format-Crgoi_5l.js",
+			"/assets/stat-card-D6cUZ5eA.js",
+			"/assets/alert-dialog-CpTPY-5H.js",
+			"/assets/badge-B5yy4jvJ.js"
+		]
+	}
+} });
+//#endregion
+export { tsrStartManifest };

@@ -265,15 +265,16 @@ export function StudentLaundryDialog({
                 <Clock className="size-4 text-warning-foreground" />
                 Pickup Record
               </span>
-              <Select value={pickupStatus} onValueChange={(v) => setPickupStatus(v as LaundryPickupStatus)}>
-                <SelectTrigger className={`h-7 w-32 text-xs font-medium capitalize ${STATUS_COLORS[pickupStatus]}`}>
+              <Select
+                value={pickupStatus === "picked_up" ? "picked_up" : "pending"}
+                onValueChange={(v) => setPickupStatus(v as LaundryPickupStatus)}
+              >
+                <SelectTrigger className={`h-7 w-32 text-xs font-medium capitalize ${STATUS_COLORS[pickupStatus === "picked_up" ? "picked_up" : "pending"]}`}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="pending">Pending</SelectItem>
                   <SelectItem value="picked_up">Picked Up</SelectItem>
-                  <SelectItem value="not_available">Not Available</SelectItem>
-                  <SelectItem value="skipped">Skipped</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -328,15 +329,16 @@ export function StudentLaundryDialog({
                 <CheckCircle2 className="size-4 text-success" />
                 Delivery Record
               </span>
-              <Select value={deliveryStatus} onValueChange={(v) => setDeliveryStatus(v as LaundryPickupStatus)}>
-                <SelectTrigger className={`h-7 w-32 text-xs font-medium capitalize ${STATUS_COLORS[deliveryStatus]}`}>
+              <Select
+                value={deliveryStatus === "picked_up" ? "picked_up" : "pending"}
+                onValueChange={(v) => setDeliveryStatus(v as LaundryPickupStatus)}
+              >
+                <SelectTrigger className={`h-7 w-32 text-xs font-medium capitalize ${STATUS_COLORS[deliveryStatus === "picked_up" ? "picked_up" : "pending"]}`}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="pending">Pending</SelectItem>
                   <SelectItem value="picked_up">Delivered</SelectItem>
-                  <SelectItem value="not_available">Not Available</SelectItem>
-                  <SelectItem value="skipped">Skipped</SelectItem>
                 </SelectContent>
               </Select>
             </div>

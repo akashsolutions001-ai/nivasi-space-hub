@@ -1,11 +1,11 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft, Phone, MapPin, Search, WashingMachine,
   CheckCircle2, Clock, XCircle, SkipForward, Calendar,
   Scale, StickyNote, Check, ChevronLeft, ChevronRight,
-  UserCheck, Loader2,
+  UserCheck, Loader2, Download, FileSpreadsheet,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -19,8 +19,10 @@ import { StudentLaundryDialog } from "@/components/nivasi/student-laundry-dialog
 import {
   useLaundries, useAdmissions, useLaundryPickupsForDate,
   useLaundryPickupSummary, useRooms, useProperties,
+  useLaundryPickupsForDateRange,
 } from "@/lib/hooks";
-import { upsertLaundryPickup, todayDateString } from "@/lib/db";
+import { upsertLaundryPickup, todayDateString, getWeekId, getWeekBounds } from "@/lib/db";
+import { buildExportRows, exportLaundryBillingExcel } from "@/lib/laundry-export";
 import type { Admission, LaundryPickupStatus } from "@/lib/types";
 
 export const Route = createFileRoute("/admin/laundry/$laundryId")({
@@ -76,6 +78,26 @@ function getMapUrl(
 
 // ── page ──────────────────────────────────────────────────────────────────────
 
+// ── Export week helpers ────────────────────────────────────────────────────────
+
+function formatWeekRange(start: string, end: string): string {
+  try {
+    const fmt = (d: string) => {
+      const [y, m, day] = d.split("-").map(Number);
+      return new Date(y!, (m ?? 1) - 1, day).toLocaleDateString("en-IN", {
+        day: "numeric", month: "short",
+      });
+    };
+    const endDate = new Date(end + "T00:00:00");
+    const year = endDate.getFullYear();
+    return `${fmt(start)} – ${fmt(end)} ${year}`;
+  } catch {
+    return `${start} – ${end}`;
+  }
+}
+
+// ── page ──────────────────────────────────────────────────────────────────────
+
 function LaundryStudentsPage() {
   const { laundryId } = Route.useParams();
   const qc = useQueryClient();
@@ -90,6 +112,28 @@ function LaundryStudentsPage() {
   // Notes and weight maps keyed by `${studentId}-${type}`
   const [notesMap, setNotesMap] = useState<Record<string, string>>({});
   const [weightMap, setWeightMap] = useState<Record<string, string>>({});
+
+  // ── Export state ──
+  const [showExportPanel, setShowExportPanel] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  // Export week selection defaults to the current week based on selectedDate
+  const currentWeekBounds = useMemo(() => getWeekBounds(selectedDate), [selectedDate]);
+  const [exportStart, setExportStart] = useState<string>(currentWeekBounds.weekStart);
+  const [exportEnd, setExportEnd] = useState<string>(currentWeekBounds.weekEnd);
+
+  // Auto-sync export range when selected date changes (only if panel is closed)
+  useEffect(() => {
+    if (!showExportPanel) {
+      setExportStart(currentWeekBounds.weekStart);
+      setExportEnd(currentWeekBounds.weekEnd);
+    }
+  }, [currentWeekBounds, showExportPanel]);
+
+  const { data: exportPickups = [], isFetching: exportFetching } = useLaundryPickupsForDateRange(
+    showExportPanel ? laundryId : null,
+    exportStart,
+    exportEnd,
+  );
 
   const { data: laundries = [], isLoading: laundryLoading } = useLaundries();
   const { data: admissions = [], isLoading: admLoading } = useAdmissions();
@@ -140,6 +184,11 @@ function LaundryStudentsPage() {
 
   async function setPickupStatus(student: Admission, type: "pickup" | "delivery", status: LaundryPickupStatus) {
     const key = `${student.id}-${type}`;
+    const pickupKey = `${student.id}-pickup`;
+    // Delivery weight always mirrors pickup weight
+    const clothesWeight = type === "delivery"
+      ? (weightMap[pickupKey] ?? "")
+      : (weightMap[key] ?? "");
     setUpdatingKey(key);
     try {
       await upsertLaundryPickup({
@@ -150,7 +199,7 @@ function LaundryStudentsPage() {
         date: selectedDate,
         type,
         status,
-        clothesWeight: weightMap[key] ?? "",
+        clothesWeight,
         notes: notesMap[key] ?? "",
       });
       await qc.invalidateQueries({ queryKey: ["laundryPickups"] });
@@ -164,8 +213,13 @@ function LaundryStudentsPage() {
 
   async function saveDetails(student: Admission, type: "pickup" | "delivery") {
     const key = `${student.id}-${type}`;
+    const pickupKey = `${student.id}-pickup`;
     const existingPickup = pickups.find((p) => p.studentId === student.id && p.type === type);
     const status = existingPickup?.status ?? "pending";
+    // Delivery weight always mirrors pickup weight
+    const clothesWeight = type === "delivery"
+      ? (weightMap[pickupKey] ?? "")
+      : (weightMap[key] ?? "");
     setUpdatingKey(key + "-details");
     try {
       await upsertLaundryPickup({
@@ -176,7 +230,7 @@ function LaundryStudentsPage() {
         date: selectedDate,
         type,
         status,
-        clothesWeight: weightMap[key] ?? "",
+        clothesWeight,
         notes: notesMap[key] ?? "",
       });
       await qc.invalidateQueries({ queryKey: ["laundryPickups"] });
@@ -197,12 +251,59 @@ function LaundryStudentsPage() {
 
   const isLoading = laundryLoading || admLoading;
 
+  // ── Export handler ────────────────────────────────────────────────────────────
+  const handleExport = useCallback(async () => {
+    if (exporting) return;
+    if (exportPickups.length === 0 && !exportFetching) {
+      toast.warning("No laundry records found for the selected period.");
+      return;
+    }
+    setExporting(true);
+    try {
+      const studentNameMap: Record<string, string> = {};
+      for (const a of admissions) {
+        studentNameMap[a.id] = a.fullName;
+      }
+      const weekId = getWeekId(exportStart);
+      const weekNum = weekId.split("-W")[1] ?? "";
+      const weekLabel = `Week ${weekNum}`;
+      const weekDateRange = formatWeekRange(exportStart, exportEnd);
+      const rows = buildExportRows(exportPickups, studentNameMap, weekLabel);
+
+      if (rows.length === 0) {
+        toast.warning("No records with weight data found for the selected period. Enter weights first.");
+        return;
+      }
+
+      await exportLaundryBillingExcel({
+        rows,
+        weekLabel,
+        weekDateRange,
+        laundryName: laundry?.laundryName ?? "Laundry",
+      });
+      toast.success(`Exported ${rows.length} record(s) to Excel successfully!`);
+    } catch (err) {
+      console.error("[export] laundry billing", err);
+      toast.error(err instanceof Error ? err.message : "Export failed. Please try again.");
+    } finally {
+      setExporting(false);
+    }
+  }, [exporting, exportPickups, exportFetching, admissions, exportStart, exportEnd, laundry?.laundryName]);
+
   return (
     <AdminShell
       title={laundry?.laundryName ?? "Laundry Students"}
       subtitle={laundry ? `Owner: ${laundry.ownerName || "—"}  ·  ${students.length} students` : ""}
       action={
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant={showExportPanel ? "default" : "outline"}
+            size="sm"
+            onClick={() => setShowExportPanel((v) => !v)}
+          >
+            <FileSpreadsheet className="mr-1.5 size-4" />
+            {showExportPanel ? "Hide Export" : "Export Billing"}
+          </Button>
           <Button asChild variant="outline" size="sm">
             <Link to="/admin/laundry/assign">
               <UserCheck className="mr-1.5 size-4" /> Assign Students
@@ -214,6 +315,113 @@ function LaundryStudentsPage() {
         </div>
       }
     >
+      {/* ── Export Billing Panel ── */}
+      {showExportPanel && (
+        <div className="mb-4 rounded-2xl border border-border bg-card p-4 shadow-soft space-y-4">
+          <div className="flex items-center gap-2">
+            <FileSpreadsheet className="size-5 text-primary" />
+            <div>
+              <h3 className="font-semibold text-sm">Export Weekly Laundry Billing</h3>
+              <p className="text-xs text-muted-foreground">Generates a formatted Excel sheet matching the NIVASI SPACE billing template. Rate is fixed at ₹80/Kg.</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">Week Start Date</label>
+              <input
+                type="date"
+                value={exportStart}
+                onChange={(e) => {
+                  setExportStart(e.target.value);
+                  // Auto-set end to 6 days after start
+                  if (e.target.value) {
+                    const d = new Date(e.target.value);
+                    d.setDate(d.getDate() + 6);
+                    setExportEnd(d.toISOString().slice(0, 10));
+                  }
+                }}
+                className="w-full h-9 rounded-lg border border-input bg-background px-3 text-sm cursor-pointer outline-none focus:ring-1 focus:ring-ring"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">Week End Date</label>
+              <input
+                type="date"
+                value={exportEnd}
+                min={exportStart}
+                onChange={(e) => setExportEnd(e.target.value)}
+                className="w-full h-9 rounded-lg border border-input bg-background px-3 text-sm cursor-pointer outline-none focus:ring-1 focus:ring-ring"
+              />
+            </div>
+          </div>
+
+          {/* Week shortcuts */}
+          <div className="flex flex-wrap gap-1.5">
+            {[-2, -1, 0].map((offset) => {
+              const d = new Date(today);
+              d.setDate(d.getDate() + offset * 7);
+              const { weekStart, weekEnd } = getWeekBounds(d.toISOString().slice(0, 10));
+              const wId = getWeekId(weekStart);
+              const wNum = wId.split("-W")[1] ?? "";
+              const label = offset === 0 ? "This week" : offset === -1 ? "Last week" : `2 weeks ago`;
+              const isActive = exportStart === weekStart && exportEnd === weekEnd;
+              return (
+                <button
+                  key={offset}
+                  onClick={() => { setExportStart(weekStart); setExportEnd(weekEnd); }}
+                  className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold border transition-colors ${
+                    isActive
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-muted/40 text-muted-foreground border-border hover:bg-muted"
+                  }`}
+                >
+                  {label} (W{wNum})
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Export summary preview */}
+          {exportFetching ? (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Loader2 className="size-3.5 animate-spin" />
+              Loading records...
+            </div>
+          ) : (
+            <div className="rounded-xl bg-muted/30 border border-border/60 px-3 py-2.5 text-xs space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Period:</span>
+                <span className="font-semibold">{formatWeekRange(exportStart, exportEnd)}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Records with weight data:</span>
+                <span className="font-semibold">
+                  {buildExportRows(exportPickups, Object.fromEntries(admissions.map((a) => [a.id, a.fullName])), "").length}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Fixed Rate:</span>
+                <span className="font-semibold text-primary">₹80 / Kg</span>
+              </div>
+            </div>
+          )}
+
+          <Button
+            id="export-laundry-billing-btn"
+            onClick={handleExport}
+            disabled={exporting || exportFetching}
+            className="w-full"
+          >
+            {exporting ? (
+              <><Loader2 className="mr-2 size-4 animate-spin" /> Generating Excel…</>
+            ) : (
+              <><Download className="mr-2 size-4" /> Download Excel Billing Sheet</>
+            )}
+          </Button>
+        </div>
+      )}
+
       {/* ── Date Picker Bar ── */}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3 shadow-soft">
         <div className="flex items-center gap-2">
@@ -270,18 +478,26 @@ function LaundryStudentsPage() {
 
       {/* ── Summary Stats for Selected Date ── */}
       {summary && (
-        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {(["picked_up", "pending", "skipped", "not_available"] as LaundryPickupStatus[]).map((s) => (
-            <div key={s} className="rounded-2xl border border-border bg-card p-3 shadow-soft text-center">
-              <p className="text-[11px] text-muted-foreground capitalize">{STATUS_LABELS[s]}</p>
-              <p className="text-xl font-bold">
-                {((summary.pickup[s] ?? 0) + (summary.delivery[s] ?? 0))}
-              </p>
-              <p className="text-[10px] text-muted-foreground">
-                P:{summary.pickup[s] ?? 0} / D:{summary.delivery[s] ?? 0}
-              </p>
-            </div>
-          ))}
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <div className="rounded-2xl border border-border bg-card p-3 shadow-soft text-center">
+            <p className="text-[11px] text-muted-foreground">Picked Up</p>
+            <p className="text-xl font-bold text-success">{summary.pickup["picked_up"] ?? 0}</p>
+            <p className="text-[10px] text-muted-foreground">Pickups Done</p>
+          </div>
+          <div className="rounded-2xl border border-border bg-card p-3 shadow-soft text-center">
+            <p className="text-[11px] text-muted-foreground">Delivered</p>
+            <p className="text-xl font-bold text-success">{summary.delivery["picked_up"] ?? 0}</p>
+            <p className="text-[10px] text-muted-foreground">Deliveries Done</p>
+          </div>
+          <div className="rounded-2xl border border-border bg-card p-3 shadow-soft text-center col-span-2 sm:col-span-1">
+            <p className="text-[11px] text-muted-foreground">Pending / Default Skipped</p>
+            <p className="text-xl font-bold text-amber-600 dark:text-amber-400">
+              {students.length > 0
+                ? Math.max(0, students.length - (summary.pickup["picked_up"] ?? 0))
+                : (summary.pickup["pending"] ?? 0)}
+            </p>
+            <p className="text-[10px] text-muted-foreground">Remaining Students</p>
+          </div>
         </div>
       )}
 
@@ -382,9 +598,15 @@ function LaundryStudentsPage() {
                 <div className="mt-3 grid grid-cols-2 gap-2 border-t border-border pt-3">
                   {(["pickup", "delivery"] as const).map((type) => {
                     const record = type === "pickup" ? pickupRecord : deliveryRecord;
-                    const currentStatus: LaundryPickupStatus = record?.status ?? "pending";
+                    const rawStatus = record?.status ?? "pending";
+                    const currentStatus: LaundryPickupStatus =
+                      rawStatus === "picked_up" || (rawStatus as string) === "delivered"
+                        ? "picked_up"
+                        : "pending";
                     const key = `${student.id}-${type}`;
                     const isUpdating = updatingKey === key;
+                    const isDelivery = type === "delivery";
+
                     return (
                       <div key={type} className="space-y-1.5">
                         <p className="text-xs font-medium capitalize text-muted-foreground">{type} Status</p>
@@ -398,9 +620,9 @@ function LaundryStudentsPage() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="pending">Pending</SelectItem>
-                            <SelectItem value="picked_up">Picked Up</SelectItem>
-                            <SelectItem value="not_available">Not Available</SelectItem>
-                            <SelectItem value="skipped">Skipped</SelectItem>
+                            <SelectItem value="picked_up">
+                              {isDelivery ? "Delivered" : "Picked Up"}
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -412,7 +634,14 @@ function LaundryStudentsPage() {
                 <div className="mt-3 grid grid-cols-2 gap-2 border-t border-border pt-3">
                   {(["pickup", "delivery"] as const).map((type) => {
                     const key = `${student.id}-${type}`;
+                    const pickupKey = `${student.id}-pickup`;
                     const isSavingDetails = updatingKey === key + "-details";
+                    const isDeliveryType = type === "delivery";
+                    // Delivery weight is always mirrored from pickup weight
+                    const displayWeight = isDeliveryType
+                      ? (weightMap[pickupKey] ?? "")
+                      : (weightMap[key] ?? "");
+
                     return (
                       <div key={type} className="space-y-2 rounded-xl border border-border/70 bg-muted/20 p-2.5">
                         <p className="text-xs font-semibold capitalize flex items-center gap-1 text-foreground">
@@ -424,12 +653,24 @@ function LaundryStudentsPage() {
                           <label className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground">
                             <Scale className="size-3 text-primary" /> Weight of Clothes
                           </label>
-                          <Input
-                            placeholder="e.g. 2.5 kg"
-                            value={weightMap[key] ?? ""}
-                            onChange={(e) => setWeightMap((prev) => ({ ...prev, [key]: e.target.value }))}
-                            className="h-7 text-xs bg-background"
-                          />
+                          <div className="relative flex items-center">
+                            <Input
+                              type="number"
+                              min="0"
+                              step="0.1"
+                              placeholder="2.5"
+                              value={displayWeight}
+                              readOnly={isDeliveryType}
+                              onChange={isDeliveryType ? undefined : (e) =>
+                                setWeightMap((prev) => ({ ...prev, [key]: e.target.value }))
+                              }
+                              className={`h-7 text-xs bg-background pr-8 ${isDeliveryType ? "opacity-70 cursor-not-allowed" : ""}`}
+                            />
+                            <span className="pointer-events-none absolute right-2.5 text-[11px] font-medium text-muted-foreground">kg</span>
+                          </div>
+                          {isDeliveryType && (
+                            <p className="text-[10px] text-muted-foreground italic">Auto-filled from pickup weight</p>
+                          )}
                         </div>
 
                         <div className="space-y-1">
@@ -446,7 +687,14 @@ function LaundryStudentsPage() {
                         </div>
 
                         <button
-                          onClick={() => saveDetails(student, type)}
+                          onClick={() => {
+                            // Sync delivery weight from pickup before saving
+                            if (isDeliveryType) {
+                              const pickupWeight = weightMap[pickupKey] ?? "";
+                              setWeightMap((prev) => ({ ...prev, [key]: pickupWeight }));
+                            }
+                            saveDetails(student, type);
+                          }}
                           disabled={isSavingDetails}
                           className="flex items-center justify-center gap-1 rounded-lg bg-primary/10 text-primary border border-primary/20 px-2.5 py-1 text-[11px] font-semibold hover:bg-primary/20 transition-colors disabled:opacity-50 w-full"
                         >

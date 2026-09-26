@@ -285,6 +285,7 @@ import {
   fetchLaundryPickupsForDate,
   fetchLaundryPickupSummaryForDate,
   fetchLaundryPickupsForStudent,
+  fetchLaundryPickupsForDateRange,
 } from "@/lib/db";
 
 export function useLaundries() {
@@ -336,6 +337,18 @@ export function useLaundryPickupsForStudent(studentId: string | null) {
     queryKey: ["laundryPickups", "student", studentId],
     queryFn: () => fetchLaundryPickupsForStudent(studentId!),
     enabled: isFirebaseConfigured && !!studentId,
+  });
+}
+
+export function useLaundryPickupsForDateRange(
+  laundryId: string | null,
+  startDate: string,
+  endDate: string,
+) {
+  return useQuery({
+    queryKey: ["laundryPickups", "range", laundryId, startDate, endDate],
+    queryFn: () => fetchLaundryPickupsForDateRange(laundryId!, startDate, endDate),
+    enabled: isFirebaseConfigured && !!laundryId && !!startDate && !!endDate,
   });
 }
 

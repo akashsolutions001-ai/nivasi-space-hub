@@ -444,27 +444,45 @@ function LaundryEmployeeDashboardPage() {
                 <div className="mt-3 grid grid-cols-2 gap-2 border-t border-border pt-3">
                   {(["pickup", "delivery"] as const).map((type) => {
                     const record  = type === "pickup" ? pickupRec : deliveryRec;
-                    const current: LaundryPickupStatus = record?.status ?? "pending";
+                    const rawStatus = record?.status ?? "pending";
+                    const current: LaundryPickupStatus =
+                      rawStatus === "picked_up" || (rawStatus as string) === "delivered"
+                        ? "picked_up"
+                        : "pending";
                     const key     = `${student.id}-${type}`;
                     const isUpdating = updatingKey === key;
+                    const isDelivery = type === "delivery";
+
+                    const options: Array<{ status: LaundryPickupStatus; label: string; icon: React.ReactNode }> = [
+                      {
+                        status: "pending",
+                        label: "Pending",
+                        icon: <Clock className="size-3.5" />,
+                      },
+                      {
+                        status: "picked_up",
+                        label: isDelivery ? "Delivered" : "Picked Up",
+                        icon: <CheckCircle2 className="size-3.5" />,
+                      },
+                    ];
 
                     return (
                       <div key={type} className="space-y-1.5">
                         <p className="text-xs font-medium capitalize text-muted-foreground">{type}</p>
                         <div className="grid grid-cols-2 gap-1">
-                          {(["picked_up", "pending", "not_available", "skipped"] as LaundryPickupStatus[]).map((s) => (
+                          {options.map((opt) => (
                             <button
-                              key={s}
+                              key={opt.status}
                               disabled={isUpdating || lStatus === "cancelled"}
-                              onClick={() => setStatus(student, type, s)}
+                              onClick={() => setStatus(student, type, opt.status)}
                               className={`flex items-center justify-center gap-1 rounded-lg border px-1 py-1.5 text-[11px] font-medium transition-all active:scale-95 ${
-                                current === s
-                                  ? STATUS_COLORS[s] + " ring-1 ring-current/30"
+                                current === opt.status
+                                  ? STATUS_COLORS[opt.status] + " ring-1 ring-current/30"
                                   : "border-border bg-muted/30 text-muted-foreground hover:bg-muted"
                               } ${lStatus === "cancelled" ? "cursor-not-allowed opacity-40" : ""}`}
                             >
-                              {STATUS_ICONS[s]}
-                              <span className="truncate">{STATUS_LABELS[s]}</span>
+                              {opt.icon}
+                              <span className="truncate">{opt.label}</span>
                             </button>
                           ))}
                         </div>

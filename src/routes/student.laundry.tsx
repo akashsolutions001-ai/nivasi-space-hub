@@ -268,12 +268,12 @@ function DailyLaundryLogsCard({ pickups }: { pickups: LaundryPickup[] }) {
                   <div className="flex gap-1.5 flex-wrap">
                     {p && (
                       <Badge variant="outline" className={`text-[10px] capitalize ${p.status === "picked_up" ? "bg-success/10 text-success border-success/30" : "bg-warning/10 text-warning-foreground border-warning/30"}`}>
-                        Pickup: {p.status}
+                        Pickup: {p.status === "picked_up" ? "Picked Up" : "Pending"}
                       </Badge>
                     )}
                     {del && (
                       <Badge variant="outline" className={`text-[10px] capitalize ${del.status === "picked_up" ? "bg-success/10 text-success border-success/30" : "bg-muted text-muted-foreground"}`}>
-                        Delivery: {del.status === "picked_up" ? "Delivered" : del.status}
+                        Delivery: {del.status === "picked_up" ? "Delivered" : "Pending"}
                       </Badge>
                     )}
                   </div>
