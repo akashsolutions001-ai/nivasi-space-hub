@@ -589,8 +589,13 @@ function StudentMessPage() {
 
   const { data: messes = [] } = useMesses();
 
-  const messId: string = (myAdmission as any)?.messId ?? "";
+  const messId: string = myAdmission?.messId || "";
   const mess = messes.find((m) => m.id === messId);
+  const resolvedMessName =
+    mess?.serialNumber != null ? `Mess #${mess.serialNumber}` : mess?.messName || myAdmission?.messName || "Assigned Mess";
+
+  const hasMessInPackage =
+    myAdmission?.packageServices?.some((s) => s.toLowerCase().includes("mess")) || !!messId;
 
   const today = todayISTDateString();
   const { h, m } = currentISTTime();
@@ -639,7 +644,7 @@ function StudentMessPage() {
         studentEmail: myAdmission.email ?? "",
         admissionId: myAdmission.admissionId,
         messId,
-        messName: mess?.messName ?? "",
+        messName: resolvedMessName,
         date: today,
         lunchStatus: "pending",
         dinnerStatus: "pending",
@@ -652,7 +657,7 @@ function StudentMessPage() {
     } finally {
       setRecordLoading(false);
     }
-  }, [myAdmission, messId, mess, today]);
+  }, [myAdmission, messId, resolvedMessName, today]);
 
   useEffect(() => { loadRecord(); }, [loadRecord]);
 
@@ -735,8 +740,12 @@ function StudentMessPage() {
   });
 
   return (
-    <StudentShell title="My Mess" backTo="/student/dashboard">
-
+    <StudentShell
+      title="My Mess"
+      subtitle="Daily tiffin tracking, meal preferences, and special diet requests"
+      backTo="/student/dashboard"
+    >
+      <div className="space-y-6">
         {/* No admission */}
         {!myAdmission && (
           <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center">
@@ -748,215 +757,314 @@ function StudentMessPage() {
           </div>
         )}
 
+        {/* No mess assigned */}
         {myAdmission && !messId && (
-          <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center">
-            <UtensilsCrossed className="mx-auto mb-3 size-10 text-muted-foreground/40" />
-            <p className="font-semibold">Mess Not Assigned</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Please contact administration.
+          <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center space-y-2">
+            <UtensilsCrossed className="mx-auto mb-2 size-10 text-muted-foreground/40" />
+            <p className="font-semibold text-base">
+              {hasMessInPackage ? "Mess Included in Package" : "Mess Not Assigned"}
+            </p>
+            <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+              {hasMessInPackage
+                ? "Your admission package includes mess services. Your hostel manager or administrator will assign your mess shortly."
+                : "Please contact administration."}
             </p>
           </div>
         )}
 
         {myAdmission && messId && (
           <>
-            {/* Assigned Mess info */}
-            <div className="rounded-2xl border border-border bg-card p-5 shadow-soft space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Assigned Mess</p>
-              <h2 className="font-display text-lg font-bold">
-                {mess?.serialNumber != null ? `Mess #${mess.serialNumber}` : "Loading…"}
-              </h2>
-              {mess?.messDescription && (
-                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
-                  {mess.messDescription}
-                </p>
-              )}
-              {!mess?.messDescription && (
-                <p className="text-sm text-muted-foreground italic">No description provided.</p>
-              )}
-            </div>
-
-            {/* Today's Tiffin */}
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Today's Tiffin — {dateLabel}
-              </p>
-              {recordLoading ? (
-                <div className="space-y-3">
-                  <Skeleton className="h-40 rounded-2xl" />
-                  <Skeleton className="h-40 rounded-2xl" />
+            {/* Top KPI stats row */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+              <div className="rounded-2xl border border-border bg-card p-4 shadow-soft">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Assigned Mess</p>
+                <p className="text-base font-bold truncate mt-1">{resolvedMessName}</p>
+                <div className="mt-1.5 flex items-center gap-1.5">
+                  <span className="inline-block size-1.5 rounded-full bg-success" />
+                  <span className="text-[11px] text-success capitalize">{myAdmission.tiffinStatus || "Active"}</span>
                 </div>
-              ) : (
-                <div className="space-y-3">
-                  <MealCard
-                    meal="lunch"
-                    window={lunchWin}
-                    status={record?.lunchStatus ?? "pending"}
-                    returnStatus={record?.lunchReturnStatus}
-                    returnedTo={record?.lunchReturnedTo}
-                    returnedAt={record?.lunchReturnedAt}
-                    receivedAt={record?.lunchReceivedAt}
-                    otherReason={record?.lunchOtherReason}
-                    onReceived={() => handleReceived("lunch")}
-                    onDoNotWant={() => setDnwOpen({ meal: "lunch" })}
-                    onOther={() => setOtherOpen({ meal: "lunch" })}
-                    onMarkReturned={() => handleMarkReturned("lunch")}
-                    saving={saving === "lunch-received" || saving === "lunch-return"}
-                  />
-                  <MealCard
-                    meal="dinner"
-                    window={dinnerWin}
-                    status={record?.dinnerStatus ?? "pending"}
-                    returnStatus={record?.dinnerReturnStatus}
-                    returnedTo={record?.dinnerReturnedTo}
-                    returnedAt={record?.dinnerReturnedAt}
-                    receivedAt={record?.dinnerReceivedAt}
-                    otherReason={record?.dinnerOtherReason}
-                    onReceived={() => handleReceived("dinner")}
-                    onDoNotWant={() => setDnwOpen({ meal: "dinner" })}
-                    onOther={() => setOtherOpen({ meal: "dinner" })}
-                    onMarkReturned={() => handleMarkReturned("dinner")}
-                    saving={saving === "dinner-received" || saving === "dinner-return"}
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* Special Mess Request */}
-            <div className="rounded-2xl border border-border bg-card p-5 shadow-soft space-y-3">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Special Mess Request</p>
-                {activeRequest && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-7 gap-1 text-xs"
-                    onClick={() => { setEditingRequest(activeRequest); setRequestDialogOpen(true); }}
-                  >
-                    <Pencil className="size-3" /> Edit
-                  </Button>
-                )}
               </div>
 
-              {activeRequest ? (
-                <div className="rounded-xl bg-muted/40 px-3 py-2.5 space-y-1">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-[11px]">
-                      {REQUEST_LABELS[activeRequest.requestType]}
-                    </Badge>
-                    <Badge variant="outline" className="text-[11px] bg-success/10 text-success border-success/30">Active</Badge>
+              <div className="rounded-2xl border border-border bg-card p-4 shadow-soft">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Today's Date</p>
+                <p className="text-base font-bold truncate mt-1">{dateLabel}</p>
+                <p className="text-[11px] font-mono text-muted-foreground mt-1.5">{today}</p>
+              </div>
+
+              <div className="rounded-2xl border border-border bg-card p-4 shadow-soft">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Lunch Status</p>
+                <div className="mt-2">
+                  <TiffinStatusBadge status={record?.lunchStatus ?? "pending"} />
+                </div>
+                <p className="text-[11px] text-muted-foreground mt-1.5">
+                  1:00 PM – 2:00 PM
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-border bg-card p-4 shadow-soft">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Dinner Status</p>
+                <div className="mt-2">
+                  <TiffinStatusBadge status={record?.dinnerStatus ?? "pending"} />
+                </div>
+                <p className="text-[11px] text-muted-foreground mt-1.5">
+                  8:00 PM – 9:00 PM
+                </p>
+              </div>
+            </div>
+
+            {/* Main responsive layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              {/* Left Column (8 cols on lg) */}
+              <div className="lg:col-span-8 space-y-6">
+                {/* Today's Tiffin Meals */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <UtensilsCrossed className="size-4 text-primary" />
+                      <h2 className="font-display font-bold text-base">Today's Meals Tracker</h2>
+                    </div>
+                    <span className="text-xs text-muted-foreground">{dateLabel}</span>
                   </div>
-                  {activeRequest.description && (
-                    <p className="text-sm text-muted-foreground">{activeRequest.description}</p>
+
+                  {recordLoading ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Skeleton className="h-44 rounded-2xl" />
+                      <Skeleton className="h-44 rounded-2xl" />
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <MealCard
+                        meal="lunch"
+                        window={lunchWin}
+                        status={record?.lunchStatus ?? "pending"}
+                        returnStatus={record?.lunchReturnStatus}
+                        returnedTo={record?.lunchReturnedTo}
+                        returnedAt={record?.lunchReturnedAt}
+                        receivedAt={record?.lunchReceivedAt}
+                        otherReason={record?.lunchOtherReason}
+                        onReceived={() => handleReceived("lunch")}
+                        onDoNotWant={() => setDnwOpen({ meal: "lunch" })}
+                        onOther={() => setOtherOpen({ meal: "lunch" })}
+                        onMarkReturned={() => handleMarkReturned("lunch")}
+                        saving={saving === "lunch-received" || saving === "lunch-return"}
+                      />
+                      <MealCard
+                        meal="dinner"
+                        window={dinnerWin}
+                        status={record?.dinnerStatus ?? "pending"}
+                        returnStatus={record?.dinnerReturnStatus}
+                        returnedTo={record?.dinnerReturnedTo}
+                        returnedAt={record?.dinnerReturnedAt}
+                        receivedAt={record?.dinnerReceivedAt}
+                        otherReason={record?.dinnerOtherReason}
+                        onReceived={() => handleReceived("dinner")}
+                        onDoNotWant={() => setDnwOpen({ meal: "dinner" })}
+                        onOther={() => setOtherOpen({ meal: "dinner" })}
+                        onMarkReturned={() => handleMarkReturned("dinner")}
+                        saving={saving === "dinner-received" || saving === "dinner-return"}
+                      />
+                    </div>
                   )}
                 </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">No active request.</p>
-              )}
 
-              <Button
-                size="sm"
-                variant="outline"
-                className="w-full"
-                onClick={() => { setEditingRequest(null); setRequestDialogOpen(true); }}
-              >
-                {activeRequest ? "New Request" : "Submit a Request"}
-              </Button>
+                {/* Special Mess Request */}
+                <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-soft space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-display font-bold text-base">Special Meal Preference / Diet Request</h3>
+                      <p className="text-xs text-muted-foreground mt-0.5">Customize portion sizes or dietary preferences</p>
+                    </div>
+                    {activeRequest && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 gap-1 text-xs"
+                        onClick={() => { setEditingRequest(activeRequest); setRequestDialogOpen(true); }}
+                      >
+                        <Pencil className="size-3.5" /> Edit
+                      </Button>
+                    )}
+                  </div>
 
-              {/* Request History — inline below submit button */}
-              {requests.length > 0 && (
-                <div className="space-y-1 pt-1">
-                  <button
-                    className="flex w-full items-center justify-between text-xs text-muted-foreground pb-1"
-                    onClick={() => setRequestsOpen((v) => !v)}
+                  {activeRequest ? (
+                    <div className="rounded-xl bg-muted/40 p-3.5 space-y-1.5 border border-border/60">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-xs font-semibold">
+                          {REQUEST_LABELS[activeRequest.requestType]}
+                        </Badge>
+                        <Badge variant="outline" className="text-[10px] bg-success/10 text-success border-success/30">Active Preference</Badge>
+                      </div>
+                      {activeRequest.description && (
+                        <p className="text-sm text-foreground">"{activeRequest.description}"</p>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border border-dashed border-border/80 p-4 text-center">
+                      <p className="text-xs text-muted-foreground">No custom diet or quantity request active.</p>
+                    </div>
+                  )}
+
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full h-10 text-xs font-semibold"
+                    onClick={() => { setEditingRequest(null); setRequestDialogOpen(true); }}
                   >
-                    <span className="flex items-center gap-1.5">
-                      <History className="size-3" />
-                      History
-                    </span>
-                    {requestsOpen ? <ChevronUp className="size-3" /> : <ChevronDown className="size-3" />}
-                  </button>
-                  {requestsOpen && (
-                    <div className="divide-y divide-border rounded-xl border border-border overflow-hidden">
-                      {requests.map((req) => (
-                        <div key={req.id} className="px-3 py-2 space-y-0.5">
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <p className="text-xs text-muted-foreground">
-                                {req.createdAt ? formatISTTimestamp(req.createdAt) : "—"}
-                              </p>
-                              <Badge variant="outline" className="text-[10px]">
-                                {REQUEST_LABELS[req.requestType]}
-                              </Badge>
+                    {activeRequest ? "Change Request" : "Submit Special Meal Request"}
+                  </Button>
+
+                  {/* Request History */}
+                  {requests.length > 0 && (
+                    <div className="space-y-1.5 pt-2 border-t border-border">
+                      <button
+                        className="flex w-full items-center justify-between text-xs font-semibold text-muted-foreground hover:text-foreground py-1 transition-colors"
+                        onClick={() => setRequestsOpen((v) => !v)}
+                      >
+                        <span className="flex items-center gap-1.5">
+                          <History className="size-3.5 text-primary" />
+                          Previous Requests ({requests.length})
+                        </span>
+                        {requestsOpen ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
+                      </button>
+                      {requestsOpen && (
+                        <div className="divide-y divide-border rounded-xl border border-border overflow-hidden">
+                          {requests.map((req) => (
+                            <div key={req.id} className="px-3.5 py-2.5 space-y-1 hover:bg-muted/15 transition-colors">
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <p className="text-xs text-muted-foreground font-mono">
+                                    {req.createdAt ? formatISTTimestamp(req.createdAt) : "—"}
+                                  </p>
+                                  <Badge variant="outline" className="text-[10px]">
+                                    {REQUEST_LABELS[req.requestType]}
+                                  </Badge>
+                                </div>
+                                <button
+                                  onClick={() => handleDeleteRequest(req.id)}
+                                  disabled={deletingRequestId === req.id}
+                                  className="shrink-0 text-muted-foreground hover:text-destructive transition-colors disabled:opacity-40"
+                                  aria-label="Delete request"
+                                >
+                                  {deletingRequestId === req.id
+                                    ? <Loader2 className="size-3.5 animate-spin" />
+                                    : <Trash2 className="size-3.5" />}
+                                </button>
+                              </div>
+                              {req.description && <p className="text-xs text-foreground italic">"{req.description}"</p>}
                             </div>
-                            <button
-                              onClick={() => handleDeleteRequest(req.id)}
-                              disabled={deletingRequestId === req.id}
-                              className="shrink-0 text-muted-foreground hover:text-destructive transition-colors disabled:opacity-40"
-                              aria-label="Delete request"
-                            >
-                              {deletingRequestId === req.id
-                                ? <Loader2 className="size-3 animate-spin" />
-                                : <Trash2 className="size-3" />}
-                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Right Column (4 cols on lg) */}
+              <div className="lg:col-span-4 space-y-6">
+                {/* Assigned Mess Details Card */}
+                <div className="rounded-2xl border border-border bg-card p-5 shadow-soft space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Mess Provider</p>
+                    <Badge
+                      variant="outline"
+                      className={`text-[11px] capitalize ${
+                        myAdmission.tiffinStatus === "active"
+                          ? "border-success/30 bg-success/10 text-success"
+                          : myAdmission.tiffinStatus === "paused"
+                          ? "border-warning/30 bg-warning/10 text-warning-foreground"
+                          : "border-destructive/20 bg-destructive/10 text-destructive"
+                      }`}
+                    >
+                      {myAdmission.tiffinStatus || "active"}
+                    </Badge>
+                  </div>
+                  <div>
+                    <h2 className="font-display text-lg font-bold">
+                      {resolvedMessName}
+                    </h2>
+                    {mess?.messDescription && (
+                      <p className="text-xs text-muted-foreground leading-relaxed mt-1">
+                        {mess.messDescription}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Meal Timings */}
+                  <div className="rounded-xl bg-muted/30 p-3 space-y-2 border border-border/60">
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Service Windows</p>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-medium text-foreground">🍱 Lunch</span>
+                      <span className="text-muted-foreground font-mono">1:00 PM – 2:00 PM</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-medium text-foreground">🍽 Dinner</span>
+                      <span className="text-muted-foreground font-mono">8:00 PM – 9:00 PM</span>
+                    </div>
+                  </div>
+
+                  {/* Leave / Do Not Want shortcut */}
+                  <Button
+                    variant="outline"
+                    className="w-full text-xs font-semibold h-10 border-primary/30 text-primary hover:bg-primary/5"
+                    onClick={() => setDnwOpen({ meal: "both" })}
+                  >
+                    <CalendarDays className="size-3.5 mr-1.5" />
+                    Schedule Leave / Do Not Want
+                  </Button>
+                </div>
+
+                {/* Tiffin History */}
+                <div className="rounded-2xl border border-border bg-card shadow-soft overflow-hidden">
+                  <button
+                    className="flex w-full items-center justify-between px-5 py-3.5 hover:bg-muted/30 transition-colors"
+                    onClick={() => setHistoryOpen((v) => !v)}
+                  >
+                    <div className="flex items-center gap-2">
+                      <CalendarDays className="size-4 text-primary" />
+                      <span className="text-sm font-bold">Past Tiffin History</span>
+                    </div>
+                    {historyOpen ? <ChevronUp className="size-4 text-muted-foreground" /> : <ChevronDown className="size-4 text-muted-foreground" />}
+                  </button>
+                  {historyOpen && (
+                    <div className="border-t border-border divide-y divide-border max-h-80 overflow-y-auto">
+                      {histLoading && <div className="px-5 py-4"><Skeleton className="h-16 rounded-xl" /></div>}
+                      {!histLoading && history.length === 0 && (
+                        <p className="px-5 py-4 text-xs text-muted-foreground text-center">No past meal logs yet.</p>
+                      )}
+                      {!histLoading && history.map((rec) => (
+                        <div key={rec.id} className="px-5 py-3 space-y-2 hover:bg-muted/15 transition-colors">
+                          <p className="text-xs font-semibold text-foreground">
+                            {formatISTDate(rec.date)}
+                          </p>
+                          <div className="grid grid-cols-2 gap-2">
+                            {(["lunch", "dinner"] as const).map((m) => {
+                              const st = m === "lunch" ? rec.lunchStatus : rec.dinnerStatus;
+                              const ret = m === "lunch" ? rec.lunchReturnStatus : rec.dinnerReturnStatus;
+                              return (
+                                <div key={m} className="rounded-lg bg-muted/40 px-2.5 py-1.5 space-y-1">
+                                  <p className="text-[10px] font-medium capitalize text-muted-foreground">{m}</p>
+                                  <TiffinStatusBadge status={st} />
+                                  {(st === "received") && <ReturnStatusBadge status={ret} />}
+                                  {st === "other" && (
+                                    <p className="text-[10px] text-muted-foreground truncate">
+                                      {m === "lunch" ? rec.lunchOtherReason : rec.dinnerOtherReason}
+                                    </p>
+                                  )}
+                                </div>
+                              );
+                            })}
                           </div>
-                          {req.description && <p className="text-sm">"{req.description}"</p>}
                         </div>
                       ))}
                     </div>
                   )}
                 </div>
-              )}
-            </div>
-
-            {/* Tiffin History */}
-            <div className="rounded-2xl border border-border bg-card shadow-soft overflow-hidden">
-              <button
-                className="flex w-full items-center justify-between px-5 py-3.5"
-                onClick={() => setHistoryOpen((v) => !v)}
-              >
-                <div className="flex items-center gap-2">
-                  <CalendarDays className="size-4 text-muted-foreground" />
-                  <span className="text-sm font-semibold">Tiffin History</span>
-                </div>
-                {historyOpen ? <ChevronUp className="size-4 text-muted-foreground" /> : <ChevronDown className="size-4 text-muted-foreground" />}
-              </button>
-              {historyOpen && (
-                <div className="border-t border-border divide-y divide-border">
-                  {histLoading && <div className="px-5 py-4"><Skeleton className="h-16 rounded-xl" /></div>}
-                  {!histLoading && history.length === 0 && (
-                    <p className="px-5 py-4 text-sm text-muted-foreground">No history yet.</p>
-                  )}
-                  {!histLoading && history.map((rec) => (
-                    <div key={rec.id} className="px-5 py-3 space-y-2">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                        {formatISTDate(rec.date)}
-                      </p>
-                      <div className="grid grid-cols-2 gap-2">
-                        {(["lunch", "dinner"] as const).map((m) => {
-                          const st = m === "lunch" ? rec.lunchStatus : rec.dinnerStatus;
-                          const ret = m === "lunch" ? rec.lunchReturnStatus : rec.dinnerReturnStatus;
-                          return (
-                            <div key={m} className="rounded-lg bg-muted/30 px-2.5 py-2 space-y-1">
-                              <p className="text-[11px] font-medium capitalize text-muted-foreground">{m}</p>
-                              <TiffinStatusBadge status={st} />
-                              {(st === "received") && <ReturnStatusBadge status={ret} />}
-                              {st === "other" && (
-                                <p className="text-[11px] text-muted-foreground truncate">
-                                  {m === "lunch" ? rec.lunchOtherReason : rec.dinnerOtherReason}
-                                </p>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+              </div>
             </div>
           </>
         )}
+      </div>
 
       {/* Dialogs */}
       {dnwOpen && myAdmission && (

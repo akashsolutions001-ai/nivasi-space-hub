@@ -4,7 +4,7 @@ import { u as require_react } from "../_libs/@floating-ui/react-dom+[...].mjs";
 import { F as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
 import { a as signInWithEmailAndPassword, i as onAuthStateChanged, o as signInWithPopup, s as signOut, t as GoogleAuthProvider } from "../_libs/firebase__auth.mjs";
 import "../_libs/firebase.mjs";
-import { F as doc, m as getDoc } from "../_libs/@firebase/firestore+[...].mjs";
+import { I as doc, m as getDoc } from "../_libs/@firebase/firestore+[...].mjs";
 import { r as getFirebaseAuth, t as getDb } from "./firebase-7zuyzO2h.mjs";
 //#region node_modules/.nitro/vite/services/ssr/assets/auth-DCFmY9CZ.js
 var import_react = /* @__PURE__ */ __toESM(require_react());

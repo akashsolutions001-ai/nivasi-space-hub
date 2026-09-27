@@ -196,11 +196,12 @@ export function useDeliveriesForDate(messId: string | null, date?: string) {
   });
 }
 
-export function useDeliveriesForStudent(studentId: string | null) {
+export function useDeliveriesForStudent(studentId: string | null, admissionId?: string) {
   return useQuery({
-    queryKey: ["deliveries", "student", studentId],
-    queryFn: () => fetchDeliveriesForStudent(studentId!),
+    queryKey: ["deliveries", "student", studentId, admissionId],
+    queryFn: () => fetchDeliveriesForStudent(studentId!, 60, admissionId),
     enabled: isFirebaseConfigured && !!studentId,
+    refetchInterval: 3000,
   });
 }
 
@@ -332,11 +333,12 @@ export function useLaundryPickupSummary(laundryId: string | null, date?: string)
   });
 }
 
-export function useLaundryPickupsForStudent(studentId: string | null) {
+export function useLaundryPickupsForStudent(studentId: string | null, admissionId?: string) {
   return useQuery({
-    queryKey: ["laundryPickups", "student", studentId],
-    queryFn: () => fetchLaundryPickupsForStudent(studentId!),
+    queryKey: ["laundryPickups", "student", studentId, admissionId],
+    queryFn: () => fetchLaundryPickupsForStudent(studentId!, admissionId),
     enabled: isFirebaseConfigured && !!studentId,
+    refetchInterval: 3000,
   });
 }
 
@@ -371,6 +373,7 @@ export function useMessRecord(studentId: string | null, date: string) {
     queryKey: ["messRecord", studentId, date],
     queryFn: () => fetchMessRecord(studentId!, date),
     enabled: isFirebaseConfigured && !!studentId,
+    refetchInterval: 3000,
   });
 }
 
@@ -379,6 +382,7 @@ export function useMessRecordsForDate(messId: string | null, date: string) {
     queryKey: ["messRecords", "date", messId, date],
     queryFn: () => fetchMessRecordsForDate(messId!, date),
     enabled: isFirebaseConfigured && !!messId,
+    refetchInterval: 4000,
   });
 }
 
@@ -387,6 +391,7 @@ export function useMessRecordsForStudent(studentId: string | null) {
     queryKey: ["messRecords", "student", studentId],
     queryFn: () => fetchMessRecordsForStudent(studentId!),
     enabled: isFirebaseConfigured && !!studentId,
+    refetchInterval: 4000,
   });
 }
 
@@ -395,6 +400,7 @@ export function useMessRequestsForStudent(studentId: string | null) {
     queryKey: ["messRequests", "student", studentId],
     queryFn: () => fetchMessRequestsForStudent(studentId!),
     enabled: isFirebaseConfigured && !!studentId,
+    refetchInterval: 4000,
   });
 }
 
@@ -403,6 +409,7 @@ export function useMessRequestsForMess(messId: string | null) {
     queryKey: ["messRequests", "mess", messId],
     queryFn: () => fetchMessRequestsForMess(messId!),
     enabled: isFirebaseConfigured && !!messId,
+    refetchInterval: 4000,
   });
 }
 
@@ -420,6 +427,7 @@ export function useStudentLaundryRecords(studentId: string | null) {
     queryKey: ["studentLaundryRecords", studentId],
     queryFn: () => fetchStudentLaundryRecords(studentId!),
     enabled: isFirebaseConfigured && !!studentId,
+    refetchInterval: 4000,
   });
 }
 

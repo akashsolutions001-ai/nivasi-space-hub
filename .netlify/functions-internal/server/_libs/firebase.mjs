@@ -1,7 +1,7 @@
 import { r as __exportAll } from "../_runtime.mjs";
 import { c as registerVersion } from "./@firebase/app+[...].mjs";
 import "./firebase__auth.mjs";
-import { A as FirestoreError, C as AbstractUserDataWriter, D as DocumentReference, E as DocumentKey, F as doc, I as ensureFirestoreConfigured, M as Timestamp, N as cast, O as FieldPath, S as where, T as Bytes, _ as orderBy, a as QueryFieldFilterConstraint, b as setDoc, c as QuerySnapshot, d as addDoc, f as deleteDoc, g as limit, h as getDocs, i as QueryDocumentSnapshot, j as Query, k as Firestore, l as SnapshotMetadata, m as getDoc, n as QueryCompositeFilterConstraint, o as QueryLimitConstraint, p as executeWrite, r as QueryConstraint, s as QueryOrderByConstraint, t as DocumentSnapshot, u as Transaction, v as query, w as AutoId, x as updateDoc, y as runTransaction } from "./@firebase/firestore+[...].mjs";
+import { A as Firestore, C as where, D as DocumentKey, E as Bytes, I as doc, L as ensureFirestoreConfigured, M as Query, N as Timestamp, O as DocumentReference, P as cast, S as updateDoc, T as AutoId, _ as onSnapshot, a as QueryFieldFilterConstraint, b as runTransaction, c as QuerySnapshot, d as addDoc, f as deleteDoc, g as limit, h as getDocs, i as QueryDocumentSnapshot, j as FirestoreError, k as FieldPath, l as SnapshotMetadata, m as getDoc, n as QueryCompositeFilterConstraint, o as QueryLimitConstraint, p as executeWrite, r as QueryConstraint, s as QueryOrderByConstraint, t as DocumentSnapshot, u as Transaction, v as orderBy, w as AbstractUserDataWriter, x as setDoc, y as query } from "./@firebase/firestore+[...].mjs";
 import "./firebase__storage.mjs";
 //#region node_modules/firebase/firestore/dist/index.mjs
 var dist_exports = /* @__PURE__ */ __exportAll({
@@ -35,6 +35,7 @@ var dist_exports = /* @__PURE__ */ __exportAll({
 	getDoc: () => getDoc,
 	getDocs: () => getDocs,
 	limit: () => limit,
+	onSnapshot: () => onSnapshot,
 	orderBy: () => orderBy,
 	query: () => query,
 	runTransaction: () => runTransaction,

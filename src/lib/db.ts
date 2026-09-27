@@ -1033,17 +1033,39 @@ export async function fetchDeliveriesForDate(messId: string, date: string): Prom
 export async function fetchDeliveriesForStudent(
   studentId: string,
   limitCount = 60,
+  admissionId?: string,
 ): Promise<Delivery[]> {
   try {
     const snap = await getDocs(
       query(
         collection(getDb(), "deliveries"),
         where("studentId", "==", studentId),
-        orderBy("date", "desc"),
-        limit(limitCount),
       ),
     );
-    return snap.docs.map(mapDelivery);
+    const docs = snap.docs.map(mapDelivery);
+
+    if (admissionId && admissionId !== studentId) {
+      try {
+        const snap2 = await getDocs(
+          query(
+            collection(getDb(), "deliveries"),
+            where("admissionId", "==", admissionId),
+          ),
+        );
+        for (const docSnap of snap2.docs) {
+          const item = mapDelivery(docSnap);
+          if (!docs.some((x) => x.id === item.id)) {
+            docs.push(item);
+          }
+        }
+      } catch (err) {
+        console.warn("[firestore] fallback fetchDeliveriesForStudent by admissionId warning:", err);
+      }
+    }
+
+    return docs
+      .sort((a, b) => b.date.localeCompare(a.date))
+      .slice(0, limitCount);
   } catch (error) {
     console.error("[firestore] fetchDeliveriesForStudent", error);
     return [];
@@ -1605,7 +1627,10 @@ export async function fetchLaundryPickupsForDate(laundryId: string, date: string
 }
 
 /** Fetch all laundry pickups & deliveries for a specific student across all dates */
-export async function fetchLaundryPickupsForStudent(studentId: string): Promise<LaundryPickup[]> {
+export async function fetchLaundryPickupsForStudent(
+  studentId: string,
+  admissionId?: string,
+): Promise<LaundryPickup[]> {
   try {
     const snap = await getDocs(
       query(
@@ -1613,9 +1638,28 @@ export async function fetchLaundryPickupsForStudent(studentId: string): Promise<
         where("studentId", "==", studentId),
       ),
     );
-    return snap.docs
-      .map(mapLaundryPickup)
-      .sort((a, b) => b.date.localeCompare(a.date));
+    const docs = snap.docs.map(mapLaundryPickup);
+
+    if (admissionId && admissionId !== studentId) {
+      try {
+        const snap2 = await getDocs(
+          query(
+            collection(getDb(), "laundryPickups"),
+            where("admissionId", "==", admissionId),
+          ),
+        );
+        for (const docSnap of snap2.docs) {
+          const item = mapLaundryPickup(docSnap);
+          if (!docs.some((x) => x.id === item.id)) {
+            docs.push(item);
+          }
+        }
+      } catch (err) {
+        console.warn("[firestore] fallback fetchLaundryPickupsForStudent by admissionId warning:", err);
+      }
+    }
+
+    return docs.sort((a, b) => b.date.localeCompare(a.date));
   } catch (error) {
     console.error("[firestore] fetchLaundryPickupsForStudent", error);
     return [];
@@ -1976,11 +2020,12 @@ export async function fetchMessRecordsForStudent(
       query(
         collection(getDb(), "messRecords"),
         where("studentId", "==", studentId),
-        orderBy("date", "desc"),
-        limit(limitCount),
       ),
     );
-    return snap.docs.map(mapMessRecord);
+    return snap.docs
+      .map(mapMessRecord)
+      .sort((a, b) => b.date.localeCompare(a.date))
+      .slice(0, limitCount);
   } catch (error) {
     console.error("[firestore] fetchMessRecordsForStudent", error);
     return [];
@@ -2027,11 +2072,12 @@ export async function fetchDoNotWantForStudent(studentId: string): Promise<DoNot
       query(
         collection(getDb(), "doNotWantRecords"),
         where("studentId", "==", studentId),
-        orderBy("fromDate", "desc"),
-        limit(30),
       ),
     );
-    return snap.docs.map(mapDoNotWant);
+    return snap.docs
+      .map(mapDoNotWant)
+      .sort((a, b) => b.fromDate.localeCompare(a.fromDate))
+      .slice(0, 30);
   } catch (error) {
     console.error("[firestore] fetchDoNotWantForStudent", error);
     return [];
@@ -2112,11 +2158,12 @@ export async function fetchMessRequestsForStudent(studentId: string): Promise<Me
       query(
         collection(getDb(), "messRequests"),
         where("studentId", "==", studentId),
-        orderBy("createdAt", "desc"),
-        limit(20),
       ),
     );
-    return snap.docs.map(mapMessRequest);
+    return snap.docs
+      .map(mapMessRequest)
+      .sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0))
+      .slice(0, 20);
   } catch (error) {
     console.error("[firestore] fetchMessRequestsForStudent", error);
     return [];
@@ -2221,11 +2268,12 @@ export async function fetchStudentLaundryRecords(
       query(
         collection(getDb(), "studentLaundryRecords"),
         where("studentId", "==", studentId),
-        orderBy("weekStart", "desc"),
-        limit(limitCount),
       ),
     );
-    return snap.docs.map(mapStudentLaundryRecord);
+    return snap.docs
+      .map(mapStudentLaundryRecord)
+      .sort((a, b) => b.weekStart.localeCompare(a.weekStart))
+      .slice(0, limitCount);
   } catch (error) {
     console.error("[firestore] fetchStudentLaundryRecords", error);
     return [];

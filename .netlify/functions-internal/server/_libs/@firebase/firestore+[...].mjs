@@ -49602,6 +49602,19 @@ async function getEventManager(client) {
 	eventManager.onLastRemoteStoreUnlisten = triggerRemoteStoreUnlisten.bind(null, onlineComponentProvider.syncEngine);
 	return eventManager;
 }
+function firestoreClientListen(client, query, options, observer) {
+	const wrappedObserver = new AsyncObserver(observer);
+	const listener = new QueryListener(query, wrappedObserver, options);
+	client.asyncQueue.enqueueAndForget(async () => {
+		return eventManagerListen(await getEventManager(client), listener);
+	});
+	return () => {
+		wrappedObserver.mute();
+		client.asyncQueue.enqueueAndForget(async () => {
+			return eventManagerUnlisten(await getEventManager(client), listener);
+		});
+	};
+}
 function firestoreClientGetDocumentViaSnapshotListener(client, key, options = {}) {
 	const deferred = new Deferred();
 	client.asyncQueue.enqueueAndForget(async () => {
@@ -51471,6 +51484,23 @@ function runTransaction(firestore, updateFunction, options) {
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+function isPartialObserver(obj) {
+	return implementsAnyMethods(obj, [
+		"next",
+		"error",
+		"complete"
+	]);
+}
+/**
+* Returns true if obj is an object and contains at least one of the specified
+* methods.
+*/
+function implementsAnyMethods(obj, methods) {
+	if (typeof obj !== "object" || obj === null) return false;
+	const object = obj;
+	for (const method of methods) if (method in object && typeof object[method] === "function") return true;
+	return false;
+}
 /**
 * @license
 * Copyright 2020 Google LLC
@@ -51585,6 +51615,53 @@ function addDoc(reference, data) {
 	const convertedValue = applyFirestoreDataConverter(reference.converter, data);
 	return executeWrite(firestore, [parseSetData(newUserDataReader(reference.firestore), "addDoc", docRef._key, convertedValue, reference.converter !== null, {}).toMutation(docRef._key, Precondition.exists(false))]).then(() => docRef);
 }
+function onSnapshot(reference, ...args) {
+	reference = getModularInstance(reference);
+	let options = {
+		includeMetadataChanges: false,
+		source: "default"
+	};
+	let currArg = 0;
+	if (typeof args[currArg] === "object" && !isPartialObserver(args[currArg])) options = args[currArg++];
+	const internalOptions = {
+		includeMetadataChanges: options.includeMetadataChanges,
+		source: options.source
+	};
+	if (isPartialObserver(args[currArg])) {
+		const userObserver = args[currArg];
+		args[currArg] = userObserver.next?.bind(userObserver);
+		args[currArg + 1] = userObserver.error?.bind(userObserver);
+		args[currArg + 2] = userObserver.complete?.bind(userObserver);
+	}
+	let observer;
+	let firestore;
+	let internalQuery;
+	if (reference instanceof DocumentReference) {
+		firestore = cast(reference.firestore, Firestore);
+		internalQuery = newQueryForPath(reference._key.path);
+		observer = {
+			next: (snapshot) => {
+				if (args[currArg]) args[currArg](convertToDocSnapshot(firestore, reference, snapshot));
+			},
+			error: args[currArg + 1],
+			complete: args[currArg + 2]
+		};
+	} else {
+		const query = cast(reference, Query);
+		firestore = cast(query.firestore, Firestore);
+		internalQuery = query._query;
+		const userDataWriter = new ExpUserDataWriter(firestore);
+		observer = {
+			next: (snapshot) => {
+				if (args[currArg]) args[currArg](new QuerySnapshot(firestore, userDataWriter, query, snapshot));
+			},
+			error: args[currArg + 1],
+			complete: args[currArg + 2]
+		};
+		validateHasExplicitOrderByForLimitToLast(reference._query);
+	}
+	return firestoreClientListen(ensureFirestoreConfigured(firestore), internalQuery, internalOptions, observer);
+}
 /**
 * Locally writes `mutations` on the async queue.
 * @internal
@@ -51682,4 +51759,4 @@ function convertToDocSnapshot(firestore, ref, snapshot) {
 */
 registerFirestore("node");
 //#endregion
-export { FirestoreError as A, AbstractUserDataWriter as C, DocumentReference as D, DocumentKey as E, doc as F, ensureFirestoreConfigured as I, getFirestore as L, Timestamp as M, cast as N, FieldPath as O, collection as P, serverTimestamp as R, where as S, Bytes as T, orderBy as _, QueryFieldFilterConstraint as a, setDoc as b, QuerySnapshot as c, addDoc as d, deleteDoc as f, limit as g, getDocs as h, QueryDocumentSnapshot as i, Query as j, Firestore as k, SnapshotMetadata as l, getDoc as m, QueryCompositeFilterConstraint as n, QueryLimitConstraint as o, executeWrite as p, QueryConstraint as r, QueryOrderByConstraint as s, DocumentSnapshot as t, Transaction as u, query as v, AutoId as w, updateDoc as x, runTransaction as y };
+export { Firestore as A, where as C, DocumentKey as D, Bytes as E, collection as F, doc as I, ensureFirestoreConfigured as L, Query as M, Timestamp as N, DocumentReference as O, cast as P, getFirestore as R, updateDoc as S, AutoId as T, onSnapshot as _, QueryFieldFilterConstraint as a, runTransaction as b, QuerySnapshot as c, addDoc as d, deleteDoc as f, limit as g, getDocs as h, QueryDocumentSnapshot as i, FirestoreError as j, FieldPath as k, SnapshotMetadata as l, getDoc as m, QueryCompositeFilterConstraint as n, QueryLimitConstraint as o, executeWrite as p, QueryConstraint as r, QueryOrderByConstraint as s, DocumentSnapshot as t, Transaction as u, orderBy as v, AbstractUserDataWriter as w, setDoc as x, query as y, serverTimestamp as z };
