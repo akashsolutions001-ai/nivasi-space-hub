@@ -5,9 +5,11 @@ import {
   ArrowLeft, Phone, MapPin, Search, UtensilsCrossed,
   CheckCircle2, Clock, XCircle, SkipForward, Pencil,
   RotateCcw, AlertCircle, MessageSquare, ChevronDown, ChevronUp,
-  Loader2, FileText,
+  Loader2, FileText, UserMinus,
 } from "lucide-react";
 import { toast } from "sonner";
+
+import { useIsAdmin } from "@/lib/auth";
 
 import { AdminShell } from "@/components/nivasi/admin-shell";
 import { Button } from "@/components/ui/button";
@@ -26,7 +28,7 @@ import {
   useMesses, useAdmissions, useDeliveriesForDate, useDeliverySummary,
   useRooms, useProperties, useMessRecordsForDate, useMessRequestsForMess,
 } from "@/lib/hooks";
-import { upsertDelivery, todayDateString, todayISTDateString, updateMess } from "@/lib/db";
+import { upsertDelivery, todayDateString, todayISTDateString, updateMess, unassignStudentFromMess } from "@/lib/db";
 import type { Admission, DeliveryStatus, MessRecord, MessRequest } from "@/lib/types";
 
 export const Route = createFileRoute("/admin/mess/$messId")({
@@ -318,6 +320,25 @@ function MessStudentsPage() {
   const [tiffinFilter, setTiffinFilter] = useState("all");
   const [updatingKey, setUpdatingKey] = useState<string | null>(null);
   const [descDialogOpen, setDescDialogOpen] = useState(false);
+  const [unassigningId, setUnassigningId] = useState<string | null>(null);
+
+  const isAdmin = useIsAdmin();
+
+  async function handleUnassign(student: Admission) {
+    if (!window.confirm(`Are you sure you want to unassign ${student.fullName} from ${mess?.messName ?? "this mess"}?`)) {
+      return;
+    }
+    setUnassigningId(student.id);
+    try {
+      await unassignStudentFromMess(student.id);
+      await qc.invalidateQueries({ queryKey: ["admissions"] });
+      toast.success(`${student.fullName} unassigned from mess.`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not unassign student.");
+    } finally {
+      setUnassigningId(null);
+    }
+  }
 
   const filtered = students.filter((s) => {
     const matchSearch = !search ||
@@ -533,6 +554,27 @@ function MessStudentsPage() {
                   record={messRecords.find((r) => r.studentId === student.id)}
                   requests={messRequests}
                 />
+
+                {/* Unassign Mess button — Only visible to Admins, not Employees */}
+                {isAdmin && (
+                  <div className="mt-2.5 pt-2.5 border-t border-dashed border-border/80 flex items-center justify-between">
+                    <span className="text-[11px] text-muted-foreground font-medium">Mess Assignment</span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={unassigningId === student.id}
+                      onClick={() => handleUnassign(student)}
+                      className="h-7 px-2.5 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive border-destructive/20 gap-1.5"
+                    >
+                      {unassigningId === student.id ? (
+                        <Loader2 className="size-3 animate-spin" />
+                      ) : (
+                        <UserMinus className="size-3" />
+                      )}
+                      Unassign Mess
+                    </Button>
+                  </div>
+                )}
               </div>
             );
           })

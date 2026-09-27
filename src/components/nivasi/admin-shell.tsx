@@ -12,6 +12,7 @@ import {
   UtensilsCrossed,
   WashingMachine,
   ArrowDownCircle,
+  FileSpreadsheet,
 } from "lucide-react";
 
 import { NivasiLogo } from "./logo";
@@ -31,6 +32,7 @@ const NAV = [
   { label: "Mess",       to: "/admin/mess",        icon: UtensilsCrossed },
   { label: "Laundry",    to: "/admin/laundry",     icon: WashingMachine },
   { label: "Payouts",    to: "/admin/payouts",     icon: ArrowDownCircle },
+  { label: "Reports",    to: "/admin/reports",     icon: FileSpreadsheet },
   { label: "Settings",   to: "/admin/settings",    icon: Settings },
 ] as const;
 

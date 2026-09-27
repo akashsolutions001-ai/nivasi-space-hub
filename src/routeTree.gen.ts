@@ -15,6 +15,7 @@ import { Route as AdminLoginRouteImport } from './routes/admin.login'
 import { Route as AdminPackagesRouteImport } from './routes/admin.packages'
 import { Route as AdminPayoutsRouteImport } from './routes/admin.payouts'
 import { Route as AdminPropertiesRouteImport } from './routes/admin.properties'
+import { Route as AdminReportsRouteImport } from './routes/admin.reports'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as EmployeeDashboardRouteImport } from './routes/employee.dashboard'
 import { Route as EmployeeDeliveryRouteImport } from './routes/employee.delivery'
@@ -67,6 +68,11 @@ const AdminPayoutsRoute = AdminPayoutsRouteImport.update({
 const AdminPropertiesRoute = AdminPropertiesRouteImport.update({
   id: '/admin/properties',
   path: '/admin/properties',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminReportsRoute = AdminReportsRouteImport.update({
+  id: '/admin/reports',
+  path: '/admin/reports',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminSettingsRoute = AdminSettingsRouteImport.update({
@@ -194,6 +200,7 @@ export interface FileRoutesByFullPath {
   '/admin/packages': typeof AdminPackagesRoute
   '/admin/payouts': typeof AdminPayoutsRoute
   '/admin/properties': typeof AdminPropertiesRoute
+  '/admin/reports': typeof AdminReportsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/employee/dashboard': typeof EmployeeDashboardRoute
   '/employee/delivery': typeof EmployeeDeliveryRoute
@@ -225,6 +232,7 @@ export interface FileRoutesByTo {
   '/admin/packages': typeof AdminPackagesRoute
   '/admin/payouts': typeof AdminPayoutsRoute
   '/admin/properties': typeof AdminPropertiesRoute
+  '/admin/reports': typeof AdminReportsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/employee/dashboard': typeof EmployeeDashboardRoute
   '/employee/delivery': typeof EmployeeDeliveryRoute
@@ -257,6 +265,7 @@ export interface FileRoutesById {
   '/admin/packages': typeof AdminPackagesRoute
   '/admin/payouts': typeof AdminPayoutsRoute
   '/admin/properties': typeof AdminPropertiesRoute
+  '/admin/reports': typeof AdminReportsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/employee/dashboard': typeof EmployeeDashboardRoute
   '/employee/delivery': typeof EmployeeDeliveryRoute
@@ -290,6 +299,7 @@ export interface FileRouteTypes {
     | '/admin/packages'
     | '/admin/payouts'
     | '/admin/properties'
+    | '/admin/reports'
     | '/admin/settings'
     | '/employee/dashboard'
     | '/employee/delivery'
@@ -321,6 +331,7 @@ export interface FileRouteTypes {
     | '/admin/packages'
     | '/admin/payouts'
     | '/admin/properties'
+    | '/admin/reports'
     | '/admin/settings'
     | '/employee/dashboard'
     | '/employee/delivery'
@@ -352,6 +363,7 @@ export interface FileRouteTypes {
     | '/admin/packages'
     | '/admin/payouts'
     | '/admin/properties'
+    | '/admin/reports'
     | '/admin/settings'
     | '/employee/dashboard'
     | '/employee/delivery'
@@ -384,6 +396,7 @@ export interface RootRouteChildren {
   AdminPackagesRoute: typeof AdminPackagesRoute
   AdminPayoutsRoute: typeof AdminPayoutsRoute
   AdminPropertiesRoute: typeof AdminPropertiesRoute
+  AdminReportsRoute: typeof AdminReportsRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   EmployeeDashboardRoute: typeof EmployeeDashboardRoute
   EmployeeDeliveryRoute: typeof EmployeeDeliveryRoute
@@ -450,6 +463,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/properties'
       fullPath: '/admin/properties'
       preLoaderRoute: typeof AdminPropertiesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/reports': {
+      id: '/admin/reports'
+      path: '/admin/reports'
+      fullPath: '/admin/reports'
+      preLoaderRoute: typeof AdminReportsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/settings': {
@@ -635,6 +655,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminPackagesRoute: AdminPackagesRoute,
   AdminPayoutsRoute: AdminPayoutsRoute,
   AdminPropertiesRoute: AdminPropertiesRoute,
+  AdminReportsRoute: AdminReportsRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   EmployeeDashboardRoute: EmployeeDashboardRoute,
   EmployeeDeliveryRoute: EmployeeDeliveryRoute,

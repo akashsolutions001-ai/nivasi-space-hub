@@ -4,7 +4,7 @@ import { _ as useNavigate, g as Link, l as useRouterState } from "../_libs/@tans
 import { F as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
 import { r as cn, t as Button } from "./button-CCQEfgNs.mjs";
 import { r as useStudentAuth } from "./studentAuth-D19cUah4.mjs";
-import { I as LogOut, P as Menu, V as House, i as WashingMachine, o as UtensilsCrossed, pt as ArrowLeft, rt as ChevronRight, z as LayoutDashboard } from "../_libs/lucide-react.mjs";
+import { I as Menu, R as LogOut, U as House, V as LayoutDashboard, at as ChevronRight, ht as ArrowLeft, i as WashingMachine, o as UtensilsCrossed } from "../_libs/lucide-react.mjs";
 import { a as SheetTitle, n as Sheet, r as SheetContent, t as NivasiLogo } from "./sheet-BQfzzsld.mjs";
 import { t as Badge } from "./badge-Bt-nVIZo.mjs";
 //#region node_modules/.nitro/vite/services/ssr/assets/student-shell-DhvnwOHB.js
