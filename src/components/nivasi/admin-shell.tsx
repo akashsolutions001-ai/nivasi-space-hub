@@ -15,6 +15,7 @@ import {
   FileSpreadsheet,
   CalendarOff,
   UserCheck,
+  ClipboardCheck,
 } from "lucide-react";
 
 import { NivasiLogo } from "./logo";
@@ -30,6 +31,7 @@ import { cn } from "@/lib/utils";
 const NAV = [
   { label: "Dashboard",        to: "/admin/dashboard",        icon: LayoutDashboard },
   { label: "Admissions",       to: "/admin/admissions",       icon: Users },
+  { label: "Mess Headcount",   to: "/admin/student-headcount", icon: ClipboardCheck },
   { label: "Leave Requests",   to: "/admin/leaves",           icon: CalendarOff, id: "leaves" },
   { label: "Profile Requests", to: "/admin/profile-requests", icon: UserCheck,   id: "profiles" },
   { label: "Properties",       to: "/admin/properties",       icon: Building2 },
@@ -54,8 +56,13 @@ function NavLinks({ onNavigate }: { onNavigate?: (() => void) | undefined }) {
 
   // Define employee-specific navigation items
   const employeeNav = [
-    // Mess employees see Mess tab, Laundry employees see Laundry tab
-    ...(isMessEmployee ? [{ label: "Mess", to: "/admin/mess", icon: UtensilsCrossed }] : []),
+    // Mess employees see Mess tab & Mess Headcount, Laundry employees see Laundry tab
+    ...(isMessEmployee
+      ? [
+          { label: "Mess", to: "/admin/mess", icon: UtensilsCrossed },
+          { label: "Mess Headcount", to: "/admin/student-headcount", icon: ClipboardCheck },
+        ]
+      : []),
     ...(isLaundryEmployee ? [{ label: "Laundry", to: "/admin/laundry", icon: WashingMachine }] : []),
     // Both employee types see "My Payout" tab
     { label: "My Payout", to: isMessEmployee ? "/employee/mess/payouts" : "/employee/laundry/payouts", icon: ArrowDownCircle },

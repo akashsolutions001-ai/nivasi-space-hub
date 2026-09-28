@@ -197,6 +197,20 @@ service cloud.firestore {
       allow read, write: if isSignedIn();
     }
 
+    // ── /leaveRequests/{leaveId} ─────────────────────────────────────────────
+    // Student leave requests (viewed/created/cancelled by students, reviewed by admin).
+
+    match /leaveRequests/{leaveId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // ── /profileUpdateRequests/{requestId} ───────────────────────────────────
+    // Student profile change requests for admin review and approval.
+
+    match /profileUpdateRequests/{requestId} {
+      allow read, write: if isSignedIn();
+    }
+
     // ── Catch-all: deny everything else ──────────────────────────────────────
 
     match /{document=**} {
@@ -204,3 +218,4 @@ service cloud.firestore {
     }
   }
 }
+

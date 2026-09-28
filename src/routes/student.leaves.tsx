@@ -279,40 +279,51 @@ function StudentLeavesPage() {
         </Button>
       }
     >
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
+        {/* Mobile Quick Action Button (< sm) */}
+        <div className="sm:hidden">
+          <Button
+            onClick={openNewLeaveModal}
+            className="w-full gradient-brand text-white shadow-soft font-semibold text-sm gap-2 h-11 rounded-xl active:scale-[0.98] transition-transform"
+          >
+            <Plus className="size-4" />
+            Apply for Leave
+          </Button>
+        </div>
+
         {/* KPI / Summary cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <div className="rounded-2xl border border-border bg-card p-4 shadow-soft">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Total Requests</p>
-            <p className="text-2xl font-bold font-display mt-1">{leaves.length}</p>
-            <p className="text-[11px] text-muted-foreground mt-0.5">All time submissions</p>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+          <div className="rounded-2xl border border-border bg-card p-3.5 sm:p-4 shadow-soft">
+            <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-muted-foreground truncate">Total Requests</p>
+            <p className="text-xl sm:text-2xl font-bold font-display mt-0.5 sm:mt-1">{leaves.length}</p>
+            <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5 truncate">All time submissions</p>
           </div>
-          <div className="rounded-2xl border border-border bg-card p-4 shadow-soft">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-warning-foreground">Pending Approval</p>
-            <p className="text-2xl font-bold font-display text-warning mt-1">{pendingCount}</p>
-            <p className="text-[11px] text-muted-foreground mt-0.5">Awaiting admin review</p>
+          <div className="rounded-2xl border border-border bg-card p-3.5 sm:p-4 shadow-soft">
+            <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-warning-foreground truncate">Pending Approval</p>
+            <p className="text-xl sm:text-2xl font-bold font-display text-warning mt-0.5 sm:mt-1">{pendingCount}</p>
+            <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5 truncate">Awaiting admin review</p>
           </div>
-          <div className="rounded-2xl border border-border bg-card p-4 shadow-soft">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-success">Approved Leaves</p>
-            <p className="text-2xl font-bold font-display text-success mt-1">{approvedCount}</p>
-            <p className="text-[11px] text-muted-foreground mt-0.5">Confirmed by hostel admin</p>
+          <div className="rounded-2xl border border-border bg-card p-3.5 sm:p-4 shadow-soft">
+            <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-success truncate">Approved Leaves</p>
+            <p className="text-xl sm:text-2xl font-bold font-display text-success mt-0.5 sm:mt-1">{approvedCount}</p>
+            <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5 truncate">Confirmed by hostel admin</p>
           </div>
-          <div className="rounded-2xl border border-border bg-card p-4 shadow-soft">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Open Return Leaves</p>
-            <p className="text-2xl font-bold font-display text-foreground mt-1">
+          <div className="rounded-2xl border border-border bg-card p-3.5 sm:p-4 shadow-soft">
+            <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-muted-foreground truncate">Open Return</p>
+            <p className="text-xl sm:text-2xl font-bold font-display text-foreground mt-0.5 sm:mt-1">
               {leaves.filter((l) => l.hasOpenReturn && l.status !== "rejected" && l.status !== "cancelled").length}
             </p>
-            <p className="text-[11px] text-muted-foreground mt-0.5">Return date to be filled</p>
+            <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5 truncate">Return date to be filled</p>
           </div>
         </div>
 
-        {/* Tab Filters */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+        {/* Tab Filters — horizontally swipeable on mobile */}
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 -mx-3.5 px-3.5 sm:mx-0 sm:px-0">
           <Button
             variant={tabFilter === "all" ? "default" : "outline"}
             size="sm"
             onClick={() => setTabFilter("all")}
-            className="rounded-xl text-xs h-8"
+            className="rounded-xl text-xs h-8 shrink-0"
           >
             All Requests ({leaves.length})
           </Button>
@@ -320,7 +331,7 @@ function StudentLeavesPage() {
             variant={tabFilter === "pending" ? "default" : "outline"}
             size="sm"
             onClick={() => setTabFilter("pending")}
-            className="rounded-xl text-xs h-8"
+            className="rounded-xl text-xs h-8 shrink-0"
           >
             Pending ({pendingCount})
           </Button>
@@ -328,7 +339,7 @@ function StudentLeavesPage() {
             variant={tabFilter === "approved" ? "default" : "outline"}
             size="sm"
             onClick={() => setTabFilter("approved")}
-            className="rounded-xl text-xs h-8"
+            className="rounded-xl text-xs h-8 shrink-0"
           >
             Approved ({approvedCount})
           </Button>
@@ -336,11 +347,12 @@ function StudentLeavesPage() {
             variant={tabFilter === "history" ? "default" : "outline"}
             size="sm"
             onClick={() => setTabFilter("history")}
-            className="rounded-xl text-xs h-8"
+            className="rounded-xl text-xs h-8 shrink-0"
           >
             History & Other
           </Button>
         </div>
+
 
         {/* Leaves List */}
         {isLoading ? (
@@ -479,7 +491,7 @@ function StudentLeavesPage() {
 
       {/* ── Dialog: Apply For Leave ── */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-        <DialogContent className="max-w-md sm:max-w-lg rounded-2xl">
+        <DialogContent className="max-w-md sm:max-w-lg w-[calc(100vw-1.5rem)] max-h-[88vh] overflow-y-auto rounded-2xl p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle className="font-display text-lg">Apply for Leave</DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
@@ -617,7 +629,7 @@ function StudentLeavesPage() {
 
       {/* ── Dialog: Set / Update Return Date ── */}
       <Dialog open={returnDialogOpen} onOpenChange={setReturnDialogOpen}>
-        <DialogContent className="max-w-md rounded-2xl">
+        <DialogContent className="max-w-md w-[calc(100vw-1.5rem)] rounded-2xl p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle className="font-display text-lg">Update Return Date</DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">

@@ -339,6 +339,50 @@ var CalendarOff = createLucideIcon("calendar-off", [
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var CalendarRange = createLucideIcon("calendar-range", [
+	["rect", {
+		width: "18",
+		height: "18",
+		x: "3",
+		y: "4",
+		rx: "2",
+		key: "1hopcy"
+	}],
+	["path", {
+		d: "M16 2v4",
+		key: "4m81vk"
+	}],
+	["path", {
+		d: "M3 10h18",
+		key: "8toen8"
+	}],
+	["path", {
+		d: "M8 2v4",
+		key: "1cmpym"
+	}],
+	["path", {
+		d: "M17 14h-6",
+		key: "bkmgh3"
+	}],
+	["path", {
+		d: "M13 18H7",
+		key: "bb0bb7"
+	}],
+	["path", {
+		d: "M7 14h.01",
+		key: "1qa3f1"
+	}],
+	["path", {
+		d: "M17 18h.01",
+		key: "1bdyru"
+	}]
+]);
+/**
+* @license lucide-react v0.575.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var Calendar = createLucideIcon("calendar", [
 	["path", {
 		d: "M8 2v4",
@@ -517,6 +561,31 @@ var CircleX = createLucideIcon("circle-x", [
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var ClipboardCheck = createLucideIcon("clipboard-check", [
+	["rect", {
+		width: "8",
+		height: "4",
+		x: "8",
+		y: "2",
+		rx: "1",
+		ry: "1",
+		key: "tgr4d6"
+	}],
+	["path", {
+		d: "M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2",
+		key: "116196"
+	}],
+	["path", {
+		d: "m9 14 2 2 4-4",
+		key: "df797q"
+	}]
+]);
+/**
+* @license lucide-react v0.575.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var Clock = createLucideIcon("clock", [["circle", {
 	cx: "12",
 	cy: "12",
@@ -525,6 +594,24 @@ var Clock = createLucideIcon("clock", [["circle", {
 }], ["path", {
 	d: "M12 6v6l4 2",
 	key: "mmk7yg"
+}]]);
+/**
+* @license lucide-react v0.575.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var Copy = createLucideIcon("copy", [["rect", {
+	width: "14",
+	height: "14",
+	x: "8",
+	y: "8",
+	rx: "2",
+	ry: "2",
+	key: "17jyea"
+}], ["path", {
+	d: "M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2",
+	key: "zix9uf"
 }]]);
 /**
 * @license lucide-react v0.575.0 - ISC
@@ -1604,4 +1691,4 @@ var Zap = createLucideIcon("zap", [["path", {
 	key: "1xq2db"
 }]]);
 //#endregion
-export { ExternalLink as $, Printer as A, LogOut as B, Share2 as C, RotateCcw as D, Scale as E, Package as F, IndianRupee as G, LoaderCircle as H, MessageSquare as I, GraduationCap as J, House as K, Menu as L, Phone as M, PhoneCall as N, RefreshCw as O, Pencil as P, EyeOff as Q, MapPin as R, ShieldAlert as S, Search as T, LayoutDashboard as U, Lock as V, Info as W, FileSpreadsheet as X, FileText as Y, Eye as Z, StickyNote as _, Briefcase as _t, Wallet as a, CircleAlert as at, SquareCheckBig as b, ArrowRight as bt, User as c, ChevronRight as ct, UserCheck as d, Check as dt, Download as et, TriangleAlert as f, Calendar as ft, ToggleLeft as g, Building2 as gt, ToggleRight as h, CalendarCheck as ht, WashingMachine as i, CircleArrowDown as it, Plus as j, Receipt as k, UserPlus as l, ChevronLeft as lt, Trash2 as m, CalendarDays as mt, X as n, CircleX as nt, UtensilsCrossed as o, ChevronsUpDown as ot, TrendingUp as p, CalendarOff as pt, History as q, Wrench as r, CircleCheck as rt, Users as s, ChevronUp as st, Zap as t, Clock as tt, UserMinus as u, ChevronDown as ut, Stethoscope as v, BookOpen as vt, Settings as w, SkipForward as x, ArrowLeft as xt, Square as y, BedDouble as yt, Mail as z };
+export { ExternalLink as $, Printer as A, LogOut as B, Share2 as C, ArrowRight as Ct, RotateCcw as D, Scale as E, Package as F, IndianRupee as G, LoaderCircle as H, MessageSquare as I, GraduationCap as J, House as K, Menu as L, Phone as M, PhoneCall as N, RefreshCw as O, Pencil as P, EyeOff as Q, MapPin as R, ShieldAlert as S, BedDouble as St, Search as T, LayoutDashboard as U, Lock as V, Info as W, FileSpreadsheet as X, FileText as Y, Eye as Z, StickyNote as _, CalendarDays as _t, Wallet as a, CircleCheck as at, SquareCheckBig as b, Briefcase as bt, User as c, ChevronsUpDown as ct, UserCheck as d, ChevronLeft as dt, Download as et, TriangleAlert as f, ChevronDown as ft, ToggleLeft as g, CalendarOff as gt, ToggleRight as h, CalendarRange as ht, WashingMachine as i, CircleX as it, Plus as j, Receipt as k, UserPlus as l, ChevronUp as lt, Trash2 as m, Calendar as mt, X as n, Clock as nt, UtensilsCrossed as o, CircleArrowDown as ot, TrendingUp as p, Check as pt, History as q, Wrench as r, ClipboardCheck as rt, Users as s, CircleAlert as st, Zap as t, Copy as tt, UserMinus as u, ChevronRight as ut, Stethoscope as v, CalendarCheck as vt, Settings as w, ArrowLeft as wt, SkipForward as x, BookOpen as xt, Square as y, Building2 as yt, Mail as z };

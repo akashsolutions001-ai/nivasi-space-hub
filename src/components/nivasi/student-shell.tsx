@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   Menu, LayoutDashboard, UtensilsCrossed, WashingMachine,
@@ -25,9 +25,14 @@ const STUDENT_NAV = [
 // ── Sidebar inner content ─────────────────────────────────────────────────────
 
 function SidebarInner({ onNavigate }: { onNavigate?: () => void }) {
+  const [mounted, setMounted] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { session, admission, logoutStudent } = useStudentAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   async function handleLogout() {
     onNavigate?.();
@@ -46,7 +51,7 @@ function SidebarInner({ onNavigate }: { onNavigate?: () => void }) {
       </div>
 
       {/* Student Profile Card - Links to Profile page */}
-      {admission && (
+      {mounted && admission && (
         <Link
           to="/student/profile"
           onClick={onNavigate}
@@ -58,6 +63,7 @@ function SidebarInner({ onNavigate }: { onNavigate?: () => void }) {
               <p className="text-xs text-muted-foreground mt-0.5">{admission.admissionId}</p>
             </div>
             <ChevronRight className="size-4 text-muted-foreground shrink-0" />
+
           </div>
           {admission.propertyName && (
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground pt-1 border-t border-border/60">
@@ -124,7 +130,7 @@ function SidebarInner({ onNavigate }: { onNavigate?: () => void }) {
       {/* Footer — session info + logout */}
       <div className="p-4 border-t border-border mt-auto">
         <div className="rounded-2xl border border-border bg-card p-3 shadow-soft space-y-2">
-          {session?.email && (
+          {mounted && session?.email && (
             <p className="text-[11px] text-muted-foreground truncate font-mono">{session.email}</p>
           )}
           <Button
@@ -161,7 +167,12 @@ interface StudentShellProps {
 
 export function StudentShell({ title, subtitle, backTo, icon: CustomIcon, action, children }: StudentShellProps) {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const { admission } = useStudentAuth();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const ResolvedIcon =
     CustomIcon ??
@@ -185,26 +196,26 @@ export function StudentShell({ title, subtitle, backTo, icon: CustomIcon, action
       {/* ── Main content area ── */}
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Mobile Header (< lg) */}
-        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background/90 px-4 py-3 backdrop-blur lg:hidden">
-          <div className="flex items-center gap-2.5">
+        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background/95 px-4 py-3 backdrop-blur lg:hidden">
+          <div className="flex items-center gap-2.5 min-w-0">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setOpen(true)}
-              className="size-9 rounded-xl"
+              className="size-9 rounded-xl shrink-0"
               aria-label="Open menu"
             >
               <Menu className="size-5" />
             </Button>
-            <div className="flex items-center gap-2">
-              <div className="flex size-7 items-center justify-center rounded-lg gradient-brand text-white shadow-soft">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="flex size-7 shrink-0 items-center justify-center rounded-lg gradient-brand text-white shadow-soft">
                 <ResolvedIcon className="size-3.5" />
               </div>
-              <span className="font-display font-bold text-base">{title}</span>
+              <span className="font-display font-bold text-base truncate">{title}</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 shrink-0">
             {backTo && (
               <Button asChild variant="ghost" size="icon" className="size-9 rounded-xl" aria-label="Back">
                 <Link to={backTo}>
@@ -241,7 +252,7 @@ export function StudentShell({ title, subtitle, backTo, icon: CustomIcon, action
 
           <div className="flex items-center gap-3">
             {action}
-            {admission && (
+            {mounted && admission && (
               <div className="flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-1.5 text-xs shadow-soft">
                 <span className="inline-block size-2 rounded-full bg-success animate-pulse" />
                 <span className="font-medium text-foreground">{admission.fullName}</span>
@@ -254,7 +265,7 @@ export function StudentShell({ title, subtitle, backTo, icon: CustomIcon, action
         </div>
 
         {/* Page Content Container — fluid and fully responsive */}
-        <main className="flex-1 px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
+        <main className="flex-1 px-3.5 py-4 pb-8 sm:px-6 sm:py-6 lg:px-8 lg:py-7">
           <div className="mx-auto w-full max-w-7xl">
             {children}
           </div>
@@ -263,3 +274,5 @@ export function StudentShell({ title, subtitle, backTo, icon: CustomIcon, action
     </div>
   );
 }
+
+

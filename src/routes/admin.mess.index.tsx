@@ -4,10 +4,12 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   Plus, UtensilsCrossed, Users, User, Phone, Pencil,
   ToggleLeft, ToggleRight, Loader2, Search, UserCheck, Trash2, ShieldAlert,
+  Download, FileSpreadsheet,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import { AdminShell } from "@/components/nivasi/admin-shell";
+import { MessExportDialog } from "@/components/nivasi/mess-export-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -189,6 +191,7 @@ function MessIndexPage() {
   const [search, setSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Mess | null>(null);
+  const [exportTarget, setExportTarget] = useState<Mess | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Mess | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -328,17 +331,28 @@ function MessIndexPage() {
                     {m.status === "active" ? "Active" : "Inactive"}
                   </Badge>
                 </div>
-                {!isMessEmployee && (
-                  <div className="flex shrink-0 gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="size-8"
-                      onClick={() => setEditTarget(m)}
-                      aria-label="Edit mess"
-                    >
-                      <Pencil className="size-3.5" />
-                    </Button>
+                <div className="flex shrink-0 items-center gap-1.5">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setExportTarget(m)}
+                    className="h-8 gap-1.5 border-orange-500/30 bg-orange-50/60 dark:bg-orange-950/20 text-orange-600 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/40 hover:text-orange-700 dark:hover:text-orange-300 font-medium text-xs shadow-soft"
+                    title={`Export ${m.messName} Student Register to Excel`}
+                  >
+                    <Download className="size-3.5" />
+                    Export
+                  </Button>
+                  {!isMessEmployee && (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-8"
+                        onClick={() => setEditTarget(m)}
+                        aria-label="Edit mess"
+                      >
+                        <Pencil className="size-3.5" />
+                      </Button>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -353,19 +367,20 @@ function MessIndexPage() {
                           ? <ToggleRight className="size-4 text-success" />
                           : <ToggleLeft className="size-4 text-muted-foreground" />}
                     </Button>
-                    {isGlobalAdmin && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                        onClick={() => setDeleteTarget(m)}
-                        aria-label="Delete mess"
-                      >
-                        <Trash2 className="size-3.5" />
-                      </Button>
-                    )}
-                  </div>
-                )}
+                      {isGlobalAdmin && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="size-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          onClick={() => setDeleteTarget(m)}
+                          aria-label="Delete mess"
+                        >
+                          <Trash2 className="size-3.5" />
+                        </Button>
+                      )}
+                    </>
+                  )}
+                </div>
               </div>
 
               {/* Owner */}
@@ -397,11 +412,22 @@ function MessIndexPage() {
               </div>
 
               {/* Action */}
-              <Button asChild variant="outline" size="sm" className="mt-3 w-full">
-                <Link to="/admin/mess/$messId" params={{ messId: m.id }}>
-                  View Students
-                </Link>
-              </Button>
+              <div className="mt-3 flex items-center gap-2">
+                <Button asChild variant="outline" size="sm" className="flex-1">
+                  <Link to="/admin/mess/$messId" params={{ messId: m.id }}>
+                    View Students ({m.studentCount})
+                  </Link>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setExportTarget(m)}
+                  className="gap-1.5 border-orange-500/30 bg-orange-50/60 dark:bg-orange-950/20 text-orange-600 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/40 hover:text-orange-700 dark:hover:text-orange-300 font-medium text-xs shadow-soft"
+                >
+                  <Download className="size-3.5" />
+                  Export
+                </Button>
+              </div>
             </div>
           ))
         )}
@@ -452,6 +478,13 @@ function MessIndexPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      {/* Mess Export Register Dialog */}
+      <MessExportDialog
+        open={!!exportTarget}
+        onClose={() => setExportTarget(null)}
+        mess={exportTarget}
+        admissions={admissions ?? []}
+      />
     </AdminShell>
   );
 }

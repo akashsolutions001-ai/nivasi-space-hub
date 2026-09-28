@@ -516,39 +516,39 @@ function StudentLaundryPage() {
         {myAdmission && laundryId && (
           <>
             {/* Top KPI stats row */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-              <div className="rounded-2xl border border-border bg-card p-4 shadow-soft">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Provider</p>
-                <p className="text-base font-bold truncate mt-1">{resolvedLaundryName}</p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4">
+              <div className="rounded-2xl border border-border bg-card p-3.5 sm:p-4 shadow-soft">
+                <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-muted-foreground truncate">Provider</p>
+                <p className="text-sm sm:text-base font-bold truncate mt-1">{resolvedLaundryName}</p>
                 <div className="mt-1.5 flex items-center gap-1.5">
                   <span className="inline-block size-1.5 rounded-full bg-success" />
-                  <span className="text-[11px] text-success capitalize">{myAdmission.laundryStatus || "Active"}</span>
+                  <span className="text-[10px] sm:text-[11px] text-success capitalize truncate">{myAdmission.laundryStatus || "Active"}</span>
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-border bg-card p-4 shadow-soft">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Current Cycle</p>
-                <p className="text-base font-bold truncate mt-1">{formatDateRange(weekStart, weekEnd)}</p>
-                <p className="text-[11px] font-mono text-muted-foreground mt-1.5">{weekId}</p>
+              <div className="rounded-2xl border border-border bg-card p-3.5 sm:p-4 shadow-soft">
+                <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-muted-foreground truncate">Current Cycle</p>
+                <p className="text-sm sm:text-base font-bold truncate mt-1">{formatDateRange(weekStart, weekEnd)}</p>
+                <p className="text-[10px] sm:text-[11px] font-mono text-muted-foreground mt-1.5 truncate">{weekId}</p>
               </div>
 
-              <div className="rounded-2xl border border-border bg-card p-4 shadow-soft">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Pickup Status</p>
-                <div className="mt-2">
+              <div className="rounded-2xl border border-border bg-card p-3.5 sm:p-4 shadow-soft">
+                <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-muted-foreground truncate">Pickup Status</p>
+                <div className="mt-1.5">
                   <PickupBadge status={record?.pickupStatus ?? "pending"} />
                 </div>
-                <p className="text-[11px] text-muted-foreground mt-1.5 truncate">
+                <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-1.5 truncate">
                   {record?.pickupAt ? formatISTTimestamp(record.pickupAt) : "Awaiting handover"}
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-border bg-card p-4 shadow-soft">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Latest Weight</p>
-                <p className="text-base font-bold text-primary mt-1 flex items-center gap-1.5">
-                  <Scale className="size-4 shrink-0" />
+              <div className="rounded-2xl border border-border bg-card p-3.5 sm:p-4 shadow-soft">
+                <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-muted-foreground truncate">Latest Weight</p>
+                <p className="text-sm sm:text-base font-bold text-primary mt-1 flex items-center gap-1.5 truncate">
+                  <Scale className="size-3.5 sm:size-4 shrink-0" />
                   {latestWeight || "—"}
                 </p>
-                <p className="text-[11px] text-muted-foreground mt-1.5">
+                <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-1.5 truncate">
                   {dailyPickups.length} logged records
                 </p>
               </div>

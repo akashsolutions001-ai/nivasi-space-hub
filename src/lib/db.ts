@@ -973,14 +973,21 @@ export async function assignStudentToMess(
   messId: string,
   messName: string,
   tiffinStatus: TiffinStatus = "active",
+  messJoiningDate?: string,
 ): Promise<void> {
   try {
-    await updateDoc(doc(getDb(), "admissions", admissionDocId), {
+    const patch: Record<string, any> = {
       messId,
       messName,
       tiffinStatus,
       updatedAt: serverTimestamp(),
-    });
+    };
+    if (messJoiningDate) {
+      patch["messJoiningDate"] = messJoiningDate;
+    } else {
+      patch["messJoiningDate"] = todayDateString();
+    }
+    await updateDoc(doc(getDb(), "admissions", admissionDocId), patch);
   } catch (error) {
     console.error("[firestore] assignStudentToMess", error);
     throw new Error("Unable to assign student to mess. Please check your connection and try again.");
@@ -993,6 +1000,7 @@ export async function unassignStudentFromMess(admissionDocId: string): Promise<v
       messId: "",
       messName: "",
       tiffinStatus: "",
+      messJoiningDate: "",
       updatedAt: serverTimestamp(),
     });
   } catch (error) {
@@ -2326,18 +2334,31 @@ function mapLeaveRequest(snap: QueryDocumentSnapshot<DocumentData>): LeaveReques
 export async function createLeaveRequest(input: LeaveRequestInput): Promise<string> {
   try {
     const hasOpenReturn = !input.toDate || input.hasOpenReturn;
-    const ref = await addDoc(collection(getDb(), "leaveRequests"), {
-      ...input,
+    const docData: Record<string, any> = {
+      studentId: input.studentId || "",
+      admissionId: input.admissionId || "",
+      studentName: input.studentName || "",
+      studentEmail: input.studentEmail || "",
+      studentPhone: input.studentPhone || "",
+      propertyName: input.propertyName || "",
+      roomNumber: input.roomNumber || "",
+      bedNumber: input.bedNumber || "",
+      collegeName: input.collegeName || "",
+      fromDate: input.fromDate || "",
       toDate: input.toDate || null,
       hasOpenReturn,
+      reason: input.reason || "",
+      emergencyContact: input.emergencyContact || "",
+      notes: input.notes || "",
       status: "pending",
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
-    });
+    };
+    const ref = await addDoc(collection(getDb(), "leaveRequests"), docData);
     return ref.id;
   } catch (error) {
     console.error("[firestore] createLeaveRequest", error);
-    throw new Error("Unable to submit leave request. Please check your connection.");
+    throw new Error(error instanceof Error ? error.message : "Unable to submit leave request. Please check your connection.");
   }
 }
 
@@ -2448,18 +2469,38 @@ function mapProfileUpdateRequest(snap: QueryDocumentSnapshot<DocumentData>): Pro
 
 export async function createProfileUpdateRequest(input: ProfileUpdateRequestInput): Promise<string> {
   try {
-    const ref = await addDoc(collection(getDb(), "profileUpdateRequests"), {
-      ...input,
+    const cleanCurrentData: Record<string, any> = {};
+    for (const [k, v] of Object.entries(input.currentData || {})) {
+      if (v !== undefined) cleanCurrentData[k] = v;
+    }
+    const cleanRequestedData: Record<string, any> = {};
+    for (const [k, v] of Object.entries(input.requestedData || {})) {
+      if (v !== undefined) cleanRequestedData[k] = v;
+    }
+
+    const docData: Record<string, any> = {
+      studentId: input.studentId || "",
+      admissionId: input.admissionId || "",
+      studentName: input.studentName || "",
+      studentEmail: input.studentEmail || "",
+      propertyName: input.propertyName || "",
+      roomNumber: input.roomNumber || "",
+      currentData: cleanCurrentData,
+      requestedData: cleanRequestedData,
+      changedFields: input.changedFields || [],
+      reason: input.reason || "",
       status: "pending",
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
-    });
+    };
+    const ref = await addDoc(collection(getDb(), "profileUpdateRequests"), docData);
     return ref.id;
   } catch (error) {
     console.error("[firestore] createProfileUpdateRequest", error);
-    throw new Error("Unable to submit profile update request.");
+    throw new Error(error instanceof Error ? error.message : "Unable to submit profile update request.");
   }
 }
+
 
 export async function fetchProfileUpdateRequestsForStudent(studentId: string): Promise<ProfileUpdateRequest[]> {
   try {

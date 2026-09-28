@@ -230,11 +230,23 @@ function StudentProfilePage() {
         </Button>
       }
     >
-      <div className="space-y-6 max-w-5xl">
+      <div className="space-y-4 sm:space-y-6 max-w-5xl">
+        {/* Mobile Quick Action Button (< sm) */}
+        <div className="sm:hidden">
+          <Button
+            onClick={openEditModal}
+            disabled={Boolean(pendingRequest)}
+            className="w-full gradient-brand text-white shadow-soft font-semibold text-sm gap-2 h-11 rounded-xl active:scale-[0.98] transition-transform"
+          >
+            <Pencil className="size-4" />
+            {pendingRequest ? "Profile Update Pending Approval" : "Request Profile Update"}
+          </Button>
+        </div>
+
         {/* Pending Request Notice Banner */}
         {pendingRequest && (
-          <div className="rounded-2xl border border-warning/40 bg-warning/10 p-5 shadow-soft">
-            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+          <div className="rounded-2xl border border-warning/40 bg-warning/10 p-4 sm:p-5 shadow-soft">
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
               <div className="flex items-start gap-3">
                 <Clock className="size-5 text-warning shrink-0 mt-0.5" />
                 <div>
@@ -258,8 +270,8 @@ function StudentProfilePage() {
               </Button>
             </div>
 
-            {/* Changed Fields Diff Table */}
-            <div className="mt-4 rounded-xl border border-warning/30 bg-background/80 overflow-hidden text-xs">
+            {/* Changed Fields Diff — Desktop Table (>= sm) */}
+            <div className="mt-4 hidden sm:block rounded-xl border border-warning/30 bg-background/80 overflow-hidden text-xs">
               <div className="grid grid-cols-3 bg-muted/60 px-3 py-2 font-semibold text-muted-foreground border-b border-border">
                 <span>Field</span>
                 <span>Current Value</span>
@@ -281,6 +293,26 @@ function StudentProfilePage() {
                 ))}
               </div>
             </div>
+
+            {/* Changed Fields Diff — Mobile Cards (< sm) */}
+            <div className="mt-3.5 space-y-2 sm:hidden text-xs">
+              {pendingRequest.changedFields.map((field) => (
+                <div key={field} className="rounded-xl border border-warning/30 bg-background/90 p-3 space-y-1.5">
+                  <span className="font-semibold text-foreground text-xs block">
+                    {FIELD_LABELS[field] || field}
+                  </span>
+                  <div className="flex items-center justify-between text-[11px] gap-2">
+                    <span className="text-muted-foreground line-through truncate max-w-[45%]">
+                      {String((pendingRequest.currentData as any)?.[field] || "—")}
+                    </span>
+                    <span className="font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-lg truncate max-w-[50%]">
+                      {String((pendingRequest.requestedData as any)?.[field] || "—")}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
 
             {pendingRequest.reason && (
               <p className="mt-2.5 text-xs text-muted-foreground italic">
@@ -549,7 +581,7 @@ function StudentProfilePage() {
 
       {/* ── Dialog: Request Profile Update ── */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl">
+        <DialogContent className="max-w-2xl w-[calc(100vw-1.5rem)] max-h-[88vh] overflow-y-auto rounded-2xl p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle className="font-display text-lg">Request Profile Update</DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   UtensilsCrossed, Loader2, CheckCircle2,
@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { StudentShell } from "@/components/nivasi/student-shell";
 import { useStudentAuth } from "@/lib/studentAuth";
-import { useMesses, useMessRecordsForStudent, useMessRequestsForStudent } from "@/lib/hooks";
+import { useMesses, useMessRecordsForStudent, useMessRequestsForStudent, useLeaveRequestsForStudent } from "@/lib/hooks";
 import {
   getOrCreateMessRecord,
   updateMessRecordField,
@@ -185,7 +185,7 @@ function DoNotWantDialog({ open, onClose, admission, messId, messName, initialMe
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
-      <DialogContent className="max-w-sm">
+      <DialogContent className="max-w-sm w-[calc(100vw-1.5rem)] rounded-2xl p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle>Do Not Want Tiffin</DialogTitle>
         </DialogHeader>
@@ -298,7 +298,7 @@ function OtherReasonDialog({ open, onClose, meal, admission, messId, messName, d
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
-      <DialogContent className="max-w-sm">
+      <DialogContent className="max-w-sm w-[calc(100vw-1.5rem)] rounded-2xl p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle>Other Reason — {meal === "lunch" ? "Lunch" : "Dinner"}</DialogTitle>
         </DialogHeader>
@@ -392,7 +392,7 @@ function MessRequestDialog({ open, onClose, admission, messId, messName, existin
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
-      <DialogContent className="max-w-sm">
+      <DialogContent className="max-w-sm w-[calc(100vw-1.5rem)] rounded-2xl p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle>{existing ? "Edit Mess Request" : "Special Mess Request"}</DialogTitle>
         </DialogHeader>
@@ -500,21 +500,21 @@ function MealCard({
 
       {/* Action buttons — only during window */}
       {canAct && status === "pending" && (
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
           <Button size="sm" variant="outline" onClick={onReceived} disabled={saving}
-            className="border-success/40 text-success hover:bg-success/10 text-xs">
-            {saving ? <Loader2 className="size-3.5 animate-spin" /> : <CheckCircle2 className="size-3.5 mr-1" />}
-            Received
+            className="border-success/40 text-success hover:bg-success/10 text-[11px] sm:text-xs h-9 px-1 sm:px-2 rounded-xl font-semibold">
+            {saving ? <Loader2 className="size-3.5 animate-spin" /> : <CheckCircle2 className="size-3.5 mr-1 shrink-0" />}
+            <span className="truncate">Received</span>
           </Button>
           <Button size="sm" variant="outline" onClick={onDoNotWant} disabled={saving}
-            className="text-xs">
-            <XCircle className="size-3.5 mr-1" />
-            Don't Want
+            className="text-[11px] sm:text-xs h-9 px-1 sm:px-2 rounded-xl font-semibold">
+            <XCircle className="size-3.5 mr-1 shrink-0" />
+            <span className="truncate">Don't Want</span>
           </Button>
           <Button size="sm" variant="outline" onClick={onOther} disabled={saving}
-            className="text-xs">
-            <AlertCircle className="size-3.5 mr-1" />
-            Other
+            className="text-[11px] sm:text-xs h-9 px-1 sm:px-2 rounded-xl font-semibold">
+            <AlertCircle className="size-3.5 mr-1 shrink-0" />
+            <span className="truncate">Other</span>
           </Button>
         </div>
       )}
@@ -614,9 +614,14 @@ function StudentMessPage() {
     return () => clearInterval(t);
   }, []);
 
-  // History
+  // History & Requests
   const { data: history = [], isLoading: histLoading } = useMessRecordsForStudent(myAdmission?.id ?? null);
   const { data: requests = [] } = useMessRequestsForStudent(myAdmission?.id ?? null);
+  const { data: myLeaves = [] } = useLeaveRequestsForStudent(myAdmission?.admissionId);
+
+  const activeLeaveToday = myLeaves.find(
+    (l) => l.status === "approved" && l.fromDate <= today && (!l.toDate || today <= l.toDate),
+  );
 
   const [historyOpen, setHistoryOpen] = useState(false);
   const [requestsOpen, setRequestsOpen] = useState(false);
@@ -775,38 +780,38 @@ function StudentMessPage() {
         {myAdmission && messId && (
           <>
             {/* Top KPI stats row */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-              <div className="rounded-2xl border border-border bg-card p-4 shadow-soft">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Assigned Mess</p>
-                <p className="text-base font-bold truncate mt-1">{resolvedMessName}</p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4">
+              <div className="rounded-2xl border border-border bg-card p-3.5 sm:p-4 shadow-soft">
+                <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-muted-foreground truncate">Assigned Mess</p>
+                <p className="text-sm sm:text-base font-bold truncate mt-1">{resolvedMessName}</p>
                 <div className="mt-1.5 flex items-center gap-1.5">
                   <span className="inline-block size-1.5 rounded-full bg-success" />
-                  <span className="text-[11px] text-success capitalize">{myAdmission.tiffinStatus || "Active"}</span>
+                  <span className="text-[10px] sm:text-[11px] text-success capitalize truncate">{myAdmission.tiffinStatus || "Active"}</span>
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-border bg-card p-4 shadow-soft">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Today's Date</p>
-                <p className="text-base font-bold truncate mt-1">{dateLabel}</p>
-                <p className="text-[11px] font-mono text-muted-foreground mt-1.5">{today}</p>
+              <div className="rounded-2xl border border-border bg-card p-3.5 sm:p-4 shadow-soft">
+                <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-muted-foreground truncate">Today's Date</p>
+                <p className="text-sm sm:text-base font-bold truncate mt-1">{dateLabel}</p>
+                <p className="text-[10px] sm:text-[11px] font-mono text-muted-foreground mt-1.5 truncate">{today}</p>
               </div>
 
-              <div className="rounded-2xl border border-border bg-card p-4 shadow-soft">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Lunch Status</p>
-                <div className="mt-2">
+              <div className="rounded-2xl border border-border bg-card p-3.5 sm:p-4 shadow-soft">
+                <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-muted-foreground truncate">Lunch Status</p>
+                <div className="mt-1.5">
                   <TiffinStatusBadge status={record?.lunchStatus ?? "pending"} />
                 </div>
-                <p className="text-[11px] text-muted-foreground mt-1.5">
+                <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-1.5 truncate">
                   1:00 PM – 2:00 PM
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-border bg-card p-4 shadow-soft">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Dinner Status</p>
-                <div className="mt-2">
+              <div className="rounded-2xl border border-border bg-card p-3.5 sm:p-4 shadow-soft">
+                <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-muted-foreground truncate">Dinner Status</p>
+                <div className="mt-1.5">
                   <TiffinStatusBadge status={record?.dinnerStatus ?? "pending"} />
                 </div>
-                <p className="text-[11px] text-muted-foreground mt-1.5">
+                <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-1.5 truncate">
                   8:00 PM – 9:00 PM
                 </p>
               </div>
@@ -816,6 +821,35 @@ function StudentMessPage() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
               {/* Left Column (8 cols on lg) */}
               <div className="lg:col-span-8 space-y-6">
+                {/* Approved Leave Notification */}
+                {activeLeaveToday && (
+                  <div className="rounded-2xl border border-sky-500/30 bg-gradient-to-r from-sky-500/10 via-sky-500/5 to-card p-4 shadow-soft">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="border-sky-500/30 bg-sky-500/15 text-sky-700 dark:text-sky-300 font-semibold text-xs">
+                            ✈️ On Approved Leave
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">
+                            {activeLeaveToday.fromDate} to {activeLeaveToday.toDate || "Open Return (TBD)"}
+                          </span>
+                        </div>
+                        <p className="text-sm font-semibold text-foreground">
+                          Your mess meals are paused while you are on leave.
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          No tiffins will be prepared or charged against your mess attendance for today. When you return, update your return date.
+                        </p>
+                      </div>
+                      <Button asChild size="sm" variant="outline" className="shrink-0 text-xs h-8">
+                        <Link to="/student/leaves">
+                          View Leave Details
+                        </Link>
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
                 {/* Today's Tiffin Meals */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">

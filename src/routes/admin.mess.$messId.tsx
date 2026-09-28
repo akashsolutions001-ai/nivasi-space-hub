@@ -5,13 +5,15 @@ import {
   ArrowLeft, Phone, MapPin, Search, UtensilsCrossed,
   CheckCircle2, Clock, XCircle, SkipForward, Pencil,
   RotateCcw, AlertCircle, MessageSquare, ChevronDown, ChevronUp,
-  Loader2, FileText, UserMinus,
+  Loader2, FileText, UserMinus, Copy, ArrowRight, CalendarOff,
+  UserCheck, UserX, Download,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import { useIsAdmin } from "@/lib/auth";
 
 import { AdminShell } from "@/components/nivasi/admin-shell";
+import { MessExportDialog } from "@/components/nivasi/mess-export-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +29,7 @@ import {
 import {
   useMesses, useAdmissions, useDeliveriesForDate, useDeliverySummary,
   useRooms, useProperties, useMessRecordsForDate, useMessRequestsForMess,
+  useAllLeaveRequests,
 } from "@/lib/hooks";
 import { upsertDelivery, todayDateString, todayISTDateString, updateMess, unassignStudentFromMess } from "@/lib/db";
 import type { Admission, DeliveryStatus, MessRecord, MessRequest } from "@/lib/types";
@@ -309,6 +312,7 @@ function MessStudentsPage() {
   const { data: properties = [] } = useProperties();
   const { data: messRecords = [] } = useMessRecordsForDate(messId, todayIST);
   const { data: messRequests = [] } = useMessRequestsForMess(messId);
+  const { data: allLeaves = [] } = useAllLeaveRequests();
 
   const mess = messes.find((m) => m.id === messId);
   const students = useMemo(
@@ -316,13 +320,67 @@ function MessStudentsPage() {
     [admissions, messId],
   );
 
+  // Active approved leaves covering today
+  const studentLeaveMap = useMemo(() => {
+    const map = new Map<string, typeof allLeaves[0]>();
+    for (const l of allLeaves) {
+      if (l.status === "approved") {
+        const from = l.fromDate;
+        const to = l.toDate;
+        if (from <= todayIST && (!to || todayIST <= to)) {
+          if (l.studentAdmissionId) map.set(l.studentAdmissionId, l);
+          if (l.studentId) map.set(l.studentId, l);
+        }
+      }
+    }
+    return map;
+  }, [allLeaves, todayIST]);
+
+  // Headcount calculation for mess kitchen
+  const kitchenCounts = useMemo(() => {
+    let present = 0;
+    let onLeave = 0;
+    let veg = 0;
+    let nonVeg = 0;
+
+    for (const s of students) {
+      const isCancelled = (s as any).tiffinStatus === "cancelled";
+      if (isCancelled) continue;
+
+      const leave = studentLeaveMap.get(s.admissionId) || studentLeaveMap.get(s.id);
+      if (leave) {
+        onLeave++;
+      } else {
+        present++;
+        const isNonVeg = ((s.mealPreference || "veg").toLowerCase().includes("non"));
+        if (isNonVeg) {
+          nonVeg++;
+        } else {
+          veg++;
+        }
+      }
+    }
+
+    return { present, onLeave, veg, nonVeg, totalActive: present + onLeave };
+  }, [students, studentLeaveMap]);
+
   const [search, setSearch] = useState("");
   const [tiffinFilter, setTiffinFilter] = useState("all");
+  const [attendanceFilter, setAttendanceFilter] = useState("all");
+  const [mealFilter, setMealFilter] = useState("all");
   const [updatingKey, setUpdatingKey] = useState<string | null>(null);
   const [descDialogOpen, setDescDialogOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
   const [unassigningId, setUnassigningId] = useState<string | null>(null);
 
   const isAdmin = useIsAdmin();
+
+  const handleCopyKitchenSummary = () => {
+    const messTitle = mess?.messName || "MESS";
+    const text = `📋 *${messTitle.toUpperCase()} KITCHEN COUNT*\n📅 *Date:* ${todayIST}\n-----------------------------------\n🟢 *Veg Meals to Cook:* ${kitchenCounts.veg}\n🍗 *Non-Veg Meals to Cook:* ${kitchenCounts.nonVeg}\n👥 *Total Students Present:* ${kitchenCounts.present}\n✈️ *Students on Leave (Skip):* ${kitchenCounts.onLeave}\n📊 *Total Active Subscriptions:* ${kitchenCounts.totalActive}`;
+    navigator.clipboard.writeText(text);
+    toast.success("Kitchen meal count copied! Ready to paste into WhatsApp.");
+  };
 
   async function handleUnassign(student: Admission) {
     if (!window.confirm(`Are you sure you want to unassign ${student.fullName} from ${mess?.messName ?? "this mess"}?`)) {
@@ -346,7 +404,21 @@ function MessStudentsPage() {
       s.phoneNumber.includes(search) ||
       (s.propertyName ?? "").toLowerCase().includes(search.toLowerCase());
     const matchTiffin = tiffinFilter === "all" || (s as any).tiffinStatus === tiffinFilter;
-    return matchSearch && matchTiffin;
+
+    const leave = studentLeaveMap.get(s.admissionId) || studentLeaveMap.get(s.id);
+    const isPresent = !leave;
+    const matchAttendance =
+      attendanceFilter === "all" ||
+      (attendanceFilter === "present" && isPresent) ||
+      (attendanceFilter === "on_leave" && !isPresent);
+
+    const isNonVeg = ((s.mealPreference || "veg").toLowerCase().includes("non"));
+    const matchMeal =
+      mealFilter === "all" ||
+      (mealFilter === "veg" && !isNonVeg) ||
+      (mealFilter === "non_veg" && isNonVeg);
+
+    return matchSearch && matchTiffin && matchAttendance && matchMeal;
   });
 
   function getDelivery(studentId: string, meal: "lunch" | "dinner") {
@@ -380,15 +452,95 @@ function MessStudentsPage() {
   return (
     <AdminShell
       title={mess?.messName ?? "Mess Students"}
-      subtitle={mess ? `Owner: ${mess.ownerName || "—"}  ·  ${students.length} students` : ""}
+      subtitle={mess ? `Owner: ${mess.ownerName || "—"}  ·  ${students.length} students enrolled` : ""}
       action={
-        <Button asChild variant="outline" size="sm">
-          <Link to="/admin/mess">
-            <ArrowLeft className="mr-1.5 size-4" /> Back to Messes
-          </Link>
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setExportOpen(true)}
+            className="gap-1.5 text-xs h-8 border-orange-500/30 bg-orange-50/60 dark:bg-orange-950/20 text-orange-600 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/40 hover:text-orange-700 dark:hover:text-orange-300 font-medium shadow-soft"
+            title="Export Student Register to Excel"
+          >
+            <Download className="size-3.5" /> Export Register
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleCopyKitchenSummary}
+            className="gap-1.5 text-xs h-8"
+          >
+            <Copy className="size-3.5" /> Copy Kitchen Count
+          </Button>
+          <Button asChild variant="outline" size="sm" className="h-8">
+            <Link to="/admin/student-headcount">
+              Full Headcount <ArrowRight className="ml-1 size-3.5" />
+            </Link>
+          </Button>
+          <Button asChild variant="outline" size="sm" className="h-8">
+            <Link to="/admin/mess">
+              <ArrowLeft className="mr-1.5 size-3.5" /> Back
+            </Link>
+          </Button>
+        </div>
       }
     >
+      {/* Live Kitchen Preparation Banner */}
+      <div className="rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/5 via-card to-card p-4 shadow-soft">
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-border/60">
+          <div className="flex items-center gap-2">
+            <div className="flex size-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <UtensilsCrossed className="size-4" />
+            </div>
+            <div>
+              <p className="font-semibold text-sm">Today's Kitchen Preparation Headcount</p>
+              <p className="text-xs text-muted-foreground">Excludes students currently away on approved leave</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 text-xs gap-1.5 border-orange-500/30 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-950/40"
+              onClick={() => setExportOpen(true)}
+            >
+              <Download className="size-3" /> Export Excel Register
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              className="h-7 text-xs gap-1.5"
+              onClick={handleCopyKitchenSummary}
+            >
+              <Copy className="size-3" /> WhatsApp Kitchen Summary
+            </Button>
+          </div>
+        </div>
+
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-center">
+            <p className="text-[11px] font-medium text-emerald-800 dark:text-emerald-300">🟢 Pure Veg Meals</p>
+            <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">{kitchenCounts.veg}</p>
+            <p className="text-[10px] text-muted-foreground">Cook for present students</p>
+          </div>
+          <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-3 text-center">
+            <p className="text-[11px] font-medium text-amber-800 dark:text-amber-300">🍗 Non-Veg Meals</p>
+            <p className="text-2xl font-bold text-amber-700 dark:text-amber-400">{kitchenCounts.nonVeg}</p>
+            <p className="text-[10px] text-muted-foreground">Cook for present students</p>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-3 text-center">
+            <p className="text-[11px] font-medium text-muted-foreground">👥 Present (Eating)</p>
+            <p className="text-2xl font-bold text-foreground">{kitchenCounts.present}</p>
+            <p className="text-[10px] text-muted-foreground">Total to serve today</p>
+          </div>
+          <div className="rounded-xl border border-sky-500/20 bg-sky-500/10 p-3 text-center">
+            <p className="text-[11px] font-medium text-sky-800 dark:text-sky-300">✈️ On Leave (Skip)</p>
+            <p className="text-2xl font-bold text-sky-700 dark:text-sky-400">{kitchenCounts.onLeave}</p>
+            <p className="text-[10px] text-muted-foreground">Approved leave away</p>
+          </div>
+        </div>
+      </div>
+
       {/* Mess Description block */}
       <div className="rounded-2xl border border-border bg-card p-4 shadow-soft space-y-2">
         <div className="flex items-center justify-between gap-2">
@@ -442,8 +594,28 @@ function MessStudentsPage() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
+        <Select value={attendanceFilter} onValueChange={setAttendanceFilter}>
+          <SelectTrigger className="w-36">
+            <SelectValue placeholder="Attendance" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Attendance</SelectItem>
+            <SelectItem value="present">Present (Eating)</SelectItem>
+            <SelectItem value="on_leave">On Leave (Skip)</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={mealFilter} onValueChange={setMealFilter}>
+          <SelectTrigger className="w-32">
+            <SelectValue placeholder="Meal Type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Meals</SelectItem>
+            <SelectItem value="veg">Pure Veg</SelectItem>
+            <SelectItem value="non_veg">Non-Veg</SelectItem>
+          </SelectContent>
+        </Select>
         <Select value={tiffinFilter} onValueChange={setTiffinFilter}>
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="w-32">
             <SelectValue placeholder="Tiffin status" />
           </SelectTrigger>
           <SelectContent>
@@ -475,21 +647,46 @@ function MessStudentsPage() {
             const lunch = getDelivery(student.id, "lunch");
             const dinner = getDelivery(student.id, "dinner");
             const tiffin = (student as any).tiffinStatus ?? "active";
+            const leave = studentLeaveMap.get(student.admissionId) || studentLeaveMap.get(student.id);
+            const isNonVeg = ((student.mealPreference || "veg").toLowerCase().includes("non"));
 
             return (
-              <div key={student.id} className="rounded-2xl border border-border bg-card p-4 shadow-soft">
+              <div key={student.id} className={`rounded-2xl border bg-card p-4 shadow-soft transition-colors ${leave ? "border-sky-500/30 bg-sky-500/[0.02]" : "border-border"}`}>
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   {/* Student info */}
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="font-semibold">{student.fullName}</h3>
-                      <Badge
-                        variant="outline"
-                        className={`text-[11px] capitalize ${tiffin === "active" ? "border-success/30 bg-success/10 text-success" : tiffin === "paused" ? "border-warning/30 bg-warning/10 text-warning-foreground" : "border-destructive/20 bg-destructive/10 text-destructive"}`}
-                      >
-                        Tiffin: {tiffin}
-                      </Badge>
+                      {/* Meal Preference Badge */}
+                      {isNonVeg ? (
+                        <Badge variant="outline" className="text-[11px] border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400">
+                          🍗 Non-Veg
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-[11px] border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
+                          🥬 Pure Veg
+                        </Badge>
+                      )}
+                      {/* Leave or Tiffin Status */}
+                      {leave ? (
+                        <Badge variant="outline" className="text-[11px] border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-400 font-medium">
+                          ✈️ On Leave ({leave.fromDate}{leave.toDate ? ` → ${leave.toDate}` : " · Open"})
+                        </Badge>
+                      ) : (
+                        <Badge
+                          variant="outline"
+                          className={`text-[11px] capitalize ${tiffin === "active" ? "border-success/30 bg-success/10 text-success" : tiffin === "paused" ? "border-warning/30 bg-warning/10 text-warning-foreground" : "border-destructive/20 bg-destructive/10 text-destructive"}`}
+                        >
+                          Tiffin: {tiffin}
+                        </Badge>
+                      )}
                     </div>
+                    {leave && (
+                      <p className="mt-1 text-xs text-sky-700 dark:text-sky-400 font-medium">
+                        Student is on approved leave. Do not prepare meal.
+                        {leave.reason ? ` Reason: "${leave.reason}"` : ""}
+                      </p>
+                    )}
                     {student.phoneNumber && (
                       <a href={`tel:${student.phoneNumber}`} className="mt-0.5 flex items-center gap-1.5 text-sm text-primary hover:underline">
                         <Phone className="size-3.5" />{student.phoneNumber}
@@ -520,6 +717,12 @@ function MessStudentsPage() {
 
                 {/* Delivery status row */}
                 <div className="mt-3 grid grid-cols-2 gap-2 border-t border-border pt-3">
+                  {leave && (
+                    <div className="col-span-2 rounded-lg bg-sky-500/10 border border-sky-500/20 px-2.5 py-1 text-[11px] text-sky-700 dark:text-sky-300 flex items-center justify-between">
+                      <span className="font-medium">✈️ Meals paused · Student is on approved leave</span>
+                      <span className="text-[10px] opacity-80">{leave.fromDate} to {leave.toDate || "Open"}</span>
+                    </div>
+                  )}
                   {(["lunch", "dinner"] as const).map((meal) => {
                     const delivery = meal === "lunch" ? lunch : dinner;
                     const currentStatus: DeliveryStatus = delivery?.status ?? "pending";
@@ -590,6 +793,14 @@ function MessStudentsPage() {
           currentDescription={(mess as any)?.messDescription ?? ""}
         />
       )}
+
+      {/* Mess Student Register Export Dialog */}
+      <MessExportDialog
+        open={exportOpen}
+        onClose={() => setExportOpen(false)}
+        mess={mess ?? null}
+        admissions={admissions}
+      />
     </AdminShell>
   );
 }

@@ -19,6 +19,7 @@ import { Route as AdminProfileRequestsRouteImport } from './routes/admin.profile
 import { Route as AdminPropertiesRouteImport } from './routes/admin.properties'
 import { Route as AdminReportsRouteImport } from './routes/admin.reports'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
+import { Route as AdminStudentHeadcountRouteImport } from './routes/admin.student-headcount'
 import { Route as EmployeeDashboardRouteImport } from './routes/employee.dashboard'
 import { Route as EmployeeDeliveryRouteImport } from './routes/employee.delivery'
 import { Route as EmployeeLaundryRouteImport } from './routes/employee.laundry'
@@ -92,6 +93,11 @@ const AdminReportsRoute = AdminReportsRouteImport.update({
 const AdminSettingsRoute = AdminSettingsRouteImport.update({
   id: '/admin/settings',
   path: '/admin/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminStudentHeadcountRoute = AdminStudentHeadcountRouteImport.update({
+  id: '/admin/student-headcount',
+  path: '/admin/student-headcount',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EmployeeDashboardRoute = EmployeeDashboardRouteImport.update({
@@ -228,6 +234,7 @@ export interface FileRoutesByFullPath {
   '/admin/properties': typeof AdminPropertiesRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/student-headcount': typeof AdminStudentHeadcountRoute
   '/employee/dashboard': typeof EmployeeDashboardRoute
   '/employee/delivery': typeof EmployeeDeliveryRoute
   '/employee/laundry': typeof EmployeeLaundryRouteWithChildren
@@ -264,6 +271,7 @@ export interface FileRoutesByTo {
   '/admin/properties': typeof AdminPropertiesRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/student-headcount': typeof AdminStudentHeadcountRoute
   '/employee/dashboard': typeof EmployeeDashboardRoute
   '/employee/delivery': typeof EmployeeDeliveryRoute
   '/employee/laundry': typeof EmployeeLaundryRouteWithChildren
@@ -301,6 +309,7 @@ export interface FileRoutesById {
   '/admin/properties': typeof AdminPropertiesRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/student-headcount': typeof AdminStudentHeadcountRoute
   '/employee/dashboard': typeof EmployeeDashboardRoute
   '/employee/delivery': typeof EmployeeDeliveryRoute
   '/employee/laundry': typeof EmployeeLaundryRouteWithChildren
@@ -339,6 +348,7 @@ export interface FileRouteTypes {
     | '/admin/properties'
     | '/admin/reports'
     | '/admin/settings'
+    | '/admin/student-headcount'
     | '/employee/dashboard'
     | '/employee/delivery'
     | '/employee/laundry'
@@ -375,6 +385,7 @@ export interface FileRouteTypes {
     | '/admin/properties'
     | '/admin/reports'
     | '/admin/settings'
+    | '/admin/student-headcount'
     | '/employee/dashboard'
     | '/employee/delivery'
     | '/employee/laundry'
@@ -411,6 +422,7 @@ export interface FileRouteTypes {
     | '/admin/properties'
     | '/admin/reports'
     | '/admin/settings'
+    | '/admin/student-headcount'
     | '/employee/dashboard'
     | '/employee/delivery'
     | '/employee/laundry'
@@ -448,6 +460,7 @@ export interface RootRouteChildren {
   AdminPropertiesRoute: typeof AdminPropertiesRoute
   AdminReportsRoute: typeof AdminReportsRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
+  AdminStudentHeadcountRoute: typeof AdminStudentHeadcountRoute
   EmployeeDashboardRoute: typeof EmployeeDashboardRoute
   EmployeeDeliveryRoute: typeof EmployeeDeliveryRoute
   EmployeeLaundryRoute: typeof EmployeeLaundryRouteWithChildren
@@ -543,6 +556,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/settings'
       fullPath: '/admin/settings'
       preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/student-headcount': {
+      id: '/admin/student-headcount'
+      path: '/admin/student-headcount'
+      fullPath: '/admin/student-headcount'
+      preLoaderRoute: typeof AdminStudentHeadcountRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/employee/dashboard': {
@@ -739,6 +759,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminPropertiesRoute: AdminPropertiesRoute,
   AdminReportsRoute: AdminReportsRoute,
   AdminSettingsRoute: AdminSettingsRoute,
+  AdminStudentHeadcountRoute: AdminStudentHeadcountRoute,
   EmployeeDashboardRoute: EmployeeDashboardRoute,
   EmployeeDeliveryRoute: EmployeeDeliveryRoute,
   EmployeeLaundryRoute: EmployeeLaundryRouteWithChildren,

@@ -126,46 +126,47 @@ function StudentDashboardPage() {
       ) : (
         <div className="space-y-6">
           {/* Top KPI stats row */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            <div className="rounded-2xl border border-border bg-card p-4 shadow-soft">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Mess Plan</p>
-              <p className="text-base font-bold truncate mt-1">{mess ? resolvedMessName : "Not Assigned"}</p>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+            <div className="rounded-2xl border border-border bg-card p-3.5 sm:p-4 shadow-soft">
+              <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-muted-foreground truncate">Mess Plan</p>
+              <p className="text-sm sm:text-base font-bold truncate mt-1">{mess ? resolvedMessName : "Not Assigned"}</p>
               <div className="mt-1.5 flex items-center gap-1.5">
                 <span className={`inline-block size-1.5 rounded-full ${tiffin === "active" ? "bg-success" : "bg-warning"}`} />
-                <span className="text-[11px] capitalize text-muted-foreground">Tiffin: {tiffin}</span>
+                <span className="text-[10px] sm:text-[11px] capitalize text-muted-foreground truncate">Tiffin: {tiffin}</span>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-border bg-card p-4 shadow-soft">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Laundry Plan</p>
-              <p className="text-base font-bold truncate mt-1">{laundry ? resolvedLaundryName : "Not Assigned"}</p>
+            <div className="rounded-2xl border border-border bg-card p-3.5 sm:p-4 shadow-soft">
+              <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-muted-foreground truncate">Laundry Plan</p>
+              <p className="text-sm sm:text-base font-bold truncate mt-1">{laundry ? resolvedLaundryName : "Not Assigned"}</p>
               <div className="mt-1.5 flex items-center gap-1.5">
                 <span className={`inline-block size-1.5 rounded-full ${laundryStatus === "active" ? "bg-success" : "bg-muted-foreground"}`} />
-                <span className="text-[11px] capitalize text-muted-foreground">Laundry: {laundryStatus}</span>
+                <span className="text-[10px] sm:text-[11px] capitalize text-muted-foreground truncate">Laundry: {laundryStatus}</span>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-border bg-card p-4 shadow-soft">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Room Assignment</p>
-              <p className="text-base font-bold truncate mt-1">
+            <div className="rounded-2xl border border-border bg-card p-3.5 sm:p-4 shadow-soft">
+              <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-muted-foreground truncate">Room Assignment</p>
+              <p className="text-sm sm:text-base font-bold truncate mt-1">
                 {admission.roomNumber ? `Room ${admission.roomNumber}` : "Room Assigned"}
               </p>
-              <p className="text-[11px] text-muted-foreground truncate mt-1.5">
+              <p className="text-[10px] sm:text-[11px] text-muted-foreground truncate mt-1.5">
                 {admission.propertyName || "Hostel Residence"}
               </p>
             </div>
 
-            <div className="rounded-2xl border border-border bg-card p-4 shadow-soft">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Latest Laundry</p>
-              <p className="text-base font-bold text-primary mt-1 flex items-center gap-1.5">
-                <Scale className="size-4 shrink-0" />
+            <div className="rounded-2xl border border-border bg-card p-3.5 sm:p-4 shadow-soft">
+              <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-muted-foreground truncate">Latest Laundry</p>
+              <p className="text-sm sm:text-base font-bold text-primary mt-1 flex items-center gap-1.5 truncate">
+                <Scale className="size-3.5 sm:size-4 shrink-0" />
                 {latestLaundryPickup?.clothesWeight || (latestLaundryPickup ? "Logged" : "No logs yet")}
               </p>
-              <p className="text-[11px] text-muted-foreground mt-1.5 capitalize">
+              <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-1.5 capitalize truncate">
                 {latestLaundryPickup ? latestLaundryPickup.status.replace("_", " ") : "Awaiting cycle"}
               </p>
             </div>
           </div>
+
 
           {/* Main 12-column responsive layout */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">

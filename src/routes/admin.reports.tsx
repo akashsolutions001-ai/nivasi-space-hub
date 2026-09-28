@@ -22,6 +22,7 @@ import {
   UtensilsCrossed,
   WashingMachine,
   XCircle,
+  CalendarOff,
 } from "lucide-react";
 
 import { AdminShell } from "@/components/nivasi/admin-shell";
@@ -45,10 +46,11 @@ import {
   useLaundries,
   useProperties,
   usePackages,
+  useAllLeaveRequests,
 } from "@/lib/hooks";
 import { useAuth, useIsGlobalAdmin } from "@/lib/auth";
 import { formatDate, formatINR } from "@/lib/format";
-import type { Admission } from "@/lib/types";
+import type { Admission, LeaveRequest } from "@/lib/types";
 
 export const Route = createFileRoute("/admin/reports")({
   head: () => ({
@@ -86,6 +88,50 @@ function downloadCsv(filename: string, headers: string[], rows: (string | number
 }
 
 /* -------------------------------------------------------------------------- */
+/*                        MONTHLY LEAVE DEDUCTION HELPER                      */
+/* -------------------------------------------------------------------------- */
+
+function getStudentLeaveDaysInMonth(
+  studentId: string,
+  year: number,
+  month: number, // 1 to 12
+  leaves: LeaveRequest[],
+): { leaveDays: number; leaveSpans: string[] } {
+  const monthStartStr = `${year}-${String(month).padStart(2, "0")}-01`;
+  const totalDays = new Date(year, month, 0).getDate();
+  const monthEndStr = `${year}-${String(month).padStart(2, "0")}-${String(totalDays).padStart(2, "0")}`;
+
+  let leaveDays = 0;
+  const leaveSpans: string[] = [];
+
+  const studentApprovedLeaves = leaves.filter(
+    (l) => l.studentId === studentId && l.status === "approved",
+  );
+
+  for (const l of studentApprovedLeaves) {
+    if (!l.fromDate || l.fromDate > monthEndStr) continue;
+    const leaveTo = l.toDate || monthEndStr;
+    if (leaveTo < monthStartStr) continue;
+
+    const start = l.fromDate < monthStartStr ? monthStartStr : l.fromDate;
+    const end = leaveTo > monthEndStr ? monthEndStr : leaveTo;
+
+    const d1 = new Date(start);
+    const d2 = new Date(end);
+    const days = Math.round((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    if (days > 0) {
+      leaveDays += days;
+      leaveSpans.push(
+        `${formatDate(start)} to ${formatDate(end)} (${days}d: ${l.reason || "Leave"})`,
+      );
+    }
+  }
+
+  leaveDays = Math.min(leaveDays, totalDays);
+  return { leaveDays, leaveSpans };
+}
+
+/* -------------------------------------------------------------------------- */
 /*                             MAIN REPORTS PAGE                              */
 /* -------------------------------------------------------------------------- */
 
@@ -95,12 +141,17 @@ function ReportsPage() {
   const { data: laundries = [], isLoading: laundriesLoading } = useLaundries();
   const { data: properties = [], isLoading: propertiesLoading } = useProperties();
   const { data: packages = [] } = usePackages();
+  const { data: allLeaves = [], isLoading: leavesLoading } = useAllLeaveRequests();
 
   const isGlobalAdmin = useIsGlobalAdmin();
   const { collegeFilter } = useAuth();
 
   // Active tab state
   const [activeTab, setActiveTab] = useState("all-students");
+
+  // Monthly mess report state
+  const [messMonth, setMessMonth] = useState<number>(new Date().getMonth() + 1);
+  const [messYear, setMessYear] = useState<number>(new Date().getFullYear());
 
   // Filter states
   const [search, setSearch] = useState("");
@@ -299,8 +350,9 @@ function ReportsPage() {
     downloadCsv(`nivasispace_master_report_${new Date().toISOString().slice(0, 10)}.csv`, headers, rows);
   };
 
-  // 2. Mess & Tiffin CSV
+  // 2. Mess & Tiffin CSV (with active leave status)
   const exportMessCsv = () => {
+    const today = new Date().toISOString().slice(0, 10);
     const headers = [
       "Sr No",
       "Admission ID",
@@ -311,27 +363,89 @@ function ReportsPage() {
       "Mess Provider",
       "Tiffin Status",
       "Meal Preference",
+      "Today's Leave Status",
       "Tiffin Box Provided",
       "Admission Date",
     ];
 
     const rows = admissions
       .filter((a) => a.messId || a.messName)
-      .map((a, i) => [
-        i + 1,
-        a.admissionId,
-        a.fullName,
-        a.phoneNumber,
-        a.propertyName || "",
-        a.roomNumber || "",
-        a.messName || "",
-        a.tiffinStatus || "none",
-        a.mealPreference || "Veg",
-        a.tiffinProvided ? "Yes" : "No",
-        a.admissionDate ? formatDate(a.admissionDate) : "",
-      ]);
+      .map((a, i) => {
+        const leave = allLeaves.find(
+          (l) =>
+            l.studentId === a.id &&
+            l.status === "approved" &&
+            l.fromDate <= today &&
+            (!l.toDate || l.toDate >= today),
+        );
+        return [
+          i + 1,
+          a.admissionId,
+          a.fullName,
+          a.phoneNumber,
+          a.propertyName || "",
+          a.roomNumber || "",
+          a.messName || "",
+          a.tiffinStatus || "none",
+          a.mealPreference || "Veg",
+          leave ? `On Leave (${formatDate(leave.fromDate)} to ${leave.toDate ? formatDate(leave.toDate) : "TBD"})` : "Present",
+          a.tiffinProvided ? "Yes" : "No",
+          a.admissionDate ? formatDate(a.admissionDate) : "",
+        ];
+      });
 
     downloadCsv(`nivasispace_mess_report_${new Date().toISOString().slice(0, 10)}.csv`, headers, rows);
+  };
+
+  // 2B. Monthly Student Mess & Leaves Register CSV
+  const exportMonthlyMessAndLeavesCsv = () => {
+    const totalDaysInMonth = new Date(messYear, messMonth, 0).getDate();
+    const monthName = new Date(messYear, messMonth - 1, 1).toLocaleString("en-IN", {
+      month: "long",
+      year: "numeric",
+    });
+    const headers = [
+      "Sr No",
+      "Admission ID",
+      "Student Name",
+      "Student Phone",
+      "Property",
+      "Room Number",
+      "Assigned Mess",
+      "Meal Preference",
+      "Billing Month",
+      "Days in Month",
+      "Days on Approved Leave",
+      "Net Active Mess Days (Served)",
+      "Mess Attendance %",
+      "Leave Periods & Details",
+    ];
+
+    const rows = admissions
+      .filter((a) => (selectedMess === "all" ? (a.messId || a.messName) : a.messId === selectedMess))
+      .map((a, i) => {
+        const { leaveDays, leaveSpans } = getStudentLeaveDaysInMonth(a.id, messYear, messMonth, allLeaves);
+        const netDays = Math.max(0, totalDaysInMonth - leaveDays);
+        const attPct = totalDaysInMonth > 0 ? ((netDays / totalDaysInMonth) * 100).toFixed(1) + "%" : "100%";
+        return [
+          i + 1,
+          a.admissionId,
+          a.fullName,
+          a.phoneNumber || "",
+          a.propertyName || "",
+          a.roomNumber || "",
+          a.messName || "Unassigned",
+          a.mealPreference || "Veg",
+          monthName,
+          totalDaysInMonth,
+          leaveDays,
+          netDays,
+          attPct,
+          leaveSpans.join(" | ") || "No leaves taken",
+        ];
+      });
+
+    downloadCsv(`nivasispace_monthly_mess_leaves_${messYear}_${String(messMonth).padStart(2, "0")}.csv`, headers, rows);
   };
 
   // 3. Laundry CSV
@@ -611,6 +725,10 @@ function ReportsPage() {
               <TabsTrigger value="mess-report" className="rounded-lg text-xs gap-1.5 py-1.5 px-3 data-[state=active]:bg-card data-[state=active]:shadow-sm">
                 <UtensilsCrossed className="size-3.5" />
                 Mess & Tiffins
+              </TabsTrigger>
+              <TabsTrigger value="monthly-mess" className="rounded-lg text-xs gap-1.5 py-1.5 px-3 data-[state=active]:bg-card data-[state=active]:shadow-sm">
+                <CalendarOff className="size-3.5" />
+                Monthly Mess & Leaves
               </TabsTrigger>
               <TabsTrigger value="laundry-report" className="rounded-lg text-xs gap-1.5 py-1.5 px-3 data-[state=active]:bg-card data-[state=active]:shadow-sm">
                 <WashingMachine className="size-3.5" />
@@ -914,6 +1032,294 @@ function ReportsPage() {
                 </table>
               </div>
             </Card>
+          </TabsContent>
+
+          {/* TAB 2B: MONTHLY STUDENT MESS & LEAVES REPORT */}
+          <TabsContent value="monthly-mess" className="space-y-4 m-0">
+            {/* Controls Bar for Monthly Mess Report */}
+            <div className="rounded-2xl border border-border bg-card p-4 shadow-soft">
+              <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5 whitespace-nowrap">
+                    <Calendar className="size-4 text-primary" />
+                    Billing Month:
+                  </span>
+
+                  {/* Month Select */}
+                  <Select
+                    value={String(messMonth)}
+                    onValueChange={(val) => setMessMonth(Number(val))}
+                  >
+                    <SelectTrigger className="w-[140px] rounded-xl text-xs h-9">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl text-xs">
+                      {[
+                        "January", "February", "March", "April", "May", "June",
+                        "July", "August", "September", "October", "November", "December",
+                      ].map((name, idx) => (
+                        <SelectItem key={name} value={String(idx + 1)}>
+                          {name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  {/* Year Select */}
+                  <Select
+                    value={String(messYear)}
+                    onValueChange={(val) => setMessYear(Number(val))}
+                  >
+                    <SelectTrigger className="w-[100px] rounded-xl text-xs h-9">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl text-xs">
+                      {[2024, 2025, 2026, 2027, 2028].map((y) => (
+                        <SelectItem key={y} value={String(y)}>
+                          {y}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  {/* Mess Filter */}
+                  <Select value={selectedMess} onValueChange={setSelectedMess}>
+                    <SelectTrigger className="w-[170px] rounded-xl text-xs h-9">
+                      <UtensilsCrossed className="size-3.5 mr-1.5 text-primary" />
+                      <SelectValue placeholder="All Messes" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl text-xs">
+                      <SelectItem value="all">All Mess Providers</SelectItem>
+                      {messes.map((m) => (
+                        <SelectItem key={m.id} value={m.id}>
+                          {m.messName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <Button
+                  onClick={exportMonthlyMessAndLeavesCsv}
+                  size="sm"
+                  className="gradient-brand text-white shadow-soft gap-1.5 text-xs h-9"
+                >
+                  <Download className="size-3.5" />
+                  Download Monthly Report (CSV)
+                </Button>
+              </div>
+            </div>
+
+            {/* Monthly KPI Overview Cards */}
+            {(() => {
+              const daysInMonth = new Date(messYear, messMonth, 0).getDate();
+              const monthlyStudents = admissions
+                .filter((a) => (selectedMess === "all" ? (a.messId || a.messName) : a.messId === selectedMess))
+                .map((s) => {
+                  const { leaveDays, leaveSpans } = getStudentLeaveDaysInMonth(s.id, messYear, messMonth, allLeaves);
+                  const netDays = Math.max(0, daysInMonth - leaveDays);
+                  const pref = (s.mealPreference || "veg").toLowerCase().includes("non") ? "non-veg" : "veg";
+                  return { ...s, leaveDays, netDays, leaveSpans, pref };
+                });
+
+              const totalEnrolled = monthlyStudents.length;
+              const totalPossibleDays = totalEnrolled * daysInMonth;
+              const totalLeaveDaysDeducted = monthlyStudents.reduce((acc, s) => acc + s.leaveDays, 0);
+              const totalNetDaysServed = monthlyStudents.reduce((acc, s) => acc + s.netDays, 0);
+              const totalVegDays = monthlyStudents.filter((s) => s.pref === "veg").reduce((acc, s) => acc + s.netDays, 0);
+              const totalNonVegDays = monthlyStudents.filter((s) => s.pref === "non-veg").reduce((acc, s) => acc + s.netDays, 0);
+              const attendanceRate = totalPossibleDays > 0 ? Math.round((totalNetDaysServed / totalPossibleDays) * 100) : 100;
+
+              return (
+                <>
+                  <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+                    <div className="rounded-2xl border border-border bg-card p-4 shadow-soft">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                        Enrolled Students
+                      </span>
+                      <p className="text-2xl font-bold font-display mt-1 text-foreground">
+                        {totalEnrolled}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        {daysInMonth} calendar days in month
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-4 shadow-soft">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-destructive">
+                        ✈️ Leave Days Deducted
+                      </span>
+                      <p className="text-2xl font-bold font-display mt-1 text-destructive">
+                        {totalLeaveDaysDeducted}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        Meals saved via approved leave
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4 shadow-soft">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-primary">
+                        🍽️ Net Mess Days Served
+                      </span>
+                      <p className="text-2xl font-bold font-display mt-1 text-primary">
+                        {totalNetDaysServed}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        Billable student-days
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl border border-emerald-300 bg-emerald-50/50 dark:bg-emerald-950/20 p-4 shadow-soft">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-300">
+                        🟢 Veg Portions
+                      </span>
+                      <p className="text-2xl font-bold font-display mt-1 text-emerald-700 dark:text-emerald-400">
+                        {totalVegDays}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        Veg student-days served
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl border border-amber-300 bg-amber-50/50 dark:bg-amber-950/20 p-4 shadow-soft">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-amber-800 dark:text-amber-300">
+                        🍗 Non-Veg Portions
+                      </span>
+                      <p className="text-2xl font-bold font-display mt-1 text-amber-700 dark:text-amber-400">
+                        {totalNonVegDays}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        Non-Veg student-days served
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Monthly Register Table */}
+                  <Card className="border border-border/80 shadow-soft">
+                    <CardHeader className="p-4 border-b border-border/60 flex flex-row items-center justify-between space-y-0">
+                      <div>
+                        <CardTitle className="text-base font-semibold">
+                          Monthly Student Mess & Leave Register —{" "}
+                          {new Date(messYear, messMonth - 1, 1).toLocaleString("en-IN", {
+                            month: "long",
+                            year: "numeric",
+                          })}
+                        </CardTitle>
+                        <CardDescription className="text-xs">
+                          Per-student breakdown of calendar days, approved leaves deducted, and net meal days. Overall attendance: {attendanceRate}%.
+                        </CardDescription>
+                      </div>
+                    </CardHeader>
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs">
+                        <thead className="bg-muted/50 text-muted-foreground border-b border-border/60">
+                          <tr>
+                            <th className="py-2.5 px-4 font-semibold">Student / ID</th>
+                            <th className="py-2.5 px-3 font-semibold">Property & Room</th>
+                            <th className="py-2.5 px-3 font-semibold">Mess Provider</th>
+                            <th className="py-2.5 px-3 font-semibold">Meal Preference</th>
+                            <th className="py-2.5 px-3 font-semibold text-center">Month Days</th>
+                            <th className="py-2.5 px-3 font-semibold text-center">Leave Days</th>
+                            <th className="py-2.5 px-3 font-semibold text-center">Net Mess Days</th>
+                            <th className="py-2.5 px-3 font-semibold text-center">Attendance %</th>
+                            <th className="py-2.5 px-4 font-semibold">Leave Periods in Month</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border/60">
+                          {monthlyStudents.length === 0 ? (
+                            <tr>
+                              <td colSpan={9} className="py-8 text-center text-muted-foreground">
+                                No mess subscribers found for the selected filters.
+                              </td>
+                            </tr>
+                          ) : (
+                            monthlyStudents.map((s) => {
+                              const attPct = daysInMonth > 0 ? Math.round((s.netDays / daysInMonth) * 100) : 100;
+                              return (
+                                <tr key={s.id} className="hover:bg-muted/30 transition-colors">
+                                  <td className="py-2.5 px-4">
+                                    <span className="font-semibold text-foreground block">{s.fullName}</span>
+                                    <span className="text-[10px] text-muted-foreground font-mono">{s.admissionId}</span>
+                                  </td>
+                                  <td className="py-2.5 px-3">
+                                    <span className="text-foreground">{s.propertyName || "—"}</span>
+                                    {s.roomNumber && (
+                                      <span className="text-[10px] text-muted-foreground block">
+                                        Rm {s.roomNumber}
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td className="py-2.5 px-3 font-medium text-foreground">
+                                    {s.messName || "Unassigned"}
+                                  </td>
+                                  <td className="py-2.5 px-3">
+                                    {s.pref === "veg" ? (
+                                      <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px]">
+                                        🟢 Pure Veg
+                                      </Badge>
+                                    ) : (
+                                      <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-[10px]">
+                                        🍗 Non-Veg
+                                      </Badge>
+                                    )}
+                                  </td>
+                                  <td className="py-2.5 px-3 text-center font-mono">
+                                    {daysInMonth}
+                                  </td>
+                                  <td className="py-2.5 px-3 text-center">
+                                    {s.leaveDays > 0 ? (
+                                      <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 text-[10px] font-bold">
+                                        -{s.leaveDays} days
+                                      </Badge>
+                                    ) : (
+                                      <span className="text-muted-foreground">0</span>
+                                    )}
+                                  </td>
+                                  <td className="py-2.5 px-3 text-center font-bold text-foreground font-mono">
+                                    {s.netDays} days
+                                  </td>
+                                  <td className="py-2.5 px-3 text-center font-mono">
+                                    <span
+                                      className={`px-2 py-0.5 rounded text-[11px] font-bold ${
+                                        attPct >= 85
+                                          ? "text-emerald-700 bg-emerald-50"
+                                          : attPct >= 65
+                                          ? "text-amber-700 bg-amber-50"
+                                          : "text-destructive bg-destructive/10"
+                                      }`}
+                                    >
+                                      {attPct}%
+                                    </span>
+                                  </td>
+                                  <td className="py-2.5 px-4">
+                                    {s.leaveSpans.length > 0 ? (
+                                      <div className="space-y-1">
+                                        {s.leaveSpans.map((span, idx) => (
+                                          <span
+                                            key={idx}
+                                            className="text-[11px] text-destructive bg-destructive/5 px-2 py-0.5 rounded block max-w-sm truncate"
+                                            title={span}
+                                          >
+                                            {span}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <span className="text-muted-foreground text-[11px]">No leaves taken</span>
+                                    )}
+                                  </td>
+                                </tr>
+                              );
+                            })
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </Card>
+                </>
+              );
+            })()}
           </TabsContent>
 
           {/* TAB 3: LAUNDRY SERVICE OPERATIONS */}

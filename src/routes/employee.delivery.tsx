@@ -10,8 +10,8 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth";
-import { useEmployeeByUid, useAdmissions, useDeliveriesForDate, useMesses } from "@/lib/hooks";
-import { upsertDelivery, todayDateString } from "@/lib/db";
+import { useEmployeeByUid, useAdmissions, useDeliveriesForDate, useMesses, useAllLeaveRequests } from "@/lib/hooks";
+import { upsertDelivery, todayDateString, todayISTDateString } from "@/lib/db";
 import type { Admission, DeliveryStatus } from "@/lib/types";
 
 export const Route = createFileRoute("/employee/delivery")({
@@ -72,6 +72,23 @@ function EmployeeDeliveryPage() {
 
   const { data: admissions = [] } = useAdmissions();
   const { data: deliveries = [] } = useDeliveriesForDate(resolvedMessId || null, today);
+  const { data: allLeaves = [] } = useAllLeaveRequests();
+  const todayIST = todayISTDateString();
+
+  const studentLeaveMap = useMemo(() => {
+    const map = new Map<string, typeof allLeaves[0]>();
+    for (const l of allLeaves) {
+      if (l.status === "approved") {
+        const from = l.fromDate;
+        const to = l.toDate;
+        if (from <= todayIST && (!to || todayIST <= to)) {
+          if (l.studentAdmissionId) map.set(l.studentAdmissionId, l);
+          if (l.studentId) map.set(l.studentId, l);
+        }
+      }
+    }
+    return map;
+  }, [allLeaves, todayIST]);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [updatingKey, setUpdatingKey] = useState<string | null>(null);
@@ -158,6 +175,8 @@ function EmployeeDeliveryPage() {
   const lunch   = student ? getDelivery(student.id, "lunch")  : undefined;
   const dinner  = student ? getDelivery(student.id, "dinner") : undefined;
   const tiffin  = student ? ((student as any).tiffinStatus ?? "active") : "active";
+  const activeLeave = student ? (studentLeaveMap.get(student.admissionId) || studentLeaveMap.get(student.id)) : undefined;
+  const isNonVeg = student ? ((student.mealPreference || "veg").toLowerCase().includes("non")) : false;
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -228,17 +247,47 @@ function EmployeeDeliveryPage() {
                   </p>
                 )}
               </div>
-              <Badge
-                variant="outline"
-                className={`shrink-0 capitalize text-[11px] ${
-                  tiffin === "active"
-                    ? "border-success/30 bg-success/10 text-success"
-                    : "border-warning/30 bg-warning/10 text-warning-foreground"
-                }`}
-              >
-                {tiffin}
-              </Badge>
+              <div className="flex items-center gap-1.5 shrink-0">
+                {isNonVeg ? (
+                  <Badge variant="outline" className="border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400 text-[11px]">
+                    🍗 Non-Veg
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-[11px]">
+                    🥬 Pure Veg
+                  </Badge>
+                )}
+                {activeLeave ? (
+                  <Badge variant="outline" className="border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-400 text-[11px] font-medium">
+                    ✈️ On Leave
+                  </Badge>
+                ) : (
+                  <Badge
+                    variant="outline"
+                    className={`capitalize text-[11px] ${
+                      tiffin === "active"
+                        ? "border-success/30 bg-success/10 text-success"
+                        : "border-warning/30 bg-warning/10 text-warning-foreground"
+                    }`}
+                  >
+                    {tiffin}
+                  </Badge>
+                )}
+              </div>
             </div>
+
+            {/* Approved Leave Alert */}
+            {activeLeave && (
+              <div className="mt-3 rounded-xl border border-sky-500/30 bg-sky-500/10 p-3 text-xs text-sky-800 dark:text-sky-300 space-y-1">
+                <div className="flex items-center justify-between font-semibold">
+                  <span>✈️ Student is on Approved Leave</span>
+                  <span>{activeLeave.fromDate} → {activeLeave.toDate || "Open Return"}</span>
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Meals paused by system. Skip delivery unless explicitly instructed. {activeLeave.reason ? `("${activeLeave.reason}")` : ""}
+                </p>
+              </div>
+            )}
 
             {/* Call + Navigate — only contact/map info exposed */}
             <div className="mt-4 flex gap-2">

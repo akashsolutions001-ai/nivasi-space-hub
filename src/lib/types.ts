@@ -55,6 +55,7 @@ export interface Admission {
   messId?: string;
   messName?: string;
   tiffinStatus?: TiffinStatus | string;
+  messJoiningDate?: string | undefined;
   // Laundry
   laundryId?: string;
   laundryName?: string;
