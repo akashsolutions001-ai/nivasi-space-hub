@@ -1,7 +1,21 @@
-import { useState } from "react";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useState, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Eye, EyeOff, Pencil, Share2, ShieldAlert, Trash2, UtensilsCrossed, WashingMachine, Loader2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Eye,
+  EyeOff,
+  Pencil,
+  Share2,
+  ShieldAlert,
+  Trash2,
+  UtensilsCrossed,
+  WashingMachine,
+  Loader2,
+  UploadCloud,
+  Upload,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { AdminShell } from "@/components/nivasi/admin-shell";
@@ -32,28 +46,45 @@ import {
   assignStudentToLaundry,
   unassignStudentFromLaundry,
   updateStudentLaundryStatus,
+  updateStudentProfilePhoto,
+  deleteStudentProfilePhoto,
 } from "@/lib/db";
+import {
+  uploadProfilePictureToCloudinary,
+  validateProfilePicture,
+  deleteProfilePictureViaNetlify,
+} from "@/lib/cloudinary";
 import { useIsGlobalAdmin } from "@/lib/auth";
 import { isFirebaseConfigured } from "@/lib/firebase";
 import { formatDate, formatINR } from "@/lib/format";
 import { useMesses, useLaundries } from "@/lib/hooks";
 import { Badge } from "@/components/ui/badge";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import type { Admission, TiffinStatus, LaundrySubscriptionStatus } from "@/lib/types";
 
 // Global admin credentials for delete confirmation
-const GLOBAL_EMAIL    = "Globaladmin@nivasispace.com";
+const GLOBAL_EMAIL = "Globaladmin@nivasispace.com";
 const GLOBAL_PASSWORD = "16Dec@1980NivasiSpace";
 
 export const Route = createFileRoute("/admin/admissions/$admissionId/")({
   head: () => ({
     meta: [
       { title: "Admission Details — NivasiSpace Admin" },
-      { name: "description", content: "Full profile, package, payment and item record for a student." },
+      {
+        name: "description",
+        content: "Full profile, package, payment and item record for a student.",
+      },
       { property: "og:title", content: "Admission Details — NivasiSpace Admin" },
-      { property: "og:description", content: "Full profile, package, payment and item record for a student." },
+      {
+        property: "og:description",
+        content: "Full profile, package, payment and item record for a student.",
+      },
     ],
   }),
   component: AdmissionDetailPage,
@@ -63,7 +94,7 @@ export const Route = createFileRoute("/admin/admissions/$admissionId/")({
 
 function buildReceiptFromAdmission(a: Admission): string {
   const balance = Math.max(0, a.balanceAmount);
-  const status  = a.paymentStatus === "completed" ? "PAID ✅" : "PENDING ⚠️";
+  const status = a.paymentStatus === "completed" ? "PAID ✅" : "PENDING ⚠️";
 
   return [
     "━━━━━━━━━━━━━━━━━━━━━━━━",
@@ -76,30 +107,34 @@ function buildReceiptFromAdmission(a: Admission): string {
     "👤 *Student Details*",
     `   Name    : ${a.fullName}`,
     `   Phone   : ${a.phoneNumber}`,
-    ...(a.email  ? [`   Email   : ${a.email}`]  : []),
+    ...(a.email ? [`   Email   : ${a.email}`] : []),
     ...(a.gender ? [`   Gender  : ${a.gender}`] : []),
     "",
-    ...((a as any).parentName ? [
-      "👨‍👩‍👧 *Parent / Guardian*",
-      `   Name     : ${(a as any).parentName}`,
-      ...((a as any).parentPhone    ? [`   Phone    : ${(a as any).parentPhone}`]    : []),
-      ...((a as any).parentRelation ? [`   Relation : ${(a as any).parentRelation}`] : []),
-      "",
-    ] : []),
+    ...((a as any).parentName
+      ? [
+          "👨‍👩‍👧 *Parent / Guardian*",
+          `   Name     : ${(a as any).parentName}`,
+          ...((a as any).parentPhone ? [`   Phone    : ${(a as any).parentPhone}`] : []),
+          ...((a as any).parentRelation ? [`   Relation : ${(a as any).parentRelation}`] : []),
+          "",
+        ]
+      : []),
     "🎓 *College*",
     `   ${a.collegeName}`,
     ...(a.course ? [`   ${a.course}${a.year ? ` — ${a.year}` : ""}`] : []),
     "",
     "🏠 *Stay*",
     `   Property : ${a.propertyName || "—"}`,
-    `   Room     : ${a.roomNumber   || "—"}`,
-    `   Bed      : ${a.bedNumber    || "—"}`,
+    `   Room     : ${a.roomNumber || "—"}`,
+    `   Bed      : ${a.bedNumber || "—"}`,
     ...(a.moveInDate ? [`   Move-in  : ${a.moveInDate}`] : []),
     "",
     "📦 *Package*",
     `   ${a.packageName || "—"}`,
     ...(a.packageServices.length ? [`   Services : ${a.packageServices.join(", ")}`] : []),
-    ...(a.packageStartDate ? [`   Period   : ${a.packageStartDate} → ${a.packageEndDate || "—"}`] : []),
+    ...(a.packageStartDate
+      ? [`   Period   : ${a.packageStartDate} → ${a.packageEndDate || "—"}`]
+      : []),
     "",
     "💰 *Payment Summary*",
     `   Total Amount  : ₹${a.packageAmount.toLocaleString("en-IN")}`,
@@ -115,17 +150,15 @@ function buildReceiptFromAdmission(a: Admission): string {
 
 function ShareReceiptPopover({ admission }: { admission: Admission }) {
   const [open, setOpen] = useState(false);
-  const text    = buildReceiptFromAdmission(admission);
+  const text = buildReceiptFromAdmission(admission);
   const encoded = encodeURIComponent(text);
 
   const studentPhone = (admission.phoneNumber ?? "").replace(/\D/g, "");
-  const parentPhone  = ((admission as any).parentPhone ?? "").replace(/\D/g, "");
-  const parentName   = (admission as any).parentName ?? "";
+  const parentPhone = ((admission as any).parentPhone ?? "").replace(/\D/g, "");
+  const parentName = (admission as any).parentName ?? "";
 
   function downloadPDF() {
-    import("@/lib/receipt-pdf").then(({ downloadReceiptPDF }) =>
-      downloadReceiptPDF(admission)
-    );
+    import("@/lib/receipt-pdf").then(({ downloadReceiptPDF }) => downloadReceiptPDF(admission));
     setOpen(false);
   }
 
@@ -133,7 +166,8 @@ function ShareReceiptPopover({ admission }: { admission: Admission }) {
     if (navigator.share) {
       navigator.share({ title: `Fee Receipt — ${admission.admissionId}`, text }).catch(() => {});
     } else {
-      navigator.clipboard.writeText(text)
+      navigator.clipboard
+        .writeText(text)
         .then(() => toast.success("Receipt copied to clipboard!"))
         .catch(() => toast.error("Could not copy receipt."));
     }
@@ -224,7 +258,13 @@ function PaymentSection({
   data,
   isGlobalAdmin,
 }: {
-  data: { packageAmount: number; amountPaid: number; balanceAmount: number; paymentStatus: "completed" | "pending"; paymentMode?: "online" | "cash" | null };
+  data: {
+    packageAmount: number;
+    amountPaid: number;
+    balanceAmount: number;
+    paymentStatus: "completed" | "pending";
+    paymentMode?: "online" | "cash" | null;
+  };
   isGlobalAdmin: boolean;
 }) {
   const [show, setShow] = useState(true);
@@ -248,11 +288,15 @@ function PaymentSection({
       {show ? (
         <>
           <Row label="Total Package Amount" value={formatINR(data.packageAmount)} />
-          <Row label="Amount Paid"          value={formatINR(data.amountPaid)} />
+          <Row label="Amount Paid" value={formatINR(data.amountPaid)} />
           <Row
             label="Balance Due"
             value={
-              <span className={data.balanceAmount > 0 ? "text-destructive font-bold" : "text-success font-bold"}>
+              <span
+                className={
+                  data.balanceAmount > 0 ? "text-destructive font-bold" : "text-success font-bold"
+                }
+              >
                 {formatINR(data.balanceAmount)}
               </span>
             }
@@ -262,9 +306,13 @@ function PaymentSection({
             label="Payment Mode"
             value={
               data.paymentMode === "online" ? (
-                <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-700">💳 Online</span>
+                <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-700">
+                  💳 Online
+                </span>
               ) : data.paymentMode === "cash" ? (
-                <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-700">💵 Cash</span>
+                <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-700">
+                  💵 Cash
+                </span>
               ) : (
                 <span className="text-muted-foreground text-sm">—</span>
               )
@@ -292,15 +340,12 @@ function DeleteButton({
   studentName: string;
   admissionId: string;
 }) {
-  const [email, setEmail]       = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [credError, setCredError] = useState("");
 
   function handleGlobalAdminConfirm() {
-    if (
-      email.trim().toLowerCase() === GLOBAL_EMAIL.toLowerCase() &&
-      password === GLOBAL_PASSWORD
-    ) {
+    if (email.trim().toLowerCase() === GLOBAL_EMAIL.toLowerCase() && password === GLOBAL_PASSWORD) {
       setCredError("");
       onConfirmedDelete();
     } else {
@@ -342,7 +387,15 @@ function DeleteButton({
 
   // Normal admin — must enter Global Admin credentials to proceed
   return (
-    <AlertDialog onOpenChange={(open) => { if (!open) { setEmail(""); setPassword(""); setCredError(""); } }}>
+    <AlertDialog
+      onOpenChange={(open) => {
+        if (!open) {
+          setEmail("");
+          setPassword("");
+          setCredError("");
+        }
+      }}
+    >
       <AlertDialogTrigger asChild>
         <Button variant="destructive" size="sm" disabled={deleting}>
           <Trash2 className="size-4" />
@@ -414,7 +467,7 @@ function MessSection({ data }: { data: Admission }) {
   const [editingMealPref, setEditingMealPref] = useState(false);
   // Local state so the pill updates instantly without waiting for query refetch
   const [localMealPref, setLocalMealPref] = useState<"veg" | "non-veg" | "">(
-    (data.mealPreference as "veg" | "non-veg") ?? ""
+    (data.mealPreference as "veg" | "non-veg") ?? "",
   );
 
   const currentMessId: string = (data as any).messId ?? "";
@@ -453,8 +506,8 @@ function MessSection({ data }: { data: Admission }) {
   }
 
   async function handleMealPrefChange(pref: "veg" | "non-veg") {
-    setLocalMealPref(pref);       // update instantly
-    setEditingMealPref(false);    // collapse to pill immediately
+    setLocalMealPref(pref); // update instantly
+    setEditingMealPref(false); // collapse to pill immediately
     setSaving(true);
     try {
       await updateAdmission(data.id, { mealPreference: pref });
@@ -469,11 +522,12 @@ function MessSection({ data }: { data: Admission }) {
     }
   }
 
-  const tiffinColor = currentTiffin === "active"
-    ? "border-success/30 bg-success/10 text-success"
-    : currentTiffin === "paused"
-    ? "border-warning/30 bg-warning/10 text-warning-foreground"
-    : "border-destructive/20 bg-destructive/10 text-destructive";
+  const tiffinColor =
+    currentTiffin === "active"
+      ? "border-success/30 bg-success/10 text-success"
+      : currentTiffin === "paused"
+        ? "border-warning/30 bg-warning/10 text-warning-foreground"
+        : "border-destructive/20 bg-destructive/10 text-destructive";
 
   return (
     <section className="rounded-2xl border border-border bg-card p-5 shadow-soft">
@@ -504,7 +558,9 @@ function MessSection({ data }: { data: Admission }) {
                   : "border-red-400 bg-red-100 text-red-700 dark:border-red-600 dark:bg-red-900/40 dark:text-red-400"
               }`}
             >
-              <span className={`mr-1 inline-block size-1.5 rounded-full ${currentMealPref === "veg" ? "bg-green-500" : "bg-red-500"}`} />
+              <span
+                className={`mr-1 inline-block size-1.5 rounded-full ${currentMealPref === "veg" ? "bg-green-500" : "bg-red-500"}`}
+              />
               {currentMealPref === "veg" ? "Veg" : "Non-Veg"}
             </Badge>
           )}
@@ -521,16 +577,24 @@ function MessSection({ data }: { data: Admission }) {
               <SelectValue placeholder="Select a mess…" />
             </SelectTrigger>
             <SelectContent>
-              {messes.filter((m) => m.status === "active").map((m) => (
-                <SelectItem key={m.id} value={m.id}>{m.messName}</SelectItem>
-              ))}
+              {messes
+                .filter((m) => m.status === "active")
+                .map((m) => (
+                  <SelectItem key={m.id} value={m.id}>
+                    {m.messName}
+                  </SelectItem>
+                ))}
             </SelectContent>
           </Select>
         </div>
         {currentMessId && (
           <div className="space-y-1">
             <p className="text-xs font-medium text-muted-foreground">Tiffin Status</p>
-            <Select value={currentTiffin} onValueChange={(v) => handleTiffinChange(v as TiffinStatus)} disabled={saving}>
+            <Select
+              value={currentTiffin}
+              onValueChange={(v) => handleTiffinChange(v as TiffinStatus)}
+              disabled={saving}
+            >
               <SelectTrigger className="h-9 text-sm">
                 <SelectValue />
               </SelectTrigger>
@@ -566,7 +630,9 @@ function MessSection({ data }: { data: Admission }) {
                   : "border-red-400 bg-red-100 text-red-700 dark:border-red-600 dark:bg-red-900/40 dark:text-red-400"
               }`}
             >
-              <span className={`size-2 rounded-full shrink-0 ${currentMealPref === "veg" ? "bg-green-500" : "bg-red-500"}`} />
+              <span
+                className={`size-2 rounded-full shrink-0 ${currentMealPref === "veg" ? "bg-green-500" : "bg-red-500"}`}
+              />
               {currentMealPref === "veg" ? "Veg" : "Non-Veg"}
             </div>
           ) : (
@@ -575,7 +641,9 @@ function MessSection({ data }: { data: Admission }) {
               <button
                 type="button"
                 disabled={saving}
-                onClick={async () => { await handleMealPrefChange("veg"); }}
+                onClick={async () => {
+                  await handleMealPrefChange("veg");
+                }}
                 className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:border-green-400 hover:bg-green-50 hover:text-green-700 disabled:opacity-50 dark:hover:bg-green-900/20 dark:hover:text-green-400"
               >
                 <span className="size-2 rounded-full bg-green-500 shrink-0" />
@@ -584,7 +652,9 @@ function MessSection({ data }: { data: Admission }) {
               <button
                 type="button"
                 disabled={saving}
-                onClick={async () => { await handleMealPrefChange("non-veg"); }}
+                onClick={async () => {
+                  await handleMealPrefChange("non-veg");
+                }}
                 className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:border-red-400 hover:bg-red-50 hover:text-red-700 disabled:opacity-50 dark:hover:bg-red-900/20 dark:hover:text-red-400"
               >
                 <span className="size-2 rounded-full bg-red-500 shrink-0" />
@@ -632,7 +702,12 @@ function LaundrySection({ data }: { data: Admission }) {
     if (!laundry) return;
     setSaving(true);
     try {
-      await assignStudentToLaundry(data.id, laundryId, laundry.laundryName, currentStatus || "active");
+      await assignStudentToLaundry(
+        data.id,
+        laundryId,
+        laundry.laundryName,
+        currentStatus || "active",
+      );
       await qc.invalidateQueries({ queryKey: ["admission", data.admissionId] });
       await qc.invalidateQueries({ queryKey: ["admissions"] });
       await qc.invalidateQueries({ queryKey: ["laundries"] });
@@ -658,11 +733,12 @@ function LaundrySection({ data }: { data: Admission }) {
     }
   }
 
-  const statusColor = currentStatus === "active"
-    ? "border-success/30 bg-success/10 text-success"
-    : currentStatus === "paused"
-    ? "border-warning/30 bg-warning/10 text-warning-foreground"
-    : "border-destructive/20 bg-destructive/10 text-destructive";
+  const statusColor =
+    currentStatus === "active"
+      ? "border-success/30 bg-success/10 text-success"
+      : currentStatus === "paused"
+        ? "border-warning/30 bg-warning/10 text-warning-foreground"
+        : "border-destructive/20 bg-destructive/10 text-destructive";
 
   return (
     <section className="rounded-2xl border border-border bg-card p-5 shadow-soft">
@@ -683,28 +759,40 @@ function LaundrySection({ data }: { data: Admission }) {
             </Badge>
           </div>
           {currentLaundry.ownerName && (
-            <p className="mt-0.5 text-xs text-muted-foreground">Owner: {currentLaundry.ownerName}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Owner: {currentLaundry.ownerName}
+            </p>
           )}
           {currentLaundry.ownerPhone && (
             <p className="text-xs text-muted-foreground">Phone: {currentLaundry.ownerPhone}</p>
           )}
         </div>
       ) : (
-        <p className="mb-3 text-sm text-muted-foreground italic">Not assigned to any laundry service yet.</p>
+        <p className="mb-3 text-sm text-muted-foreground italic">
+          Not assigned to any laundry service yet.
+        </p>
       )}
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1">
           <p className="text-xs font-medium text-muted-foreground">Assign to Laundry</p>
-          <Select value={currentLaundryId || "none"} onValueChange={handleLaundryChange} disabled={saving}>
+          <Select
+            value={currentLaundryId || "none"}
+            onValueChange={handleLaundryChange}
+            disabled={saving}
+          >
             <SelectTrigger className="h-9 text-sm">
               <SelectValue placeholder="Select laundry…" />
             </SelectTrigger>
             <SelectContent>
               {currentLaundryId && <SelectItem value="unassign">Unassign from Laundry</SelectItem>}
-              {laundries.filter((l) => l.status === "active").map((l) => (
-                <SelectItem key={l.id} value={l.id}>{l.laundryName}</SelectItem>
-              ))}
+              {laundries
+                .filter((l) => l.status === "active")
+                .map((l) => (
+                  <SelectItem key={l.id} value={l.id}>
+                    {l.laundryName}
+                  </SelectItem>
+                ))}
             </SelectContent>
           </Select>
         </div>
@@ -712,7 +800,11 @@ function LaundrySection({ data }: { data: Admission }) {
         {currentLaundryId && (
           <div className="space-y-1">
             <p className="text-xs font-medium text-muted-foreground">Subscription Status</p>
-            <Select value={currentStatus} onValueChange={(v) => handleStatusChange(v as LaundrySubscriptionStatus)} disabled={saving}>
+            <Select
+              value={currentStatus}
+              onValueChange={(v) => handleStatusChange(v as LaundrySubscriptionStatus)}
+              disabled={saving}
+            >
               <SelectTrigger className="h-9 text-sm capitalize">
                 <SelectValue />
               </SelectTrigger>
@@ -733,16 +825,106 @@ function LaundrySection({ data }: { data: Admission }) {
 
 function AdmissionDetailPage() {
   const { admissionId } = Route.useParams();
-  const navigate        = useNavigate();
-  const queryClient     = useQueryClient();
-  const isGlobalAdmin   = useIsGlobalAdmin();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const isGlobalAdmin = useIsGlobalAdmin();
   const [deleting, setDeleting] = useState(false);
+
+  // Profile Picture management state
+  const adminFileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [deletingPhoto, setDeletingPhoto] = useState(false);
+  const [deletePhotoOpen, setDeletePhotoOpen] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["admission", admissionId],
-    queryFn:  () => fetchAdmission(admissionId),
-    enabled:  isFirebaseConfigured,
+    queryFn: () => fetchAdmission(admissionId),
+    enabled: isFirebaseConfigured,
   });
+
+  const handleAdminPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || !data) return;
+
+    // Validate image format & max 2 MB
+    const validation = validateProfilePicture(file);
+    if (!validation.valid) {
+      toast.error(validation.error || "Please select a valid image.");
+      return;
+    }
+
+    const oldPublicId = data.profilePhoto?.publicId;
+
+    setUploadingPhoto(true);
+    const toastId = toast.loading("Uploading profile picture to Cloudinary...");
+
+    try {
+      // 1. Upload new photo to Cloudinary
+      const result = await uploadProfilePictureToCloudinary(file);
+
+      // 2. Save new photo to Firestore
+      await updateStudentProfilePhoto(data.id, {
+        url: result.secure_url,
+        publicId: result.public_id,
+        storage: "cloudinary",
+      });
+
+      // 3. Update UI
+      await queryClient.invalidateQueries({ queryKey: ["admission", admissionId] });
+      await queryClient.invalidateQueries({ queryKey: ["admissions"] });
+
+      toast.success("Profile picture updated successfully!", { id: toastId });
+
+      // 4. Replacement Safety: only after successful upload & Firestore save, delete old Cloudinary asset
+      if (oldPublicId && oldPublicId !== result.public_id) {
+        deleteProfilePictureViaNetlify({
+          publicId: oldPublicId,
+          studentId: data.id,
+        }).catch((err) => {
+          console.warn("[admin admission] Non-blocking cleanup of previous photo:", err);
+        });
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to upload photo.";
+      toast.error(msg, { id: toastId });
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
+  const handleAdminDeletePhoto = async () => {
+    if (!data) return;
+    const publicId = data.profilePhoto?.publicId;
+
+    setDeletingPhoto(true);
+    const toastId = toast.loading("Deleting photo from Cloudinary...");
+
+    try {
+      if (publicId) {
+        // 1. Call Netlify function to delete from Cloudinary
+        await deleteProfilePictureViaNetlify({
+          publicId,
+          studentId: data.id,
+        });
+      }
+
+      // 2. Only after successful Cloudinary deletion, clear from Firestore
+      await deleteStudentProfilePhoto(data.id);
+
+      // 3. Update UI
+      await queryClient.invalidateQueries({ queryKey: ["admission", admissionId] });
+      await queryClient.invalidateQueries({ queryKey: ["admissions"] });
+
+      toast.success("Profile picture deleted successfully!", { id: toastId });
+      setDeletePhotoOpen(false);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to delete photo.";
+      toast.error(msg, { id: toastId });
+    } finally {
+      setDeletingPhoto(false);
+    }
+  };
 
   async function handleDelete() {
     if (!data) return;
@@ -811,11 +993,11 @@ function AdmissionDetailPage() {
         />
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">
-
           {/* Hero banner */}
           <section className="gradient-brand flex items-center gap-5 rounded-2xl p-6 text-primary-foreground shadow-lift lg:col-span-2">
             <ProfileAvatar
               path={data.profileImagePath}
+              url={data.profilePhoto?.url || data.profileImageUrl}
               name={data.fullName}
               className="size-24 shrink-0 ring-2 ring-white/40"
             />
@@ -824,8 +1006,8 @@ function AdmissionDetailPage() {
               <p className="font-mono text-sm opacity-90 mt-0.5">{data.admissionId}</p>
               <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm opacity-90">
                 {data.phoneNumber && <span>📞 {data.phoneNumber}</span>}
-                {data.email       && <span>✉️ {data.email}</span>}
-                {data.gender      && <span>👤 {data.gender}</span>}
+                {data.email && <span>✉️ {data.email}</span>}
+                {data.gender && <span>👤 {data.gender}</span>}
               </div>
               <div className="mt-2">
                 <PaymentBadge status={data.paymentStatus} />
@@ -833,45 +1015,127 @@ function AdmissionDetailPage() {
             </div>
           </section>
 
+          {/* Profile Picture Management for Admin */}
+          <Section title="🖼️ Profile Picture">
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 py-2">
+              <div className="relative group">
+                <ProfileAvatar
+                  path={data.profileImagePath}
+                  url={data.profilePhoto?.url || data.profileImageUrl}
+                  name={data.fullName}
+                  className="size-24 shrink-0 ring-2 ring-border shadow-soft"
+                />
+              </div>
+
+              <div className="flex-1 space-y-3 text-center sm:text-left">
+                <div>
+                  <p className="text-sm font-semibold">Student Photo</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    JPG, PNG, or WEBP up to 5 MB. Stored securely on Cloudinary.
+                  </p>
+                </div>
+
+                <input
+                  ref={adminFileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={handleAdminPhotoUpload}
+                  disabled={uploadingPhoto || deletingPhoto}
+                />
+
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => adminFileInputRef.current?.click()}
+                    disabled={uploadingPhoto || deletingPhoto}
+                    className="gap-2"
+                  >
+                    {uploadingPhoto ? (
+                      <>
+                        <Loader2 className="size-4 animate-spin text-primary" />
+                        <span>Uploading...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="size-4" />
+                        <span>
+                          {data.profilePhoto?.url || data.profileImageUrl
+                            ? "Change Photo"
+                            : "Upload Photo"}
+                        </span>
+                      </>
+                    )}
+                  </Button>
+
+                  {(data.profilePhoto?.url || data.profileImageUrl) && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => setDeletePhotoOpen(true)}
+                      disabled={uploadingPhoto || deletingPhoto}
+                      className="gap-2"
+                    >
+                      {deletingPhoto ? (
+                        <>
+                          <Loader2 className="size-4 animate-spin" />
+                          <span>Deleting...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Trash2 className="size-4" />
+                          <span>Delete Photo</span>
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </Section>
+
           <Section title="👤 Personal Details">
-            <Row label="Full Name"    value={data.fullName} />
+            <Row label="Full Name" value={data.fullName} />
             <Row label="Phone Number" value={data.phoneNumber} />
-            <Row label="Email"        value={data.email} />
-            <Row label="Address"      value={(data as any).address} />
-            <Row label="Gender"       value={data.gender} />
+            <Row label="Email" value={data.email} />
+            <Row label="Address" value={(data as any).address} />
+            <Row label="Gender" value={data.gender} />
             <Row label="Date of Birth" value={formatDate(data.dateOfBirth)} />
           </Section>
 
-          {((data as any).parentName) && (
+          {(data as any).parentName && (
             <Section title="👨‍👩‍👧 Parent / Guardian">
-              <Row label="Name"     value={(data as any).parentName} />
-              <Row label="Phone"    value={(data as any).parentPhone} />
+              <Row label="Name" value={(data as any).parentName} />
+              <Row label="Phone" value={(data as any).parentPhone} />
               <Row label="Relation" value={(data as any).parentRelation} />
             </Section>
           )}
 
           <Section title="🎓 College Details">
             <Row label="College" value={data.collegeName} />
-            <Row label="Course"  value={data.course} />
-            <Row label="Year"    value={data.year} />
+            <Row label="Course" value={data.course} />
+            <Row label="Year" value={data.year} />
           </Section>
 
           <Section title="🏠 Stay Details">
-            <Row label="Property / PG"  value={data.propertyName} />
-            <Row label="Room Number"    value={data.roomNumber} />
-            <Row label="Bed Number"     value={data.bedNumber} />
+            <Row label="Property / PG" value={data.propertyName} />
+            <Row label="Room Number" value={data.roomNumber} />
+            <Row label="Bed Number" value={data.bedNumber} />
             <Row label="Admission Date" value={formatDate(data.admissionDate)} />
-            <Row label="Move-in Date"   value={formatDate(data.moveInDate)} />
+            <Row label="Move-in Date" value={formatDate(data.moveInDate)} />
           </Section>
 
           <Section title="📦 Package Allotted">
-            <Row label="Package Name"      value={data.packageName} />
+            <Row label="Package Name" value={data.packageName} />
             <Row
               label="Services Included"
               value={data.packageServices.length ? data.packageServices.join(", ") : "—"}
             />
             <Row label="Package Start" value={formatDate(data.packageStartDate)} />
-            <Row label="Package End"   value={formatDate(data.packageEndDate)} />
+            <Row label="Package End" value={formatDate(data.packageEndDate)} />
           </Section>
 
           {/* Mess & Tiffin assignment */}
@@ -887,22 +1151,42 @@ function AdmissionDetailPage() {
             <div className="grid gap-3 sm:grid-cols-3 mt-1">
               <div className="rounded-xl border border-border bg-background p-3 space-y-2">
                 <div className="flex flex-wrap gap-2">
-                  <StatusPill ok={data.bagProvided} okLabel="Bag Provided" pendingLabel="Bag Pending" />
+                  <StatusPill
+                    ok={data.bagProvided}
+                    okLabel="Bag Provided"
+                    pendingLabel="Bag Pending"
+                  />
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Payment:{" "}
-                  <span className={data.bagPaymentCollected ? "font-semibold text-success" : "font-semibold text-warning-foreground"}>
+                  <span
+                    className={
+                      data.bagPaymentCollected
+                        ? "font-semibold text-success"
+                        : "font-semibold text-warning-foreground"
+                    }
+                  >
                     {data.bagPaymentCollected ? "✓ Collected" : "⚠ Pending"}
                   </span>
                 </p>
               </div>
               <div className="rounded-xl border border-border bg-background p-3 space-y-2">
                 <div className="flex flex-wrap gap-2">
-                  <StatusPill ok={data.tiffinProvided} okLabel="Tiffin Provided" pendingLabel="Tiffin Pending" />
+                  <StatusPill
+                    ok={data.tiffinProvided}
+                    okLabel="Tiffin Provided"
+                    pendingLabel="Tiffin Pending"
+                  />
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Payment:{" "}
-                  <span className={data.tiffinPaymentCollected ? "font-semibold text-success" : "font-semibold text-warning-foreground"}>
+                  <span
+                    className={
+                      data.tiffinPaymentCollected
+                        ? "font-semibold text-success"
+                        : "font-semibold text-warning-foreground"
+                    }
+                  >
                     {data.tiffinPaymentCollected ? "✓ Collected" : "⚠ Pending"}
                   </span>
                 </p>
@@ -913,7 +1197,13 @@ function AdmissionDetailPage() {
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Payment:{" "}
-                  <span className={data.mattressPaymentCollected ? "font-semibold text-success" : "font-semibold text-warning-foreground"}>
+                  <span
+                    className={
+                      data.mattressPaymentCollected
+                        ? "font-semibold text-success"
+                        : "font-semibold text-warning-foreground"
+                    }
+                  >
                     {data.mattressPaymentCollected ? "✓ Collected" : "⚠ Pending"}
                   </span>
                 </p>
@@ -930,12 +1220,48 @@ function AdmissionDetailPage() {
           )}
 
           <Section title="🕐 Record Info">
-            <Row label="Created"      value={data.createdAt ? formatDate(data.createdAt.toISOString())  : "—"} />
-            <Row label="Last Updated" value={data.updatedAt ? formatDate(data.updatedAt.toISOString()) : "—"} />
+            <Row
+              label="Created"
+              value={data.createdAt ? formatDate(data.createdAt.toISOString()) : "—"}
+            />
+            <Row
+              label="Last Updated"
+              value={data.updatedAt ? formatDate(data.updatedAt.toISOString()) : "—"}
+            />
           </Section>
-
         </div>
       )}
+
+      {/* Delete Profile Photo Confirmation Dialog */}
+      <AlertDialog open={deletePhotoOpen} onOpenChange={setDeletePhotoOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Student Profile Picture?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove the profile picture for{" "}
+              <strong>{data?.fullName}</strong>? This will permanently delete the image from
+              Cloudinary and clear it from their profile.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletingPhoto}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleAdminDeletePhoto}
+              disabled={deletingPhoto}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deletingPhoto ? (
+                <>
+                  <Loader2 className="mr-2 size-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete Picture"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AdminShell>
   );
 }

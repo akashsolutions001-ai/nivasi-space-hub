@@ -221,6 +221,23 @@ export async function updateStudentProfilePhoto(
   }
 }
 
+/**
+ * Clears the profile picture references from a student's Firestore admission record.
+ */
+export async function deleteStudentProfilePhoto(admissionDocId: string): Promise<void> {
+  try {
+    await updateDoc(doc(getDb(), "admissions", admissionDocId), {
+      profilePhoto: null,
+      profileImageUrl: null,
+      profileImagePath: null,
+      updatedAt: serverTimestamp(),
+    });
+  } catch (error) {
+    console.error("[firestore] deleteStudentProfilePhoto", error);
+    throw new Error("Unable to remove profile picture from admission record. Please try again.");
+  }
+}
+
 export async function deleteAdmission(id: string): Promise<void> {
   try {
     await import("firebase/firestore").then(({ deleteDoc }) =>

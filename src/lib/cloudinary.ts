@@ -1,3 +1,5 @@
+import { getFirebaseAuth } from "./firebase";
+
 /**
  * Cloudinary Direct Browser Upload Utility for Nivasi Admission Hub.
  *
@@ -16,7 +18,7 @@ export const CLOUDINARY_ASSET_FOLDER = "nivasi/admission-hub";
 
 export const CLOUDINARY_UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
 
-// Validation limits
+// Validation limits (5 MB maximum)
 export const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
 export const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 export const ALLOWED_IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "webp"];
@@ -132,4 +134,78 @@ export function getOptimizedCloudinaryUrl(url?: string | null, size = 320): stri
     "/image/upload/",
     `/image/upload/c_fill,g_auto,w_${size},h_${size},q_auto,f_auto/`,
   );
+}
+
+export interface DeleteProfilePictureParams {
+  publicId: string;
+  studentId?: string;
+}
+
+/**
+ * Invokes the secure Netlify serverless function to delete a Cloudinary profile picture.
+ * Obtains the current Firebase Auth ID token and sends it in the Authorization header.
+ *
+ * Never touches or requires Cloudinary API Secret on the frontend.
+ */
+export async function deleteProfilePictureViaNetlify({
+  publicId,
+  studentId,
+}: DeleteProfilePictureParams): Promise<{ success: boolean; message: string }> {
+  if (!publicId) {
+    throw new Error("Cannot delete profile picture: missing publicId.");
+  }
+
+  const auth = getFirebaseAuth();
+  const currentUser = auth.currentUser;
+  if (!currentUser) {
+    throw new Error("You must be signed in to perform this action.");
+  }
+
+  const idToken = await currentUser.getIdToken();
+  const endpoint = "/.netlify/functions/delete-cloudinary-image";
+
+  let response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${idToken}`,
+    },
+    body: JSON.stringify({ publicId, studentId }),
+  });
+
+  // Fallback to /api/delete-cloudinary-image if the direct netlify endpoint is rewrote
+  if (response.status === 404) {
+    response = await fetch("/api/delete-cloudinary-image", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${idToken}`,
+      },
+      body: JSON.stringify({ publicId, studentId }),
+    });
+  }
+
+  interface DeleteResponsePayload {
+    success?: boolean;
+    message?: string;
+    error?: string;
+  }
+
+  let responseData: DeleteResponsePayload = {};
+  try {
+    responseData = (await response.json()) as DeleteResponsePayload;
+  } catch {
+    responseData = {};
+  }
+
+  if (!response.ok) {
+    const errorMsg =
+      responseData.error || `Failed to delete profile picture (status ${response.status}).`;
+    throw new Error(errorMsg);
+  }
+
+  return {
+    success: true,
+    message: responseData.message || "Profile picture deleted successfully.",
+  };
 }

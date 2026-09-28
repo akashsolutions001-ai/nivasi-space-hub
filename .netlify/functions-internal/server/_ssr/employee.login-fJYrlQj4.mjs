@@ -4,7 +4,7 @@ import { _ as useNavigate } from "../_libs/@tanstack/react-router+[...].mjs";
 import { F as require_jsx_runtime } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
 import { t as Button } from "./button-CCQEfgNs.mjs";
 import { n as useAuth } from "./auth-C-wItvgy.mjs";
-import { H as LoaderCircle, o as UtensilsCrossed } from "../_libs/lucide-react.mjs";
+import { U as LoaderCircle, o as UtensilsCrossed } from "../_libs/lucide-react.mjs";
 import { t as Input } from "./input-DoD5W07l.mjs";
 import { t as Label } from "./label-B1jF9p8Y.mjs";
 import { n as toast } from "../_libs/sonner.mjs";

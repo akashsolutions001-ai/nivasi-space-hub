@@ -24,6 +24,7 @@ import {
   Building,
   Camera,
   UploadCloud,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -41,6 +42,16 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -54,11 +65,13 @@ import {
   createProfileUpdateRequest,
   cancelProfileUpdateRequest,
   updateStudentProfilePhoto,
+  deleteStudentProfilePhoto,
 } from "@/lib/db";
 import {
   uploadProfilePictureToCloudinary,
   validateProfilePicture,
   getOptimizedCloudinaryUrl,
+  deleteProfilePictureViaNetlify,
 } from "@/lib/cloudinary";
 import { formatDate } from "@/lib/format";
 import type { Admission, ProfileUpdateRequest } from "@/lib/types";
@@ -96,9 +109,11 @@ function StudentProfilePage() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  // Profile Picture Upload state
+  // Profile Picture Upload & Delete state
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [deletingPhoto, setDeletingPhoto] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [photoError, setPhotoError] = useState<string | null>(null);
 
   // Form states
@@ -129,7 +144,7 @@ function StudentProfilePage() {
 
     setPhotoError(null);
 
-    // 1. Client-side validation: format (JPG, JPEG, PNG, WEBP) & max size (5 MB)
+    // 1. Client-side validation: format (JPG, JPEG, PNG, WEBP) & max size (2 MB)
     const validation = validateProfilePicture(file);
     if (!validation.valid) {
       const err = validation.error || "Please select a valid image.";
@@ -137,6 +152,9 @@ function StudentProfilePage() {
       toast.error(err);
       return;
     }
+
+    // Capture old publicId for replacement safety (DO NOT delete before new upload & save succeed)
+    const oldPublicId = admission.profilePhoto?.publicId;
 
     // 2. Direct upload to Cloudinary (unsigned API)
     setUploadingPhoto(true);
@@ -157,12 +175,54 @@ function StudentProfilePage() {
       queryClient.invalidateQueries({ queryKey: ["admissions"] });
 
       toast.success("Profile picture updated successfully!", { id: toastId });
+
+      // 5. Replacement safety: only after successful upload AND successful Firestore save, delete old Cloudinary asset
+      if (oldPublicId && oldPublicId !== result.public_id) {
+        deleteProfilePictureViaNetlify({
+          publicId: oldPublicId,
+          studentId: admission.id,
+        }).catch((err) => {
+          console.warn("[student profile] Non-blocking cleanup of previous photo:", err);
+        });
+      }
     } catch (err: any) {
       const msg = err?.message || "Failed to upload profile picture. Please try again.";
       setPhotoError(msg);
       toast.error(msg, { id: toastId });
     } finally {
       setUploadingPhoto(false);
+    }
+  };
+
+  const handleDeletePhoto = async () => {
+    if (!admission?.id) return;
+    const publicId = admission.profilePhoto?.publicId;
+
+    setDeletingPhoto(true);
+    const toastId = toast.loading("Deleting profile picture...");
+
+    try {
+      // If photo has a Cloudinary publicId, delete from Cloudinary via Netlify function first
+      if (publicId) {
+        await deleteProfilePictureViaNetlify({
+          publicId,
+          studentId: admission.id,
+        });
+      }
+
+      // Only after successful Cloudinary deletion, remove profilePhoto from Firestore
+      await deleteStudentProfilePhoto(admission.id);
+
+      await refreshAdmission().catch(() => {});
+      queryClient.invalidateQueries({ queryKey: ["admissions"] });
+
+      toast.success("Profile picture deleted successfully!", { id: toastId });
+      setDeleteDialogOpen(false);
+    } catch (err: any) {
+      const msg = err?.message || "Failed to delete profile picture. Please try again.";
+      toast.error(msg, { id: toastId });
+    } finally {
+      setDeletingPhoto(false);
     }
   };
 
@@ -492,7 +552,7 @@ function StudentProfilePage() {
                   variant="outline"
                   size="sm"
                   onClick={() => fileInputRef.current?.click()}
-                  disabled={uploadingPhoto}
+                  disabled={uploadingPhoto || deletingPhoto}
                   className="h-8 text-xs font-medium gap-1.5 rounded-xl border-border hover:bg-muted"
                 >
                   {uploadingPhoto ? (
@@ -512,6 +572,30 @@ function StudentProfilePage() {
                     </>
                   )}
                 </Button>
+
+                {currentPhotoUrl && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setDeleteDialogOpen(true)}
+                    disabled={uploadingPhoto || deletingPhoto}
+                    className="h-8 text-xs font-medium gap-1.5 rounded-xl border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                  >
+                    {deletingPhoto ? (
+                      <>
+                        <Loader2 className="size-3.5 animate-spin text-destructive" />
+                        Deleting...
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="size-3.5 text-destructive" />
+                        Delete Photo
+                      </>
+                    )}
+                  </Button>
+                )}
+
                 <span className="text-[11px] text-muted-foreground">
                   JPG, PNG or WEBP · Max 5 MB
                 </span>
@@ -523,6 +607,30 @@ function StudentProfilePage() {
                   {photoError}
                 </p>
               )}
+
+              {/* Confirmation Dialog for Profile Picture Deletion */}
+              <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                <AlertDialogContent className="rounded-2xl">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Profile Picture?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete your profile picture? This will permanently
+                      remove the image from Cloudinary and reset your avatar to the default
+                      initials.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel disabled={deletingPhoto}>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDeletePhoto}
+                      disabled={deletingPhoto}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      {deletingPhoto ? "Deleting..." : "Delete Photo"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </div>
         </div>
