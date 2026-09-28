@@ -412,3 +412,67 @@ export interface StudentLaundryRecord {
 }
 
 export type StudentLaundryRecordInput = Omit<StudentLaundryRecord, "id" | "createdAt" | "updatedAt">;
+
+// ── Student Leave Requests ───────────────────────────────────────────────────
+
+export type LeaveStatus = "pending" | "approved" | "rejected" | "cancelled" | "completed";
+
+export interface LeaveRequest {
+  id: string;
+  studentId: string;       // Firestore admission document ID
+  admissionId: string;     // NS-ADM-XXXXXX
+  studentName: string;
+  studentEmail: string;
+  studentPhone?: string | undefined;
+  propertyName?: string | undefined;
+  roomNumber?: string | undefined;
+  bedNumber?: string | undefined;
+  collegeName?: string | undefined;
+
+  fromDate: string;        // YYYY-MM-DD (mandatory)
+  toDate?: string | null | undefined;  // YYYY-MM-DD (optional, can be filled later)
+  hasOpenReturn: boolean;  // true if toDate is not yet specified
+
+  reason: string;
+  emergencyContact?: string | undefined;
+  notes?: string | undefined;
+
+  status: LeaveStatus;
+  adminNotes?: string | undefined;
+  reviewedBy?: string | undefined;
+  reviewedAt?: Date | null | undefined;
+
+  createdAt?: Date | null | undefined;
+  updatedAt?: Date | null | undefined;
+}
+
+export type LeaveRequestInput = Omit<LeaveRequest, "id" | "createdAt" | "updatedAt">;
+
+// ── Student Profile Update Requests ──────────────────────────────────────────
+
+export type ProfileUpdateStatus = "pending" | "approved" | "rejected" | "cancelled";
+
+export interface ProfileUpdateRequest {
+  id: string;
+  studentId: string;       // Firestore admission document ID
+  admissionId: string;     // NS-ADM-XXXXXX
+  studentName: string;
+  studentEmail: string;
+  propertyName?: string | undefined;
+  roomNumber?: string | undefined;
+
+  currentData: Partial<Admission>;
+  requestedData: Partial<Admission>;
+  changedFields: string[];
+
+  reason?: string | undefined;
+  status: ProfileUpdateStatus;
+  adminNotes?: string | undefined;
+  reviewedBy?: string | undefined;
+  reviewedAt?: Date | null | undefined;
+
+  createdAt?: Date | null | undefined;
+  updatedAt?: Date | null | undefined;
+}
+
+export type ProfileUpdateRequestInput = Omit<ProfileUpdateRequest, "id" | "createdAt" | "updatedAt">;

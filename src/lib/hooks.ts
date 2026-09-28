@@ -365,8 +365,12 @@ import {
   fetchAllMessRequests,
   fetchStudentLaundryRecords,
   fetchDoNotWantForStudent,
+  fetchLeaveRequestsForStudent,
+  fetchAllLeaveRequests,
+  fetchProfileUpdateRequestsForStudent,
+  fetchAllProfileUpdateRequests,
 } from "@/lib/db";
-import type { MessRecord, MessRequest, StudentLaundryRecord, DoNotWantRecord } from "@/lib/types";
+import type { MessRecord, MessRequest, StudentLaundryRecord, DoNotWantRecord, LeaveRequest, ProfileUpdateRequest } from "@/lib/types";
 
 export function useMessRecord(studentId: string | null, date: string) {
   return useQuery({
@@ -436,5 +440,47 @@ export function useDoNotWantForStudent(studentId: string | null) {
     queryKey: ["doNotWant", studentId],
     queryFn: () => fetchDoNotWantForStudent(studentId!),
     enabled: isFirebaseConfigured && !!studentId,
+  });
+}
+
+// ── Leave Requests ───────────────────────────────────────────────────────────
+
+export function useLeaveRequestsForStudent(studentId: string | null) {
+  return useQuery({
+    queryKey: ["leaveRequests", "student", studentId],
+    queryFn: () => fetchLeaveRequestsForStudent(studentId!),
+    enabled: isFirebaseConfigured && !!studentId,
+    refetchInterval: 4000,
+  });
+}
+
+export function useAllLeaveRequests() {
+  const ready = useIsReady();
+  return useQuery({
+    queryKey: ["leaveRequests", "all"],
+    queryFn: fetchAllLeaveRequests,
+    enabled: ready,
+    refetchInterval: 5000,
+  });
+}
+
+// ── Profile Update Requests ──────────────────────────────────────────────────
+
+export function useProfileUpdateRequestsForStudent(studentId: string | null) {
+  return useQuery({
+    queryKey: ["profileUpdateRequests", "student", studentId],
+    queryFn: () => fetchProfileUpdateRequestsForStudent(studentId!),
+    enabled: isFirebaseConfigured && !!studentId,
+    refetchInterval: 4000,
+  });
+}
+
+export function useAllProfileUpdateRequests() {
+  const ready = useIsReady();
+  return useQuery({
+    queryKey: ["profileUpdateRequests", "all"],
+    queryFn: fetchAllProfileUpdateRequests,
+    enabled: ready,
+    refetchInterval: 5000,
   });
 }

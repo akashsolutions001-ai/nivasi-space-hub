@@ -2,7 +2,7 @@ import { useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   Menu, LayoutDashboard, UtensilsCrossed, WashingMachine,
-  LogOut, ArrowLeft, ChevronRight, Home,
+  LogOut, ArrowLeft, ChevronRight, Home, CalendarOff, User,
 } from "lucide-react";
 
 import { NivasiLogo } from "./logo";
@@ -15,9 +15,11 @@ import { cn } from "@/lib/utils";
 // ── Nav items ─────────────────────────────────────────────────────────────────
 
 const STUDENT_NAV = [
-  { label: "Dashboard",  to: "/student/dashboard", icon: LayoutDashboard },
-  { label: "My Mess",    to: "/student/mess",       icon: UtensilsCrossed },
-  { label: "My Laundry", to: "/student/laundry",    icon: WashingMachine },
+  { label: "Dashboard",      to: "/student/dashboard", icon: LayoutDashboard },
+  { label: "My Mess",        to: "/student/mess",       icon: UtensilsCrossed },
+  { label: "My Laundry",     to: "/student/laundry",    icon: WashingMachine },
+  { label: "Leave Requests", to: "/student/leaves",     icon: CalendarOff },
+  { label: "My Profile",     to: "/student/profile",    icon: User },
 ] as const;
 
 // ── Sidebar inner content ─────────────────────────────────────────────────────
@@ -43,12 +45,19 @@ function SidebarInner({ onNavigate }: { onNavigate?: () => void }) {
         <NivasiLogo />
       </div>
 
-      {/* Student Profile Card */}
+      {/* Student Profile Card - Links to Profile page */}
       {admission && (
-        <div className="mx-4 mt-4 rounded-2xl border border-border bg-muted/40 p-3.5 space-y-2">
-          <div className="min-w-0">
-            <p className="text-sm font-bold font-display truncate text-foreground">{admission.fullName}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{admission.admissionId}</p>
+        <Link
+          to="/student/profile"
+          onClick={onNavigate}
+          className="mx-4 mt-4 block rounded-2xl border border-border bg-muted/40 p-3.5 space-y-2 hover:bg-muted/70 transition-colors"
+        >
+          <div className="flex items-center justify-between">
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-bold font-display truncate text-foreground">{admission.fullName}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{admission.admissionId}</p>
+            </div>
+            <ChevronRight className="size-4 text-muted-foreground shrink-0" />
           </div>
           {admission.propertyName && (
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground pt-1 border-t border-border/60">
@@ -85,7 +94,7 @@ function SidebarInner({ onNavigate }: { onNavigate?: () => void }) {
               </Badge>
             )}
           </div>
-        </div>
+        </Link>
       )}
 
       {/* Nav links */}
@@ -160,6 +169,10 @@ export function StudentShell({ title, subtitle, backTo, icon: CustomIcon, action
       ? WashingMachine
       : title.toLowerCase().includes("mess")
       ? UtensilsCrossed
+      : title.toLowerCase().includes("leave")
+      ? CalendarOff
+      : title.toLowerCase().includes("profile")
+      ? User
       : LayoutDashboard);
 
   return (

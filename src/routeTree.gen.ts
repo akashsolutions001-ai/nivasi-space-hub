@@ -11,9 +11,11 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
+import { Route as AdminLeavesRouteImport } from './routes/admin.leaves'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
 import { Route as AdminPackagesRouteImport } from './routes/admin.packages'
 import { Route as AdminPayoutsRouteImport } from './routes/admin.payouts'
+import { Route as AdminProfileRequestsRouteImport } from './routes/admin.profile-requests'
 import { Route as AdminPropertiesRouteImport } from './routes/admin.properties'
 import { Route as AdminReportsRouteImport } from './routes/admin.reports'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
@@ -23,8 +25,10 @@ import { Route as EmployeeLaundryRouteImport } from './routes/employee.laundry'
 import { Route as EmployeeLoginRouteImport } from './routes/employee.login'
 import { Route as StudentDashboardRouteImport } from './routes/student.dashboard'
 import { Route as StudentLaundryRouteImport } from './routes/student.laundry'
+import { Route as StudentLeavesRouteImport } from './routes/student.leaves'
 import { Route as StudentLoginRouteImport } from './routes/student.login'
 import { Route as StudentMessRouteImport } from './routes/student.mess'
+import { Route as StudentProfileRouteImport } from './routes/student.profile'
 import { Route as AdminAdmissionsIndexRouteImport } from './routes/admin.admissions.index'
 import { Route as AdminAdmissionsNewRouteImport } from './routes/admin.admissions.new'
 import { Route as AdminLaundryIndexRouteImport } from './routes/admin.laundry.index'
@@ -50,6 +54,11 @@ const AdminDashboardRoute = AdminDashboardRouteImport.update({
   path: '/admin/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminLeavesRoute = AdminLeavesRouteImport.update({
+  id: '/admin/leaves',
+  path: '/admin/leaves',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminLoginRoute = AdminLoginRouteImport.update({
   id: '/admin/login',
   path: '/admin/login',
@@ -63,6 +72,11 @@ const AdminPackagesRoute = AdminPackagesRouteImport.update({
 const AdminPayoutsRoute = AdminPayoutsRouteImport.update({
   id: '/admin/payouts',
   path: '/admin/payouts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminProfileRequestsRoute = AdminProfileRequestsRouteImport.update({
+  id: '/admin/profile-requests',
+  path: '/admin/profile-requests',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminPropertiesRoute = AdminPropertiesRouteImport.update({
@@ -110,6 +124,11 @@ const StudentLaundryRoute = StudentLaundryRouteImport.update({
   path: '/student/laundry',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StudentLeavesRoute = StudentLeavesRouteImport.update({
+  id: '/student/leaves',
+  path: '/student/leaves',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StudentLoginRoute = StudentLoginRouteImport.update({
   id: '/student/login',
   path: '/student/login',
@@ -118,6 +137,11 @@ const StudentLoginRoute = StudentLoginRouteImport.update({
 const StudentMessRoute = StudentMessRouteImport.update({
   id: '/student/mess',
   path: '/student/mess',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudentProfileRoute = StudentProfileRouteImport.update({
+  id: '/student/profile',
+  path: '/student/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminAdmissionsIndexRoute = AdminAdmissionsIndexRouteImport.update({
@@ -196,9 +220,11 @@ const AdminAdmissionsAdmissionIdEditRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/leaves': typeof AdminLeavesRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/packages': typeof AdminPackagesRoute
   '/admin/payouts': typeof AdminPayoutsRoute
+  '/admin/profile-requests': typeof AdminProfileRequestsRoute
   '/admin/properties': typeof AdminPropertiesRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/settings': typeof AdminSettingsRoute
@@ -208,8 +234,10 @@ export interface FileRoutesByFullPath {
   '/employee/login': typeof EmployeeLoginRoute
   '/student/dashboard': typeof StudentDashboardRoute
   '/student/laundry': typeof StudentLaundryRoute
+  '/student/leaves': typeof StudentLeavesRoute
   '/student/login': typeof StudentLoginRoute
   '/student/mess': typeof StudentMessRoute
+  '/student/profile': typeof StudentProfileRoute
   '/admin/admissions/new': typeof AdminAdmissionsNewRoute
   '/admin/laundry/$laundryId': typeof AdminLaundryLaundryIdRoute
   '/admin/laundry/assign': typeof AdminLaundryAssignRoute
@@ -228,9 +256,11 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/leaves': typeof AdminLeavesRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/packages': typeof AdminPackagesRoute
   '/admin/payouts': typeof AdminPayoutsRoute
+  '/admin/profile-requests': typeof AdminProfileRequestsRoute
   '/admin/properties': typeof AdminPropertiesRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/settings': typeof AdminSettingsRoute
@@ -240,8 +270,10 @@ export interface FileRoutesByTo {
   '/employee/login': typeof EmployeeLoginRoute
   '/student/dashboard': typeof StudentDashboardRoute
   '/student/laundry': typeof StudentLaundryRoute
+  '/student/leaves': typeof StudentLeavesRoute
   '/student/login': typeof StudentLoginRoute
   '/student/mess': typeof StudentMessRoute
+  '/student/profile': typeof StudentProfileRoute
   '/admin/admissions/new': typeof AdminAdmissionsNewRoute
   '/admin/laundry/$laundryId': typeof AdminLaundryLaundryIdRoute
   '/admin/laundry/assign': typeof AdminLaundryAssignRoute
@@ -261,9 +293,11 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/leaves': typeof AdminLeavesRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/packages': typeof AdminPackagesRoute
   '/admin/payouts': typeof AdminPayoutsRoute
+  '/admin/profile-requests': typeof AdminProfileRequestsRoute
   '/admin/properties': typeof AdminPropertiesRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/settings': typeof AdminSettingsRoute
@@ -273,8 +307,10 @@ export interface FileRoutesById {
   '/employee/login': typeof EmployeeLoginRoute
   '/student/dashboard': typeof StudentDashboardRoute
   '/student/laundry': typeof StudentLaundryRoute
+  '/student/leaves': typeof StudentLeavesRoute
   '/student/login': typeof StudentLoginRoute
   '/student/mess': typeof StudentMessRoute
+  '/student/profile': typeof StudentProfileRoute
   '/admin/admissions/new': typeof AdminAdmissionsNewRoute
   '/admin/laundry/$laundryId': typeof AdminLaundryLaundryIdRoute
   '/admin/laundry/assign': typeof AdminLaundryAssignRoute
@@ -295,9 +331,11 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin/dashboard'
+    | '/admin/leaves'
     | '/admin/login'
     | '/admin/packages'
     | '/admin/payouts'
+    | '/admin/profile-requests'
     | '/admin/properties'
     | '/admin/reports'
     | '/admin/settings'
@@ -307,8 +345,10 @@ export interface FileRouteTypes {
     | '/employee/login'
     | '/student/dashboard'
     | '/student/laundry'
+    | '/student/leaves'
     | '/student/login'
     | '/student/mess'
+    | '/student/profile'
     | '/admin/admissions/new'
     | '/admin/laundry/$laundryId'
     | '/admin/laundry/assign'
@@ -327,9 +367,11 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/admin/dashboard'
+    | '/admin/leaves'
     | '/admin/login'
     | '/admin/packages'
     | '/admin/payouts'
+    | '/admin/profile-requests'
     | '/admin/properties'
     | '/admin/reports'
     | '/admin/settings'
@@ -339,8 +381,10 @@ export interface FileRouteTypes {
     | '/employee/login'
     | '/student/dashboard'
     | '/student/laundry'
+    | '/student/leaves'
     | '/student/login'
     | '/student/mess'
+    | '/student/profile'
     | '/admin/admissions/new'
     | '/admin/laundry/$laundryId'
     | '/admin/laundry/assign'
@@ -359,9 +403,11 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin/dashboard'
+    | '/admin/leaves'
     | '/admin/login'
     | '/admin/packages'
     | '/admin/payouts'
+    | '/admin/profile-requests'
     | '/admin/properties'
     | '/admin/reports'
     | '/admin/settings'
@@ -371,8 +417,10 @@ export interface FileRouteTypes {
     | '/employee/login'
     | '/student/dashboard'
     | '/student/laundry'
+    | '/student/leaves'
     | '/student/login'
     | '/student/mess'
+    | '/student/profile'
     | '/admin/admissions/new'
     | '/admin/laundry/$laundryId'
     | '/admin/laundry/assign'
@@ -392,9 +440,11 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
+  AdminLeavesRoute: typeof AdminLeavesRoute
   AdminLoginRoute: typeof AdminLoginRoute
   AdminPackagesRoute: typeof AdminPackagesRoute
   AdminPayoutsRoute: typeof AdminPayoutsRoute
+  AdminProfileRequestsRoute: typeof AdminProfileRequestsRoute
   AdminPropertiesRoute: typeof AdminPropertiesRoute
   AdminReportsRoute: typeof AdminReportsRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
@@ -404,8 +454,10 @@ export interface RootRouteChildren {
   EmployeeLoginRoute: typeof EmployeeLoginRoute
   StudentDashboardRoute: typeof StudentDashboardRoute
   StudentLaundryRoute: typeof StudentLaundryRoute
+  StudentLeavesRoute: typeof StudentLeavesRoute
   StudentLoginRoute: typeof StudentLoginRoute
   StudentMessRoute: typeof StudentMessRoute
+  StudentProfileRoute: typeof StudentProfileRoute
   AdminAdmissionsNewRoute: typeof AdminAdmissionsNewRoute
   AdminLaundryLaundryIdRoute: typeof AdminLaundryLaundryIdRoute
   AdminLaundryAssignRoute: typeof AdminLaundryAssignRoute
@@ -437,6 +489,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/leaves': {
+      id: '/admin/leaves'
+      path: '/admin/leaves'
+      fullPath: '/admin/leaves'
+      preLoaderRoute: typeof AdminLeavesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/login': {
       id: '/admin/login'
       path: '/admin/login'
@@ -456,6 +515,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/payouts'
       fullPath: '/admin/payouts'
       preLoaderRoute: typeof AdminPayoutsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/profile-requests': {
+      id: '/admin/profile-requests'
+      path: '/admin/profile-requests'
+      fullPath: '/admin/profile-requests'
+      preLoaderRoute: typeof AdminProfileRequestsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/properties': {
@@ -521,6 +587,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudentLaundryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/student/leaves': {
+      id: '/student/leaves'
+      path: '/student/leaves'
+      fullPath: '/student/leaves'
+      preLoaderRoute: typeof StudentLeavesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/student/login': {
       id: '/student/login'
       path: '/student/login'
@@ -533,6 +606,13 @@ declare module '@tanstack/react-router' {
       path: '/student/mess'
       fullPath: '/student/mess'
       preLoaderRoute: typeof StudentMessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/student/profile': {
+      id: '/student/profile'
+      path: '/student/profile'
+      fullPath: '/student/profile'
+      preLoaderRoute: typeof StudentProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/admissions/': {
@@ -651,9 +731,11 @@ const EmployeeLaundryRouteWithChildren = EmployeeLaundryRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminDashboardRoute: AdminDashboardRoute,
+  AdminLeavesRoute: AdminLeavesRoute,
   AdminLoginRoute: AdminLoginRoute,
   AdminPackagesRoute: AdminPackagesRoute,
   AdminPayoutsRoute: AdminPayoutsRoute,
+  AdminProfileRequestsRoute: AdminProfileRequestsRoute,
   AdminPropertiesRoute: AdminPropertiesRoute,
   AdminReportsRoute: AdminReportsRoute,
   AdminSettingsRoute: AdminSettingsRoute,
@@ -663,8 +745,10 @@ const rootRouteChildren: RootRouteChildren = {
   EmployeeLoginRoute: EmployeeLoginRoute,
   StudentDashboardRoute: StudentDashboardRoute,
   StudentLaundryRoute: StudentLaundryRoute,
+  StudentLeavesRoute: StudentLeavesRoute,
   StudentLoginRoute: StudentLoginRoute,
   StudentMessRoute: StudentMessRoute,
+  StudentProfileRoute: StudentProfileRoute,
   AdminAdmissionsNewRoute: AdminAdmissionsNewRoute,
   AdminLaundryLaundryIdRoute: AdminLaundryLaundryIdRoute,
   AdminLaundryAssignRoute: AdminLaundryAssignRoute,

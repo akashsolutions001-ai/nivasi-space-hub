@@ -13,6 +13,8 @@ import {
   WashingMachine,
   ArrowDownCircle,
   FileSpreadsheet,
+  CalendarOff,
+  UserCheck,
 } from "lucide-react";
 
 import { NivasiLogo } from "./logo";
@@ -21,19 +23,22 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth, useIsGlobalAdmin, useIsMessEmployee, useIsLaundryEmployee } from "@/lib/auth";
+import { useAllLeaveRequests, useAllProfileUpdateRequests } from "@/lib/hooks";
 import { hasStudentSession } from "@/lib/studentAuth";
 import { cn } from "@/lib/utils";
 
 const NAV = [
-  { label: "Dashboard",  to: "/admin/dashboard",  icon: LayoutDashboard },
-  { label: "Admissions", to: "/admin/admissions",  icon: Users },
-  { label: "Properties", to: "/admin/properties",  icon: Building2 },
-  { label: "Packages",   to: "/admin/packages",    icon: Package },
-  { label: "Mess",       to: "/admin/mess",        icon: UtensilsCrossed },
-  { label: "Laundry",    to: "/admin/laundry",     icon: WashingMachine },
-  { label: "Payouts",    to: "/admin/payouts",     icon: ArrowDownCircle },
-  { label: "Reports",    to: "/admin/reports",     icon: FileSpreadsheet },
-  { label: "Settings",   to: "/admin/settings",    icon: Settings },
+  { label: "Dashboard",        to: "/admin/dashboard",        icon: LayoutDashboard },
+  { label: "Admissions",       to: "/admin/admissions",       icon: Users },
+  { label: "Leave Requests",   to: "/admin/leaves",           icon: CalendarOff, id: "leaves" },
+  { label: "Profile Requests", to: "/admin/profile-requests", icon: UserCheck,   id: "profiles" },
+  { label: "Properties",       to: "/admin/properties",       icon: Building2 },
+  { label: "Packages",         to: "/admin/packages",         icon: Package },
+  { label: "Mess",             to: "/admin/mess",             icon: UtensilsCrossed },
+  { label: "Laundry",          to: "/admin/laundry",          icon: WashingMachine },
+  { label: "Payouts",          to: "/admin/payouts",          icon: ArrowDownCircle },
+  { label: "Reports",          to: "/admin/reports",          icon: FileSpreadsheet },
+  { label: "Settings",         to: "/admin/settings",         icon: Settings },
 ] as const;
 
 function NavLinks({ onNavigate }: { onNavigate?: (() => void) | undefined }) {
@@ -41,6 +46,11 @@ function NavLinks({ onNavigate }: { onNavigate?: (() => void) | undefined }) {
   const isMessEmployee = useIsMessEmployee();
   const isLaundryEmployee = useIsLaundryEmployee();
   const isEmployee = isMessEmployee || isLaundryEmployee;
+
+  const { data: leaves = [] } = useAllLeaveRequests();
+  const { data: profileReqs = [] } = useAllProfileUpdateRequests();
+  const pendingLeaves = leaves.filter((l) => l.status === "pending").length;
+  const pendingProfiles = profileReqs.filter((p) => p.status === "pending").length;
 
   // Define employee-specific navigation items
   const employeeNav = [
@@ -57,6 +67,13 @@ function NavLinks({ onNavigate }: { onNavigate?: (() => void) | undefined }) {
     <nav className="flex flex-col gap-1">
       {visibleNav.map((item) => {
         const active = pathname.startsWith(item.to);
+        const pendingBadge =
+          item.to === "/admin/leaves" && pendingLeaves > 0
+            ? pendingLeaves
+            : item.to === "/admin/profile-requests" && pendingProfiles > 0
+            ? pendingProfiles
+            : 0;
+
         return (
           <Link
             key={item.to}
@@ -69,8 +86,20 @@ function NavLinks({ onNavigate }: { onNavigate?: (() => void) | undefined }) {
                 : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
             )}
           >
-            <item.icon className="size-[18px]" />
-            {item.label}
+            <item.icon className="size-[18px] shrink-0" />
+            <span className="flex-1 truncate">{item.label}</span>
+            {pendingBadge > 0 && (
+              <span
+                className={cn(
+                  "flex size-5 items-center justify-center rounded-full text-[11px] font-bold",
+                  active
+                    ? "bg-white text-primary"
+                    : "bg-primary text-primary-foreground",
+                )}
+              >
+                {pendingBadge}
+              </span>
+            )}
           </Link>
         );
       })}

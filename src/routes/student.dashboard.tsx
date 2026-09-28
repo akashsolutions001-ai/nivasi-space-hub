@@ -3,7 +3,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import {
   Loader2, MapPin, Phone, UtensilsCrossed, Home,
   CheckCircle2, Clock, XCircle, SkipForward, CalendarDays,
-  WashingMachine, Scale, ChevronRight, Package,
+  WashingMachine, Scale, ChevronRight, Package, CalendarOff, User,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,8 @@ import {
   useMessRequestsForStudent,
   useLaundries,
   useLaundryPickupsForStudent,
+  useLeaveRequestsForStudent,
+  useProfileUpdateRequestsForStudent,
 } from "@/lib/hooks";
 import { todayISTDateString, todayDateString } from "@/lib/db";
 import type { DeliveryStatus, LaundryPickup } from "@/lib/types";
@@ -67,6 +69,8 @@ function StudentDashboardPage() {
     admission?.id ?? null,
     admission?.admissionId,
   );
+  const { data: leaveRequests = [] } = useLeaveRequestsForStudent(admission?.id ?? null);
+  const { data: profileReqs = [] } = useProfileUpdateRequestsForStudent(admission?.id ?? null);
 
   // Guard — redirect to login if no session
   useEffect(() => {
@@ -167,7 +171,7 @@ function StudentDashboardPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             {/* Left Main Column (8 cols on lg) */}
             <div className="lg:col-span-8 space-y-6">
-              {/* Quick Access Grid: My Mess & My Laundry */}
+              {/* Quick Access Grid: My Mess, My Laundry, Leave Requests & Profile */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Link
                   to="/student/mess"
@@ -231,6 +235,76 @@ function StudentDashboardPage() {
                   </div>
                   <div className="mt-4 flex items-center gap-1 text-xs font-semibold text-primary pt-3 border-t border-border/60">
                     <span>Open Laundry Portal</span>
+                    <ChevronRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
+                  </div>
+                </Link>
+
+                {/* Leave Requests Card */}
+                <Link
+                  to="/student/leaves"
+                  className="group relative flex flex-col justify-between rounded-2xl border border-border bg-card p-5 shadow-soft transition-all hover:border-primary/50 hover:shadow-md"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex size-11 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-600 transition-transform group-hover:scale-105">
+                        <CalendarOff className="size-5" />
+                      </div>
+                      {leaveRequests.some((l) => l.status === "pending") ? (
+                        <Badge variant="outline" className="text-[10px] border-warning/30 bg-warning/10 text-warning-foreground font-semibold">
+                          Pending Approval
+                        </Badge>
+                      ) : leaveRequests.some((l) => l.status === "approved" && (!l.toDate || l.toDate >= todayISTDateString())) ? (
+                        <Badge variant="outline" className="text-[10px] border-success/30 bg-success/10 text-success font-semibold">
+                          Approved Leave
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-[10px] border-border text-muted-foreground">
+                          {leaveRequests.length} Recorded
+                        </Badge>
+                      )}
+                    </div>
+                    <div>
+                      <h3 className="font-display text-base font-bold text-foreground">Hostel Leave Requests</h3>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Apply for leave, open return dates & view approval
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex items-center gap-1 text-xs font-semibold text-primary pt-3 border-t border-border/60">
+                    <span>Manage Leaves</span>
+                    <ChevronRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
+                  </div>
+                </Link>
+
+                {/* Profile Card */}
+                <Link
+                  to="/student/profile"
+                  className="group relative flex flex-col justify-between rounded-2xl border border-border bg-card p-5 shadow-soft transition-all hover:border-primary/50 hover:shadow-md"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex size-11 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-transform group-hover:scale-105">
+                        <User className="size-5" />
+                      </div>
+                      {profileReqs.some((p) => p.status === "pending") ? (
+                        <Badge variant="outline" className="text-[10px] border-warning/30 bg-warning/10 text-warning-foreground font-semibold">
+                          Update Pending
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-[10px] border-border text-muted-foreground">
+                          View & Edit
+                        </Badge>
+                      )}
+                    </div>
+                    <div>
+                      <h3 className="font-display text-base font-bold text-foreground">Admission Profile</h3>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        View official records & request profile updates
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex items-center gap-1 text-xs font-semibold text-primary pt-3 border-t border-border/60">
+                    <span>View Profile</span>
                     <ChevronRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
                   </div>
                 </Link>

@@ -24,7 +24,20 @@ import {
 } from "firebase/auth";
 
 import { getDb, getFirebaseAuth } from "./firebase";
-import type { Admission, AdmissionInput, College, City, PackagePlan, Property } from "./types";
+import type {
+  Admission,
+  AdmissionInput,
+  College,
+  City,
+  PackagePlan,
+  Property,
+  LeaveRequest,
+  LeaveRequestInput,
+  LeaveStatus,
+  ProfileUpdateRequest,
+  ProfileUpdateRequestInput,
+  ProfileUpdateStatus,
+} from "./types";
 
 function toDate(value: unknown): Date | null {
   if (!value) return null;
@@ -2277,5 +2290,269 @@ export async function fetchStudentLaundryRecords(
   } catch (error) {
     console.error("[firestore] fetchStudentLaundryRecords", error);
     return [];
+  }
+}
+
+// ── Student Leave Requests ───────────────────────────────────────────────────
+
+function mapLeaveRequest(snap: QueryDocumentSnapshot<DocumentData>): LeaveRequest {
+  const d: any = snap.data();
+  return {
+    id: snap.id,
+    studentId: d.studentId ?? "",
+    admissionId: d.admissionId ?? "",
+    studentName: d.studentName ?? "",
+    studentEmail: d.studentEmail ?? "",
+    studentPhone: d.studentPhone ?? "",
+    propertyName: d.propertyName ?? "",
+    roomNumber: d.roomNumber ?? "",
+    bedNumber: d.bedNumber ?? "",
+    collegeName: d.collegeName ?? "",
+    fromDate: d.fromDate ?? "",
+    toDate: d.toDate ?? null,
+    hasOpenReturn: Boolean(d.hasOpenReturn ?? !d.toDate),
+    reason: d.reason ?? "",
+    emergencyContact: d.emergencyContact ?? "",
+    notes: d.notes ?? "",
+    status: d.status ?? "pending",
+    adminNotes: d.adminNotes ?? "",
+    reviewedBy: d.reviewedBy ?? "",
+    reviewedAt: toDate(d.reviewedAt),
+    createdAt: toDate(d.createdAt),
+    updatedAt: toDate(d.updatedAt),
+  };
+}
+
+export async function createLeaveRequest(input: LeaveRequestInput): Promise<string> {
+  try {
+    const hasOpenReturn = !input.toDate || input.hasOpenReturn;
+    const ref = await addDoc(collection(getDb(), "leaveRequests"), {
+      ...input,
+      toDate: input.toDate || null,
+      hasOpenReturn,
+      status: "pending",
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+    return ref.id;
+  } catch (error) {
+    console.error("[firestore] createLeaveRequest", error);
+    throw new Error("Unable to submit leave request. Please check your connection.");
+  }
+}
+
+export async function updateLeaveReturnDate(id: string, toDate: string): Promise<void> {
+  try {
+    await updateDoc(doc(getDb(), "leaveRequests", id), {
+      toDate,
+      hasOpenReturn: false,
+      updatedAt: serverTimestamp(),
+    });
+  } catch (error) {
+    console.error("[firestore] updateLeaveReturnDate", error);
+    throw new Error("Unable to update return date.");
+  }
+}
+
+export async function updateLeaveRequestStatus(
+  id: string,
+  status: LeaveStatus,
+  adminNotes?: string,
+  reviewedBy?: string,
+): Promise<void> {
+  try {
+    const patch: Record<string, any> = {
+      status,
+      reviewedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    if (adminNotes !== undefined) patch["adminNotes"] = adminNotes;
+    if (reviewedBy !== undefined) patch["reviewedBy"] = reviewedBy;
+    await updateDoc(doc(getDb(), "leaveRequests", id), patch);
+  } catch (error) {
+    console.error("[firestore] updateLeaveRequestStatus", error);
+    throw new Error("Unable to update leave request status.");
+  }
+}
+
+export async function cancelLeaveRequest(id: string): Promise<void> {
+  try {
+    await updateDoc(doc(getDb(), "leaveRequests", id), {
+      status: "cancelled",
+      updatedAt: serverTimestamp(),
+    });
+  } catch (error) {
+    console.error("[firestore] cancelLeaveRequest", error);
+    throw new Error("Unable to cancel leave request.");
+  }
+}
+
+export async function fetchLeaveRequestsForStudent(studentId: string): Promise<LeaveRequest[]> {
+  try {
+    const snap = await getDocs(
+      query(
+        collection(getDb(), "leaveRequests"),
+        where("studentId", "==", studentId),
+      ),
+    );
+    return snap.docs
+      .map(mapLeaveRequest)
+      .sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0));
+  } catch (error) {
+    console.error("[firestore] fetchLeaveRequestsForStudent", error);
+    return [];
+  }
+}
+
+export async function fetchAllLeaveRequests(): Promise<LeaveRequest[]> {
+  try {
+    const snap = await getDocs(
+      query(
+        collection(getDb(), "leaveRequests"),
+        limit(400),
+      ),
+    );
+    return snap.docs
+      .map(mapLeaveRequest)
+      .sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0));
+  } catch (error) {
+    console.error("[firestore] fetchAllLeaveRequests", error);
+    return [];
+  }
+}
+
+// ── Student Profile Update Requests ──────────────────────────────────────────
+
+function mapProfileUpdateRequest(snap: QueryDocumentSnapshot<DocumentData>): ProfileUpdateRequest {
+  const d: any = snap.data();
+  return {
+    id: snap.id,
+    studentId: d.studentId ?? "",
+    admissionId: d.admissionId ?? "",
+    studentName: d.studentName ?? "",
+    studentEmail: d.studentEmail ?? "",
+    propertyName: d.propertyName ?? "",
+    roomNumber: d.roomNumber ?? "",
+    currentData: d.currentData ?? {},
+    requestedData: d.requestedData ?? {},
+    changedFields: Array.isArray(d.changedFields) ? d.changedFields : [],
+    reason: d.reason ?? "",
+    status: d.status ?? "pending",
+    adminNotes: d.adminNotes ?? "",
+    reviewedBy: d.reviewedBy ?? "",
+    reviewedAt: toDate(d.reviewedAt),
+    createdAt: toDate(d.createdAt),
+    updatedAt: toDate(d.updatedAt),
+  };
+}
+
+export async function createProfileUpdateRequest(input: ProfileUpdateRequestInput): Promise<string> {
+  try {
+    const ref = await addDoc(collection(getDb(), "profileUpdateRequests"), {
+      ...input,
+      status: "pending",
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+    return ref.id;
+  } catch (error) {
+    console.error("[firestore] createProfileUpdateRequest", error);
+    throw new Error("Unable to submit profile update request.");
+  }
+}
+
+export async function fetchProfileUpdateRequestsForStudent(studentId: string): Promise<ProfileUpdateRequest[]> {
+  try {
+    const snap = await getDocs(
+      query(
+        collection(getDb(), "profileUpdateRequests"),
+        where("studentId", "==", studentId),
+      ),
+    );
+    return snap.docs
+      .map(mapProfileUpdateRequest)
+      .sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0));
+  } catch (error) {
+    console.error("[firestore] fetchProfileUpdateRequestsForStudent", error);
+    return [];
+  }
+}
+
+export async function fetchAllProfileUpdateRequests(): Promise<ProfileUpdateRequest[]> {
+  try {
+    const snap = await getDocs(
+      query(
+        collection(getDb(), "profileUpdateRequests"),
+        limit(300),
+      ),
+    );
+    return snap.docs
+      .map(mapProfileUpdateRequest)
+      .sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0));
+  } catch (error) {
+    console.error("[firestore] fetchAllProfileUpdateRequests", error);
+    return [];
+  }
+}
+
+export async function approveProfileUpdateRequest(
+  requestId: string,
+  studentDocId: string,
+  requestedData: Partial<Admission>,
+  adminName?: string,
+  adminNotes?: string,
+): Promise<void> {
+  try {
+    const db = getDb();
+    // 1. Update the actual admission document with the approved changes
+    await updateDoc(doc(db, "admissions", studentDocId), {
+      ...requestedData,
+      updatedAt: serverTimestamp(),
+    });
+
+    // 2. Mark the request as approved
+    const patch: Record<string, any> = {
+      status: "approved",
+      reviewedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    if (adminName) patch["reviewedBy"] = adminName;
+    if (adminNotes !== undefined) patch["adminNotes"] = adminNotes;
+    await updateDoc(doc(db, "profileUpdateRequests", requestId), patch);
+  } catch (error) {
+    console.error("[firestore] approveProfileUpdateRequest", error);
+    throw new Error("Unable to approve profile update. Please check your connection.");
+  }
+}
+
+export async function rejectProfileUpdateRequest(
+  requestId: string,
+  adminName?: string,
+  adminNotes?: string,
+): Promise<void> {
+  try {
+    const patch: Record<string, any> = {
+      status: "rejected",
+      reviewedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    if (adminName) patch["reviewedBy"] = adminName;
+    if (adminNotes !== undefined) patch["adminNotes"] = adminNotes;
+    await updateDoc(doc(getDb(), "profileUpdateRequests", requestId), patch);
+  } catch (error) {
+    console.error("[firestore] rejectProfileUpdateRequest", error);
+    throw new Error("Unable to reject profile update request.");
+  }
+}
+
+export async function cancelProfileUpdateRequest(requestId: string): Promise<void> {
+  try {
+    await updateDoc(doc(getDb(), "profileUpdateRequests", requestId), {
+      status: "cancelled",
+      updatedAt: serverTimestamp(),
+    });
+  } catch (error) {
+    console.error("[firestore] cancelProfileUpdateRequest", error);
+    throw new Error("Unable to cancel profile update request.");
   }
 }
