@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useState, useEffect, useRef } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -21,6 +22,8 @@ import {
   ArrowRight,
   Info,
   Building,
+  Camera,
+  UploadCloud,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -47,7 +50,16 @@ import {
 import { StudentShell } from "@/components/nivasi/student-shell";
 import { useStudentAuth } from "@/lib/studentAuth";
 import { useProfileUpdateRequestsForStudent } from "@/lib/hooks";
-import { createProfileUpdateRequest, cancelProfileUpdateRequest } from "@/lib/db";
+import {
+  createProfileUpdateRequest,
+  cancelProfileUpdateRequest,
+  updateStudentProfilePhoto,
+} from "@/lib/db";
+import {
+  uploadProfilePictureToCloudinary,
+  validateProfilePicture,
+  getOptimizedCloudinaryUrl,
+} from "@/lib/cloudinary";
 import { formatDate } from "@/lib/format";
 import type { Admission, ProfileUpdateRequest } from "@/lib/types";
 
@@ -73,15 +85,21 @@ const FIELD_LABELS: Record<string, string> = {
 };
 
 function StudentProfilePage() {
-  const { session, admission, loading } = useStudentAuth();
+  const { session, admission, loading, refreshAdmission } = useStudentAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const { data: updateRequests = [], isLoading: reqLoading } =
-    useProfileUpdateRequestsForStudent(admission?.id ?? null);
+  const { data: updateRequests = [], isLoading: reqLoading } = useProfileUpdateRequestsForStudent(
+    admission?.id ?? null,
+  );
 
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  // Profile Picture Upload state
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
 
   // Form states
   const [fullName, setFullName] = useState("");
@@ -98,6 +116,55 @@ function StudentProfilePage() {
   const [year, setYear] = useState("");
   const [mealPreference, setMealPreference] = useState<"veg" | "non-veg">("veg");
   const [updateReason, setUpdateReason] = useState("");
+
+  const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // Reset input so same file can be re-selected if needed
+
+    if (!file) return;
+    if (!admission?.id) {
+      toast.error("Admission record not loaded.");
+      return;
+    }
+
+    setPhotoError(null);
+
+    // 1. Client-side validation: format (JPG, JPEG, PNG, WEBP) & max size (5 MB)
+    const validation = validateProfilePicture(file);
+    if (!validation.valid) {
+      const err = validation.error || "Please select a valid image.";
+      setPhotoError(err);
+      toast.error(err);
+      return;
+    }
+
+    // 2. Direct upload to Cloudinary (unsigned API)
+    setUploadingPhoto(true);
+    const toastId = toast.loading("Uploading profile picture to Cloudinary...");
+
+    try {
+      const result = await uploadProfilePictureToCloudinary(file);
+
+      // 3. Save returned Cloudinary data inside student's existing Firestore document
+      await updateStudentProfilePhoto(admission.id, {
+        url: result.secure_url,
+        publicId: result.public_id,
+        storage: "cloudinary",
+      });
+
+      // 4. Update UI immediately
+      await refreshAdmission().catch(() => {});
+      queryClient.invalidateQueries({ queryKey: ["admissions"] });
+
+      toast.success("Profile picture updated successfully!", { id: toastId });
+    } catch (err: any) {
+      const msg = err?.message || "Failed to upload profile picture. Please try again.";
+      setPhotoError(msg);
+      toast.error(msg, { id: toastId });
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
 
   useEffect(() => {
     if (!loading && !session) {
@@ -214,6 +281,8 @@ function StudentProfilePage() {
     );
   }
 
+  const currentPhotoUrl = admission.profilePhoto?.url || admission.profileImageUrl || null;
+
   return (
     <StudentShell
       title="My Profile"
@@ -231,6 +300,16 @@ function StudentProfilePage() {
       }
     >
       <div className="space-y-4 sm:space-y-6 max-w-5xl">
+        {/* Hidden file input for direct Cloudinary profile picture upload */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/jpg,image/png,image/webp"
+          className="hidden"
+          onChange={handlePhotoSelect}
+          disabled={uploadingPhoto}
+        />
+
         {/* Mobile Quick Action Button (< sm) */}
         <div className="sm:hidden">
           <Button
@@ -254,8 +333,9 @@ function StudentProfilePage() {
                     Profile Update Request Pending Admin Approval
                   </h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    You submitted changes on {formatDate(pendingRequest.createdAt?.toISOString().slice(0, 10))}.
-                    They will be applied to your admission record once verified by the administrator.
+                    You submitted changes on{" "}
+                    {formatDate(pendingRequest.createdAt?.toISOString().slice(0, 10))}. They will be
+                    applied to your admission record once verified by the administrator.
                   </p>
                 </div>
               </div>
@@ -297,7 +377,10 @@ function StudentProfilePage() {
             {/* Changed Fields Diff — Mobile Cards (< sm) */}
             <div className="mt-3.5 space-y-2 sm:hidden text-xs">
               {pendingRequest.changedFields.map((field) => (
-                <div key={field} className="rounded-xl border border-warning/30 bg-background/90 p-3 space-y-1.5">
+                <div
+                  key={field}
+                  className="rounded-xl border border-warning/30 bg-background/90 p-3 space-y-1.5"
+                >
                   <span className="font-semibold text-foreground text-xs block">
                     {FIELD_LABELS[field] || field}
                   </span>
@@ -313,7 +396,6 @@ function StudentProfilePage() {
               ))}
             </div>
 
-
             {pendingRequest.reason && (
               <p className="mt-2.5 text-xs text-muted-foreground italic">
                 Reason given: "{pendingRequest.reason}"
@@ -322,32 +404,71 @@ function StudentProfilePage() {
           </div>
         )}
 
-        {/* Student Profile Header Card */}
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-soft">
+        {/* Student Profile Header Card with Profile Picture */}
+        <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-soft">
           <div className="flex flex-col sm:flex-row sm:items-center gap-5">
-            <div className="size-20 rounded-2xl gradient-brand text-white flex items-center justify-center font-display text-2xl font-bold shadow-soft shrink-0">
-              {admission.fullName
-                .split(" ")
-                .map((n) => n[0])
-                .slice(0, 2)
-                .join("")
-                .toUpperCase() || "ST"}
+            {/* Profile Avatar / Photo Container */}
+            <div className="relative shrink-0 self-start sm:self-center">
+              <div className="relative size-20 sm:size-24 rounded-2xl overflow-hidden border-2 border-border shadow-soft bg-muted flex items-center justify-center">
+                {currentPhotoUrl ? (
+                  <img
+                    src={getOptimizedCloudinaryUrl(currentPhotoUrl, 200)}
+                    alt={admission.fullName}
+                    className="size-full object-cover"
+                  />
+                ) : (
+                  <div className="size-full gradient-brand text-white flex items-center justify-center font-display text-2xl sm:text-3xl font-bold">
+                    {admission.fullName
+                      .split(" ")
+                      .map((n) => n[0])
+                      .slice(0, 2)
+                      .join("")
+                      .toUpperCase() || "ST"}
+                  </div>
+                )}
+
+                {/* Uploading loading overlay */}
+                {uploadingPhoto && (
+                  <div className="absolute inset-0 bg-background/85 backdrop-blur-[2px] flex flex-col items-center justify-center gap-1 text-[11px] font-semibold text-foreground z-10">
+                    <Loader2 className="size-5 animate-spin text-primary" />
+                    <span>Uploading...</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Quick camera button overlay on avatar */}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingPhoto}
+                aria-label={currentPhotoUrl ? "Change profile picture" : "Upload profile picture"}
+                title={currentPhotoUrl ? "Change profile picture" : "Upload profile picture"}
+                className="absolute -bottom-1 -right-1 p-1.5 rounded-full bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-transform active:scale-95 disabled:opacity-50 cursor-pointer"
+              >
+                <Camera className="size-3.5" />
+              </button>
             </div>
 
-            <div className="min-w-0 flex-1 space-y-1">
+            <div className="min-w-0 flex-1 space-y-1.5">
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="text-xl sm:text-2xl font-bold font-display text-foreground">
                   {admission.fullName}
                 </h2>
-                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-xs font-mono">
+                <Badge
+                  variant="outline"
+                  className="bg-primary/10 text-primary border-primary/20 text-xs font-mono"
+                >
                   {admission.admissionId}
                 </Badge>
-                <Badge variant="outline" className="bg-success/10 text-success border-success/30 text-xs">
+                <Badge
+                  variant="outline"
+                  className="bg-success/10 text-success border-success/30 text-xs"
+                >
                   Active Student
                 </Badge>
               </div>
 
-              <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground pt-1">
+              <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground pt-0.5">
                 <span className="flex items-center gap-1.5">
                   <Mail className="size-3.5 text-primary" />
                   {admission.email || "No email on file"}
@@ -363,6 +484,45 @@ function StudentProfilePage() {
                   </span>
                 )}
               </div>
+
+              {/* Profile Photo Action Bar */}
+              <div className="flex flex-wrap items-center gap-3 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingPhoto}
+                  className="h-8 text-xs font-medium gap-1.5 rounded-xl border-border hover:bg-muted"
+                >
+                  {uploadingPhoto ? (
+                    <>
+                      <Loader2 className="size-3.5 animate-spin text-primary" />
+                      Uploading...
+                    </>
+                  ) : currentPhotoUrl ? (
+                    <>
+                      <UploadCloud className="size-3.5 text-primary" />
+                      Change Profile Picture
+                    </>
+                  ) : (
+                    <>
+                      <UploadCloud className="size-3.5 text-primary" />
+                      Upload Profile Picture
+                    </>
+                  )}
+                </Button>
+                <span className="text-[11px] text-muted-foreground">
+                  JPG, PNG or WEBP · Max 5 MB
+                </span>
+              </div>
+
+              {photoError && (
+                <p className="text-xs text-destructive flex items-center gap-1.5 pt-1">
+                  <AlertCircle className="size-3.5 shrink-0" />
+                  {photoError}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -383,7 +543,9 @@ function StudentProfilePage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground font-medium">Contact Phone</span>
-                <span className="text-foreground font-semibold">{admission.phoneNumber || "—"}</span>
+                <span className="text-foreground font-semibold">
+                  {admission.phoneNumber || "—"}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground font-medium">Email Address</span>
@@ -397,7 +559,9 @@ function StudentProfilePage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground font-medium">Gender</span>
-                <span className="text-foreground font-semibold capitalize">{admission.gender || "—"}</span>
+                <span className="text-foreground font-semibold capitalize">
+                  {admission.gender || "—"}
+                </span>
               </div>
               <div className="pt-1">
                 <span className="text-muted-foreground font-medium block">Permanent Address</span>
@@ -422,11 +586,15 @@ function StudentProfilePage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground font-medium">Relationship</span>
-                <span className="text-foreground font-semibold capitalize">{admission.parentRelation || "Parent"}</span>
+                <span className="text-foreground font-semibold capitalize">
+                  {admission.parentRelation || "Parent"}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground font-medium">Guardian Phone</span>
-                <span className="text-foreground font-semibold">{admission.parentPhone || "—"}</span>
+                <span className="text-foreground font-semibold">
+                  {admission.parentPhone || "—"}
+                </span>
               </div>
               <div className="rounded-xl bg-brand-soft/60 p-3 text-[11px] text-muted-foreground space-y-1 border border-border">
                 <p className="font-semibold text-foreground flex items-center gap-1.5">
@@ -434,8 +602,8 @@ function StudentProfilePage() {
                   Student Portal Login Note:
                 </p>
                 <p>
-                  Your parent/guardian phone number is also configured as your student portal account password.
-                  Updating it will keep hostel contact records accurate.
+                  Your parent/guardian phone number is also configured as your student portal
+                  account password. Updating it will keep hostel contact records accurate.
                 </p>
               </div>
             </div>
@@ -482,7 +650,9 @@ function StudentProfilePage() {
             <div className="space-y-3 text-xs">
               <div className="flex justify-between">
                 <span className="text-muted-foreground font-medium">Hostel Property</span>
-                <span className="text-foreground font-semibold">{admission.propertyName || "—"}</span>
+                <span className="text-foreground font-semibold">
+                  {admission.propertyName || "—"}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground font-medium">Room & Bed</span>
@@ -493,7 +663,9 @@ function StudentProfilePage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground font-medium">Package Plan</span>
-                <span className="text-foreground font-semibold">{admission.packageName || "—"}</span>
+                <span className="text-foreground font-semibold">
+                  {admission.packageName || "—"}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground font-medium">Meal Preference</span>
@@ -502,11 +674,17 @@ function StudentProfilePage() {
                 </span>
               </div>
               <div>
-                <span className="text-muted-foreground font-medium block pb-1">Included Services</span>
+                <span className="text-muted-foreground font-medium block pb-1">
+                  Included Services
+                </span>
                 <div className="flex flex-wrap gap-1.5">
                   {admission.packageServices && admission.packageServices.length > 0 ? (
                     admission.packageServices.map((svc) => (
-                      <Badge key={svc} variant="outline" className="text-[10px] bg-muted/60 border-border">
+                      <Badge
+                        key={svc}
+                        variant="outline"
+                        className="text-[10px] bg-muted/60 border-border"
+                      >
                         {svc}
                       </Badge>
                     ))
@@ -532,12 +710,18 @@ function StudentProfilePage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       {req.status === "approved" ? (
-                        <Badge variant="outline" className="bg-success/15 text-success border-success/30 text-xs gap-1">
+                        <Badge
+                          variant="outline"
+                          className="bg-success/15 text-success border-success/30 text-xs gap-1"
+                        >
                           <CheckCircle2 className="size-3" />
                           Approved
                         </Badge>
                       ) : req.status === "rejected" ? (
-                        <Badge variant="outline" className="bg-destructive/15 text-destructive border-destructive/30 text-xs gap-1">
+                        <Badge
+                          variant="outline"
+                          className="bg-destructive/15 text-destructive border-destructive/30 text-xs gap-1"
+                        >
                           <XCircle className="size-3" />
                           Rejected
                         </Badge>
@@ -561,7 +745,10 @@ function StudentProfilePage() {
                   <div className="flex flex-wrap gap-1.5 pt-1">
                     <span className="text-muted-foreground">Fields updated:</span>
                     {req.changedFields.map((f) => (
-                      <span key={f} className="font-semibold text-foreground bg-muted px-2 py-0.5 rounded-md">
+                      <span
+                        key={f}
+                        className="font-semibold text-foreground bg-muted px-2 py-0.5 rounded-md"
+                      >
                         {FIELD_LABELS[f] || f}
                       </span>
                     ))}
@@ -569,7 +756,8 @@ function StudentProfilePage() {
 
                   {req.adminNotes && (
                     <p className="rounded-xl bg-muted/50 p-2 text-foreground">
-                      <span className="font-semibold text-muted-foreground">Admin Feedback:</span> {req.adminNotes}
+                      <span className="font-semibold text-muted-foreground">Admin Feedback:</span>{" "}
+                      {req.adminNotes}
                     </p>
                   )}
                 </div>
@@ -585,7 +773,8 @@ function StudentProfilePage() {
           <DialogHeader>
             <DialogTitle className="font-display text-lg">Request Profile Update</DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
-              Submit changes to your admission details. To safeguard official records, changes will be sent to the administrator for review before taking effect.
+              Submit changes to your admission details. To safeguard official records, changes will
+              be sent to the administrator for review before taking effect.
             </DialogDescription>
           </DialogHeader>
 
@@ -593,7 +782,8 @@ function StudentProfilePage() {
           <div className="rounded-xl bg-brand-soft/70 border border-brand-soft p-3 flex items-start gap-2.5 text-xs text-brand-dark">
             <ShieldAlert className="size-4 text-primary shrink-0 mt-0.5" />
             <p>
-              Your requested updates will not directly change your profile until confirmed and approved by your hostel administrator.
+              Your requested updates will not directly change your profile until confirmed and
+              approved by your hostel administrator.
             </p>
           </div>
 

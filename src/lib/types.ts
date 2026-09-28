@@ -1,16 +1,18 @@
 export type PaymentStatus = "completed" | "pending";
 
-export const SERVICE_OPTIONS = [
-  "Room",
-  "Mess",
-  "Laundry",
-  "Ironing",
-  "House Cleaning",
-] as const;
+export const SERVICE_OPTIONS = ["Room", "Mess", "Laundry", "Ironing", "House Cleaning"] as const;
+
+export interface ProfilePhoto {
+  url: string;
+  publicId?: string;
+  storage?: "cloudinary" | string;
+  uploadedAt?: Date | null;
+}
 
 export interface Admission {
   id: string;
   admissionId: string;
+  profilePhoto?: ProfilePhoto | null;
   profileImagePath?: string | null;
   profileImageUrl?: string | null;
   fullName: string;
@@ -156,11 +158,11 @@ export type MessEmployeeInput = Omit<MessEmployee, "id" | "createdAt">;
 
 export interface Delivery {
   id: string;
-  studentId: string;      // admissions document ID
-  admissionId: string;    // NS-ADM-XXXXXX
+  studentId: string; // admissions document ID
+  admissionId: string; // NS-ADM-XXXXXX
   messId: string;
   employeeId: string;
-  date: string;           // ISO date YYYY-MM-DD
+  date: string; // ISO date YYYY-MM-DD
   meal: MealType;
   status: DeliveryStatus;
   deliveredAt?: Date | null;
@@ -173,31 +175,16 @@ export type DeliveryInput = Omit<Delivery, "id" | "createdAt" | "updatedAt">;
 // ── Payouts / Debit Transactions ─────────────────────────────────────────────
 
 export type PayoutType =
-  | "MESS"
-  | "TIFFIN"
-  | "LAUNDRY"
-  | "CLEANING_STAFF"
-  | "SERVICE_PROVIDER"
-  | "REFUND"
-  | "OTHER";
+  "MESS" | "TIFFIN" | "LAUNDRY" | "CLEANING_STAFF" | "SERVICE_PROVIDER" | "REFUND" | "OTHER";
 
-export type PayoutStatus =
-  | "PENDING"
-  | "PROCESSING"
-  | "PAID"
-  | "FAILED"
-  | "CANCELLED";
+export type PayoutStatus = "PENDING" | "PROCESSING" | "PAID" | "FAILED" | "CANCELLED";
 
-export type PayoutPaymentMethod =
-  | "UPI"
-  | "BANK_TRANSFER"
-  | "CASH"
-  | "OTHER";
+export type PayoutPaymentMethod = "UPI" | "BANK_TRANSFER" | "CASH" | "OTHER";
 
 export interface Payout {
   id: string;
-  payoutId: string;       // PAY-YYYYMMDD-XXXXXX
-  transactionId: string;  // same as payoutId for display
+  payoutId: string; // PAY-YYYYMMDD-XXXXXX
+  transactionId: string; // same as payoutId for display
 
   // Recipient
   recipientName: string;
@@ -218,8 +205,8 @@ export interface Payout {
   studentName?: string;
 
   // Service-provider / other extra fields
-  servicePeriod?: string;   // "September 2026" or date range string
-  studentCount?: number;    // for tiffin payouts
+  servicePeriod?: string; // "September 2026" or date range string
+  studentCount?: number; // for tiffin payouts
   relatedItem?: string;
   service?: string;
 
@@ -293,10 +280,10 @@ export interface LaundryPickup {
   admissionId: string;
   laundryId: string;
   employeeId: string;
-  date: string;           // YYYY-MM-DD
+  date: string; // YYYY-MM-DD
   type: LaundryPickupType;
   status: LaundryPickupStatus;
-  notes?: string;         // e.g. description of clothes
+  notes?: string; // e.g. description of clothes
   clothesWeight?: string; // e.g. weight of clothes like 2.5 kg
   pickedUpAt?: Date | null;
   createdAt?: Date | null;
@@ -354,8 +341,8 @@ export interface DoNotWantRecord {
   admissionId: string;
   messId: string;
   messName: string;
-  fromDate: string;   // YYYY-MM-DD
-  toDate: string;     // YYYY-MM-DD
+  fromDate: string; // YYYY-MM-DD
+  toDate: string; // YYYY-MM-DD
   meals: ("lunch" | "dinner")[];
   createdAt?: Date | null;
 }
@@ -412,7 +399,10 @@ export interface StudentLaundryRecord {
   updatedAt?: Date | null;
 }
 
-export type StudentLaundryRecordInput = Omit<StudentLaundryRecord, "id" | "createdAt" | "updatedAt">;
+export type StudentLaundryRecordInput = Omit<
+  StudentLaundryRecord,
+  "id" | "createdAt" | "updatedAt"
+>;
 
 // ── Student Leave Requests ───────────────────────────────────────────────────
 
@@ -420,8 +410,8 @@ export type LeaveStatus = "pending" | "approved" | "rejected" | "cancelled" | "c
 
 export interface LeaveRequest {
   id: string;
-  studentId: string;       // Firestore admission document ID
-  admissionId: string;     // NS-ADM-XXXXXX
+  studentId: string; // Firestore admission document ID
+  admissionId: string; // NS-ADM-XXXXXX
   studentName: string;
   studentEmail: string;
   studentPhone?: string | undefined;
@@ -430,9 +420,9 @@ export interface LeaveRequest {
   bedNumber?: string | undefined;
   collegeName?: string | undefined;
 
-  fromDate: string;        // YYYY-MM-DD (mandatory)
-  toDate?: string | null | undefined;  // YYYY-MM-DD (optional, can be filled later)
-  hasOpenReturn: boolean;  // true if toDate is not yet specified
+  fromDate: string; // YYYY-MM-DD (mandatory)
+  toDate?: string | null | undefined; // YYYY-MM-DD (optional, can be filled later)
+  hasOpenReturn: boolean; // true if toDate is not yet specified
 
   reason: string;
   emergencyContact?: string | undefined;
@@ -455,8 +445,8 @@ export type ProfileUpdateStatus = "pending" | "approved" | "rejected" | "cancell
 
 export interface ProfileUpdateRequest {
   id: string;
-  studentId: string;       // Firestore admission document ID
-  admissionId: string;     // NS-ADM-XXXXXX
+  studentId: string; // Firestore admission document ID
+  admissionId: string; // NS-ADM-XXXXXX
   studentName: string;
   studentEmail: string;
   propertyName?: string | undefined;
@@ -476,4 +466,7 @@ export interface ProfileUpdateRequest {
   updatedAt?: Date | null | undefined;
 }
 
-export type ProfileUpdateRequestInput = Omit<ProfileUpdateRequest, "id" | "createdAt" | "updatedAt">;
+export type ProfileUpdateRequestInput = Omit<
+  ProfileUpdateRequest,
+  "id" | "createdAt" | "updatedAt"
+>;

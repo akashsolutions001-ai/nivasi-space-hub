@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Student authentication — Firebase Auth (email + parentPhone as password).
  *
@@ -11,14 +12,7 @@
  *   so every student has a real Firebase Auth account from day one.
  */
 
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  useRef,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useState, useEffect, useRef, type ReactNode } from "react";
 import {
   signInWithEmailAndPassword,
   signInWithPopup,
@@ -93,14 +87,16 @@ const StudentAuthContext = createContext<StudentAuthState | null>(null);
 // ── Auth error messages ───────────────────────────────────────────────────────
 
 const AUTH_ERRORS: Record<string, string> = {
-  "auth/invalid-credential":    "Incorrect email or password. Your password is your parent / guardian contact number.",
-  "auth/invalid-email":         "Please enter a valid email address.",
-  "auth/user-not-found":        "No account found with this email address. Please contact administration.",
-  "auth/wrong-password":        "Incorrect password. Your password is your parent / guardian contact number.",
-  "auth/user-disabled":         "This account has been disabled. Please contact administration.",
-  "auth/too-many-requests":     "Too many login attempts. Please wait a moment and try again.",
-  "auth/network-request-failed":"Network connection issue. Please check your internet connection.",
-  "auth/popup-closed-by-user":  "Sign in popup was closed. Please try again.",
+  "auth/invalid-credential":
+    "Incorrect email or password. Your password is your parent / guardian contact number.",
+  "auth/invalid-email": "Please enter a valid email address.",
+  "auth/user-not-found": "No account found with this email address. Please contact administration.",
+  "auth/wrong-password":
+    "Incorrect password. Your password is your parent / guardian contact number.",
+  "auth/user-disabled": "This account has been disabled. Please contact administration.",
+  "auth/too-many-requests": "Too many login attempts. Please wait a moment and try again.",
+  "auth/network-request-failed": "Network connection issue. Please check your internet connection.",
+  "auth/popup-closed-by-user": "Sign in popup was closed. Please try again.",
 };
 
 // ── Provider ──────────────────────────────────────────────────────────────────
@@ -178,11 +174,7 @@ export function StudentAuthProvider({ children }: { children: ReactNode }) {
       );
       if (snap.empty) {
         snap = await getDocs(
-          query(
-            collection(db, "admissions"),
-            where("email", "==", emailCandidate),
-            limit(1),
-          ),
+          query(collection(db, "admissions"), where("email", "==", emailCandidate), limit(1)),
         );
       }
       if (snap.empty && storedSession.admissionId) {
@@ -264,8 +256,11 @@ export function StudentAuthProvider({ children }: { children: ReactNode }) {
     const phoneCleaned = parentPhone.trim().replace(/\D/g, "");
 
     // 1. Try to sign in with email and parentPhone
-    let signInResult = await signInWithEmailAndPassword(getFirebaseAuth(), emailTrimmed, phoneCleaned)
-      .catch((err) => ({ error: err as { code?: string; message?: string } }));
+    let signInResult = await signInWithEmailAndPassword(
+      getFirebaseAuth(),
+      emailTrimmed,
+      phoneCleaned,
+    ).catch((err) => ({ error: err as { code?: string; message?: string } }));
 
     // If account doesn't exist, try auto-create via REST then sign in
     if ("error" in signInResult) {
@@ -280,21 +275,33 @@ export function StudentAuthProvider({ children }: { children: ReactNode }) {
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ email: emailTrimmed, password: phoneCleaned, returnSecureToken: false }),
+              body: JSON.stringify({
+                email: emailTrimmed,
+                password: phoneCleaned,
+                returnSecureToken: false,
+              }),
             },
           );
           if (res.ok) {
-            signInResult = await signInWithEmailAndPassword(getFirebaseAuth(), emailTrimmed, phoneCleaned)
-              .catch((err) => ({ error: err as { code?: string } }));
+            signInResult = await signInWithEmailAndPassword(
+              getFirebaseAuth(),
+              emailTrimmed,
+              phoneCleaned,
+            ).catch((err) => ({ error: err as { code?: string } }));
           } else {
-            const data = await res.json() as { error?: { message?: string } };
+            const data = (await res.json()) as { error?: { message?: string } };
             const msg = data?.error?.message ?? "";
             if (msg === "EMAIL_EXISTS") {
-              throw new Error("Incorrect password. If you previously registered using Google, please click 'Continue with Google'.");
+              throw new Error(
+                "Incorrect password. If you previously registered using Google, please click 'Continue with Google'.",
+              );
             }
           }
         } catch (autoCreateErr) {
-          if (autoCreateErr instanceof Error && autoCreateErr.message.includes("Continue with Google")) {
+          if (
+            autoCreateErr instanceof Error &&
+            autoCreateErr.message.includes("Continue with Google")
+          ) {
             throw autoCreateErr;
           }
         }
@@ -302,7 +309,10 @@ export function StudentAuthProvider({ children }: { children: ReactNode }) {
 
       if ("error" in signInResult) {
         const c = signInResult.error?.code ?? "";
-        throw new Error(AUTH_ERRORS[c] ?? "Incorrect email or password. Your password is your parent / guardian contact number.");
+        throw new Error(
+          AUTH_ERRORS[c] ??
+            "Incorrect email or password. Your password is your parent / guardian contact number.",
+        );
       }
     }
 
@@ -318,20 +328,20 @@ export function StudentAuthProvider({ children }: { children: ReactNode }) {
       );
       if (snap.empty) {
         snap = await getDocs(
-          query(
-            collection(getDb(), "admissions"),
-            where("email", "==", emailTrimmed),
-            limit(1),
-          ),
+          query(collection(getDb(), "admissions"), where("email", "==", emailTrimmed), limit(1)),
         );
       }
     } catch (firestoreErr) {
       console.error("[studentAuth] load admission error:", firestoreErr);
-      throw new Error("Signed in, but could not load admission profile. Please contact administration.");
+      throw new Error(
+        "Signed in, but could not load admission profile. Please contact administration.",
+      );
     }
 
     if (snap.empty) {
-      throw new Error("Signed in, but no admission record matches this email address. Please contact administration.");
+      throw new Error(
+        "Signed in, but no admission record matches this email address. Please contact administration.",
+      );
     }
 
     const docSnap = snap.docs[0]!;
@@ -371,21 +381,21 @@ export function StudentAuthProvider({ children }: { children: ReactNode }) {
       );
       if (snap.empty) {
         snap = await getDocs(
-          query(
-            collection(getDb(), "admissions"),
-            where("email", "==", googleEmail),
-            limit(1),
-          ),
+          query(collection(getDb(), "admissions"), where("email", "==", googleEmail), limit(1)),
         );
       }
     } catch (firestoreErr) {
       console.error("[studentAuth] google login firestore error:", firestoreErr);
-      throw new Error("Signed in with Google, but could not load admission profile. Please contact administration.");
+      throw new Error(
+        "Signed in with Google, but could not load admission profile. Please contact administration.",
+      );
     }
 
     if (snap.empty) {
       await signOut(getFirebaseAuth());
-      throw new Error(`No admission record found for Google account (${googleEmail}). Please use the email provided on your admission form.`);
+      throw new Error(
+        `No admission record found for Google account (${googleEmail}). Please use the email provided on your admission form.`,
+      );
     }
 
     const docSnap = snap.docs[0]!;
@@ -419,7 +429,17 @@ export function StudentAuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <StudentAuthContext.Provider value={{ session, admission, loading, loginStudent, loginStudentWithGoogle, logoutStudent, refreshAdmission }}>
+    <StudentAuthContext.Provider
+      value={{
+        session,
+        admission,
+        loading,
+        loginStudent,
+        loginStudentWithGoogle,
+        logoutStudent,
+        refreshAdmission,
+      }}
+    >
       {children}
     </StudentAuthContext.Provider>
   );
@@ -444,8 +464,20 @@ function buildAdmission(id: string, d: Record<string, unknown>): Admission {
   return {
     id,
     admissionId: String(d["admissionId"] ?? id),
-    profileImagePath: (d["profileImagePath"] as string | null) ?? null,
-    profileImageUrl: (d["profileImageUrl"] as string | null) ?? null,
+    profilePhoto: d["profilePhoto"]
+      ? {
+          url: String((d["profilePhoto"] as any).url ?? ""),
+          publicId: String((d["profilePhoto"] as any).publicId ?? ""),
+          storage: String((d["profilePhoto"] as any).storage ?? "cloudinary"),
+          uploadedAt: toDate((d["profilePhoto"] as any).uploadedAt),
+        }
+      : null,
+    profileImagePath:
+      (d["profileImagePath"] as string | null) ??
+      (d["profilePhoto"] ? String((d["profilePhoto"] as any).url ?? "") : null),
+    profileImageUrl:
+      (d["profileImageUrl"] as string | null) ??
+      (d["profilePhoto"] ? String((d["profilePhoto"] as any).url ?? "") : null),
     fullName: String(d["fullName"] ?? ""),
     phoneNumber: String(d["phoneNumber"] ?? ""),
     email: String(d["email"] ?? ""),
@@ -476,8 +508,12 @@ function buildAdmission(id: string, d: Record<string, unknown>): Admission {
     tiffinPaymentCollected: Boolean(d["tiffinPaymentCollected"]),
     mattressRequired: Boolean(d["mattressRequired"]),
     mattressPaymentCollected: Boolean(d["mattressPaymentCollected"]),
-    paymentMode: d["paymentMode"] === "online" || d["paymentMode"] === "cash" ? d["paymentMode"] : null,
-    mealPreference: d["mealPreference"] === "veg" || d["mealPreference"] === "non-veg" ? d["mealPreference"] : undefined,
+    paymentMode:
+      d["paymentMode"] === "online" || d["paymentMode"] === "cash" ? d["paymentMode"] : null,
+    mealPreference:
+      d["mealPreference"] === "veg" || d["mealPreference"] === "non-veg"
+        ? d["mealPreference"]
+        : undefined,
     notes: String(d["notes"] ?? ""),
     parentName: String(d["parentName"] ?? ""),
     parentPhone: String(d["parentPhone"] ?? ""),

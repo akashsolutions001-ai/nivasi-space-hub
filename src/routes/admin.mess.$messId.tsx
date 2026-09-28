@@ -328,7 +328,7 @@ function MessStudentsPage() {
         const from = l.fromDate;
         const to = l.toDate;
         if (from <= todayIST && (!to || todayIST <= to)) {
-          if (l.studentAdmissionId) map.set(l.studentAdmissionId, l);
+          if (l.admissionId) map.set(l.admissionId, l);
           if (l.studentId) map.set(l.studentId, l);
         }
       }

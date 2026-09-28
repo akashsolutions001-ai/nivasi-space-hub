@@ -18,15 +18,13 @@ import {
   type QueryDocumentSnapshot,
   type Timestamp,
 } from "firebase/firestore";
-import {
-  createUserWithEmailAndPassword,
-  updateProfile,
-} from "firebase/auth";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 
 import { getDb, getFirebaseAuth } from "./firebase";
 import type {
   Admission,
   AdmissionInput,
+  ProfilePhoto,
   College,
   City,
   PackagePlan,
@@ -50,8 +48,16 @@ function mapAdmission(snap: QueryDocumentSnapshot<DocumentData>): Admission {
   return {
     id: snap.id,
     admissionId: d.admissionId ?? snap.id,
-    profileImagePath: d.profileImagePath ?? null,
-    profileImageUrl: d.profileImageUrl ?? null,
+    profilePhoto: d.profilePhoto
+      ? {
+          url: d.profilePhoto.url ?? "",
+          publicId: d.profilePhoto.publicId ?? "",
+          storage: d.profilePhoto.storage ?? "cloudinary",
+          uploadedAt: toDate(d.profilePhoto.uploadedAt),
+        }
+      : null,
+    profileImagePath: d.profileImagePath ?? d.profilePhoto?.url ?? null,
+    profileImageUrl: d.profileImageUrl ?? d.profilePhoto?.url ?? null,
     fullName: d.fullName ?? "",
     phoneNumber: d.phoneNumber ?? "",
     email: d.email ?? "",
@@ -84,7 +90,8 @@ function mapAdmission(snap: QueryDocumentSnapshot<DocumentData>): Admission {
     mattressRequired: Boolean(d.mattressRequired),
     mattressPaymentCollected: Boolean(d.mattressPaymentCollected),
     paymentMode: d.paymentMode === "online" || d.paymentMode === "cash" ? d.paymentMode : null,
-    mealPreference: d.mealPreference === "veg" || d.mealPreference === "non-veg" ? d.mealPreference : undefined,
+    mealPreference:
+      d.mealPreference === "veg" || d.mealPreference === "non-veg" ? d.mealPreference : undefined,
     notes: d.notes ?? "",
     parentName: d.parentName ?? "",
     parentPhone: d.parentPhone ?? "",
@@ -102,7 +109,8 @@ function mapAdmission(snap: QueryDocumentSnapshot<DocumentData>): Admission {
   } as any;
 }
 
-const friendly = (action: string) => `Unable to ${action}. Please check your connection and try again.`;
+const friendly = (action: string) =>
+  `Unable to ${action}. Please check your connection and try again.`;
 
 /* ---------------------------------- IDs ---------------------------------- */
 
@@ -123,7 +131,9 @@ export async function generateAdmissionId(): Promise<string> {
 
 export async function fetchAdmissions(): Promise<Admission[]> {
   try {
-    const snap = await getDocs(query(collection(getDb(), "admissions"), orderBy("createdAt", "desc")));
+    const snap = await getDocs(
+      query(collection(getDb(), "admissions"), orderBy("createdAt", "desc")),
+    );
     return snap.docs.map(mapAdmission);
   } catch (error) {
     console.error("[firestore] fetchAdmissions", error);
@@ -160,7 +170,7 @@ export async function createAdmission(input: AdmissionInput): Promise<string> {
     //    Email = admission email, password = parentPhone digits only.
     //    Best-effort: failures don't block the admission save.
     const email = (input.email ?? "").trim();
-    const parentPhone = (input.parentPhone ?? "");
+    const parentPhone = input.parentPhone ?? "";
     if (email && parentPhone.replace(/\D/g, "").length >= 6) {
       await ensureStudentAuthAccount(email, parentPhone, input.fullName ?? "").catch(() => {});
     }
@@ -178,6 +188,36 @@ export async function updateAdmission(id: string, patch: Partial<AdmissionInput>
   } catch (error) {
     console.error("[firestore] updateAdmission", error);
     throw new Error(friendly("update this admission"));
+  }
+}
+
+/**
+ * Updates only the authenticated student's profile photo in their admission record.
+ * Stores the Cloudinary secure URL, publicId, and storage metadata.
+ */
+export async function updateStudentProfilePhoto(
+  admissionDocId: string,
+  photo: {
+    url: string;
+    publicId: string;
+    storage: "cloudinary";
+  },
+): Promise<void> {
+  try {
+    await updateDoc(doc(getDb(), "admissions", admissionDocId), {
+      profilePhoto: {
+        url: photo.url,
+        publicId: photo.publicId,
+        storage: photo.storage,
+        uploadedAt: serverTimestamp(),
+      },
+      profileImageUrl: photo.url,
+      profileImagePath: photo.url,
+      updatedAt: serverTimestamp(),
+    });
+  } catch (error) {
+    console.error("[firestore] updateStudentProfilePhoto", error);
+    throw new Error("Unable to save profile picture to admission record. Please try again.");
   }
 }
 
@@ -216,10 +256,15 @@ export async function ensureStudentAuthAccount(
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), password, displayName: fullName, returnSecureToken: false }),
+        body: JSON.stringify({
+          email: email.trim(),
+          password,
+          displayName: fullName,
+          returnSecureToken: false,
+        }),
       },
     );
-    const data = await res.json() as { error?: { message?: string } };
+    const data = (await res.json()) as { error?: { message?: string } };
     if (!res.ok) {
       const msg = data?.error?.message ?? "";
       if (msg === "EMAIL_EXISTS") return "exists";
@@ -314,7 +359,10 @@ export async function fetchColleges(): Promise<College[]> {
           id: s.id,
           collegeId: d.collegeId ?? s.id,
           collegeName: ((d.collegeName || d.name || "") as string).trim(),
-          collegeType: (d.collegeType || d.type as string | undefined)?.toLowerCase().trim() as College["collegeType"] ?? "other",
+          collegeType:
+            ((d.collegeType || (d.type as string | undefined))
+              ?.toLowerCase()
+              .trim() as College["collegeType"]) ?? "other",
           city: ((d.city || d.cityName || "") as string).trim(),
           active: d.active !== false,
         } satisfies College;
@@ -607,7 +655,8 @@ export async function createAdminUser(input: AdminUserInput): Promise<string> {
   } catch (error) {
     console.error("[firestore] createAdminUser", error);
     const code = (error as { code?: string })?.code ?? "";
-    if (code === "auth/email-already-in-use") throw new Error("An account with this email already exists.");
+    if (code === "auth/email-already-in-use")
+      throw new Error("An account with this email already exists.");
     if (code === "auth/weak-password") throw new Error("Password must be at least 6 characters.");
     if (code === "auth/invalid-email") throw new Error("Please enter a valid email address.");
     throw new Error("Could not create the admin account. Please try again.");
@@ -662,7 +711,11 @@ export async function seedDefaults(): Promise<void> {
   if (collegeSnap.empty) {
     await Promise.all(
       [
-        { collegeName: "Dr. D.Y.Patil Pratishthan's College of Engineering Salokhenagar Kolhapur", collegeType: "engineering" as const, city: "Kolhapur" },
+        {
+          collegeName: "Dr. D.Y.Patil Pratishthan's College of Engineering Salokhenagar Kolhapur",
+          collegeType: "engineering" as const,
+          city: "Kolhapur",
+        },
         { collegeName: "DYP Medical College", collegeType: "medical" as const, city: "Kolhapur" },
       ].map(({ collegeName, collegeType, city }) => {
         const ref = doc(collection(db, "colleges"));
@@ -729,12 +782,12 @@ function mapMess(snap: QueryDocumentSnapshot<DocumentData>): Mess {
 function mapEmployee(snap: QueryDocumentSnapshot<DocumentData>): MessEmployee {
   const d: any = snap.data();
   // Support both old single-mess format and new multi-mess format
-  const messIds: string[] = Array.isArray(d.messIds)
-    ? d.messIds
-    : d.messId ? [d.messId] : [];
+  const messIds: string[] = Array.isArray(d.messIds) ? d.messIds : d.messId ? [d.messId] : [];
   const messNames: string[] = Array.isArray(d.messNames)
     ? d.messNames
-    : d.messName ? [d.messName] : [];
+    : d.messName
+      ? [d.messName]
+      : [];
   return {
     id: snap.id,
     employeeId: d.employeeId ?? snap.id,
@@ -861,7 +914,10 @@ export async function fetchEmployeesByMess(messId: string): Promise<MessEmployee
     const seen = new Set<string>();
     const results: MessEmployee[] = [];
     for (const s of [...snap.docs, ...snap2.docs]) {
-      if (!seen.has(s.id)) { seen.add(s.id); results.push(mapEmployee(s)); }
+      if (!seen.has(s.id)) {
+        seen.add(s.id);
+        results.push(mapEmployee(s));
+      }
     }
     return results.sort((a, b) => a.name.localeCompare(b.name));
   } catch (error) {
@@ -933,7 +989,8 @@ export async function createMessEmployee(input: CreateEmployeeInput): Promise<st
   } catch (error) {
     console.error("[firestore] createMessEmployee", error);
     const code = (error as { code?: string })?.code ?? "";
-    if (code === "auth/email-already-in-use") throw new Error("An account with this email already exists.");
+    if (code === "auth/email-already-in-use")
+      throw new Error("An account with this email already exists.");
     if (code === "auth/weak-password") throw new Error("Password must be at least 6 characters.");
     if (code === "auth/invalid-email") throw new Error("Please enter a valid email address.");
     throw new Error("Could not create employee account. Please try again.");
@@ -942,7 +999,9 @@ export async function createMessEmployee(input: CreateEmployeeInput): Promise<st
 
 export async function updateMessEmployee(
   id: string,
-  patch: Partial<Pick<MessEmployeeInput, "name" | "phone" | "messIds" | "messNames" | "role" | "status">>,
+  patch: Partial<
+    Pick<MessEmployeeInput, "name" | "phone" | "messIds" | "messNames" | "role" | "status">
+  >,
 ): Promise<void> {
   try {
     await updateDoc(doc(getDb(), "employees", id), { ...patch });
@@ -990,7 +1049,9 @@ export async function assignStudentToMess(
     await updateDoc(doc(getDb(), "admissions", admissionDocId), patch);
   } catch (error) {
     console.error("[firestore] assignStudentToMess", error);
-    throw new Error("Unable to assign student to mess. Please check your connection and try again.");
+    throw new Error(
+      "Unable to assign student to mess. Please check your connection and try again.",
+    );
   }
 }
 
@@ -1005,7 +1066,9 @@ export async function unassignStudentFromMess(admissionDocId: string): Promise<v
     });
   } catch (error) {
     console.error("[firestore] unassignStudentFromMess", error);
-    throw new Error("Unable to unassign student from mess. Please check your connection and try again.");
+    throw new Error(
+      "Unable to unassign student from mess. Please check your connection and try again.",
+    );
   }
 }
 
@@ -1058,20 +1121,14 @@ export async function fetchDeliveriesForStudent(
 ): Promise<Delivery[]> {
   try {
     const snap = await getDocs(
-      query(
-        collection(getDb(), "deliveries"),
-        where("studentId", "==", studentId),
-      ),
+      query(collection(getDb(), "deliveries"), where("studentId", "==", studentId)),
     );
     const docs = snap.docs.map(mapDelivery);
 
     if (admissionId && admissionId !== studentId) {
       try {
         const snap2 = await getDocs(
-          query(
-            collection(getDb(), "deliveries"),
-            where("admissionId", "==", admissionId),
-          ),
+          query(collection(getDb(), "deliveries"), where("admissionId", "==", admissionId)),
         );
         for (const docSnap of snap2.docs) {
           const item = mapDelivery(docSnap);
@@ -1084,9 +1141,7 @@ export async function fetchDeliveriesForStudent(
       }
     }
 
-    return docs
-      .sort((a, b) => b.date.localeCompare(a.date))
-      .slice(0, limitCount);
+    return docs.sort((a, b) => b.date.localeCompare(a.date)).slice(0, limitCount);
   } catch (error) {
     console.error("[firestore] fetchDeliveriesForStudent", error);
     return [];
@@ -1227,7 +1282,7 @@ export async function fetchPayouts(options?: {
     const db = getDb();
     const constraints: any[] = [orderBy("createdAt", "desc")];
     if (options?.startDate) constraints.push(where("createdAt", ">=", options.startDate));
-    if (options?.endDate)   constraints.push(where("createdAt", "<=", options.endDate));
+    if (options?.endDate) constraints.push(where("createdAt", "<=", options.endDate));
     if (options?.limitCount) constraints.push(limit(options.limitCount));
     const snap = await getDocs(query(collection(db, "payouts"), ...constraints));
     return snap.docs.map(mapPayout);
@@ -1350,8 +1405,13 @@ export async function deletePayoutRecord(id: string): Promise<void> {
 // ═══════════════════════════════════════════════════════════════════════════
 
 import type {
-  Laundry, LaundryInput, LaundryEmployee, LaundryEmployeeInput,
-  LaundryPickup, LaundryPickupInput, LaundrySubscriptionStatus,
+  Laundry,
+  LaundryInput,
+  LaundryEmployee,
+  LaundryEmployeeInput,
+  LaundryPickup,
+  LaundryPickupInput,
+  LaundrySubscriptionStatus,
 } from "./types";
 
 // ── Mappers ──────────────────────────────────────────────────────────────────
@@ -1375,10 +1435,14 @@ function mapLaundryEmployee(snap: QueryDocumentSnapshot<DocumentData>): LaundryE
   const d: any = snap.data();
   const laundryIds: string[] = Array.isArray(d.laundryIds)
     ? d.laundryIds
-    : d.laundryId ? [d.laundryId] : [];
+    : d.laundryId
+      ? [d.laundryId]
+      : [];
   const laundryNames: string[] = Array.isArray(d.laundryNames)
     ? d.laundryNames
-    : d.laundryName ? [d.laundryName] : [];
+    : d.laundryName
+      ? [d.laundryName]
+      : [];
   return {
     id: snap.id,
     employeeId: d.employeeId ?? snap.id,
@@ -1480,7 +1544,9 @@ export async function fetchLaundryEmployees(): Promise<LaundryEmployee[]> {
     return snap.docs.map(mapLaundryEmployee);
   } catch (error) {
     console.error("[firestore] fetchLaundryEmployees", error);
-    throw new Error("Unable to load laundry employees. Please check your connection and try again.");
+    throw new Error(
+      "Unable to load laundry employees. Please check your connection and try again.",
+    );
   }
 }
 
@@ -1547,7 +1613,8 @@ export async function createLaundryEmployee(input: CreateLaundryEmployeeInput): 
   } catch (error) {
     console.error("[firestore] createLaundryEmployee", error);
     const code = (error as { code?: string })?.code ?? "";
-    if (code === "auth/email-already-in-use") throw new Error("An account with this email already exists.");
+    if (code === "auth/email-already-in-use")
+      throw new Error("An account with this email already exists.");
     if (code === "auth/weak-password") throw new Error("Password must be at least 6 characters.");
     if (code === "auth/invalid-email") throw new Error("Please enter a valid email address.");
     throw new Error("Could not create employee account. Please try again.");
@@ -1556,7 +1623,9 @@ export async function createLaundryEmployee(input: CreateLaundryEmployeeInput): 
 
 export async function updateLaundryEmployee(
   id: string,
-  patch: Partial<Pick<LaundryEmployeeInput, "name" | "phone" | "laundryIds" | "laundryNames" | "role" | "status">>,
+  patch: Partial<
+    Pick<LaundryEmployeeInput, "name" | "phone" | "laundryIds" | "laundryNames" | "role" | "status">
+  >,
 ): Promise<void> {
   try {
     await updateDoc(doc(getDb(), "laundryEmployees", id), { ...patch });
@@ -1575,7 +1644,9 @@ export async function updateLaundryEmployee(
     }
   } catch (error) {
     console.error("[firestore] updateLaundryEmployee", error);
-    throw new Error("Unable to update laundry employee. Please check your connection and try again.");
+    throw new Error(
+      "Unable to update laundry employee. Please check your connection and try again.",
+    );
   }
 }
 
@@ -1596,7 +1667,9 @@ export async function assignStudentToLaundry(
     });
   } catch (error) {
     console.error("[firestore] assignStudentToLaundry", error);
-    throw new Error("Unable to assign student to laundry. Please check your connection and try again.");
+    throw new Error(
+      "Unable to assign student to laundry. Please check your connection and try again.",
+    );
   }
 }
 
@@ -1610,7 +1683,9 @@ export async function unassignStudentFromLaundry(admissionDocId: string): Promis
     });
   } catch (error) {
     console.error("[firestore] unassignStudentFromLaundry", error);
-    throw new Error("Unable to unassign student from laundry. Please check your connection and try again.");
+    throw new Error(
+      "Unable to unassign student from laundry. Please check your connection and try again.",
+    );
   }
 }
 
@@ -1631,7 +1706,10 @@ export async function updateStudentLaundryStatus(
 
 // ── Laundry Pickups ───────────────────────────────────────────────────────────
 
-export async function fetchLaundryPickupsForDate(laundryId: string, date: string): Promise<LaundryPickup[]> {
+export async function fetchLaundryPickupsForDate(
+  laundryId: string,
+  date: string,
+): Promise<LaundryPickup[]> {
   try {
     const snap = await getDocs(
       query(
@@ -1654,20 +1732,14 @@ export async function fetchLaundryPickupsForStudent(
 ): Promise<LaundryPickup[]> {
   try {
     const snap = await getDocs(
-      query(
-        collection(getDb(), "laundryPickups"),
-        where("studentId", "==", studentId),
-      ),
+      query(collection(getDb(), "laundryPickups"), where("studentId", "==", studentId)),
     );
     const docs = snap.docs.map(mapLaundryPickup);
 
     if (admissionId && admissionId !== studentId) {
       try {
         const snap2 = await getDocs(
-          query(
-            collection(getDb(), "laundryPickups"),
-            where("admissionId", "==", admissionId),
-          ),
+          query(collection(getDb(), "laundryPickups"), where("admissionId", "==", admissionId)),
         );
         for (const docSnap of snap2.docs) {
           const item = mapLaundryPickup(docSnap);
@@ -1676,7 +1748,10 @@ export async function fetchLaundryPickupsForStudent(
           }
         }
       } catch (err) {
-        console.warn("[firestore] fallback fetchLaundryPickupsForStudent by admissionId warning:", err);
+        console.warn(
+          "[firestore] fallback fetchLaundryPickupsForStudent by admissionId warning:",
+          err,
+        );
       }
     }
 
@@ -1750,7 +1825,9 @@ export async function upsertLaundryPickup(input: LaundryPickupInput): Promise<st
     return deterministicId;
   } catch (error) {
     console.error("[firestore] upsertLaundryPickup", error);
-    throw new Error("Unable to save laundry pickup status. Please check your connection and try again.");
+    throw new Error(
+      "Unable to save laundry pickup status. Please check your connection and try again.",
+    );
   }
 }
 
@@ -1778,17 +1855,17 @@ export async function fetchLaundryPickupsForDateRange(
   try {
     // Query by laundryId only (single-field index, never requires composite index in Firestore)
     const snap = await getDocs(
-      query(
-        collection(getDb(), "laundryPickups"),
-        where("laundryId", "==", laundryId),
-      ),
+      query(collection(getDb(), "laundryPickups"), where("laundryId", "==", laundryId)),
     );
     return snap.docs
       .map(mapLaundryPickup)
       .filter((p) => (!startDate || p.date >= startDate) && (!endDate || p.date <= endDate))
       .sort((a, b) => a.date.localeCompare(b.date));
   } catch (error) {
-    console.warn("[firestore] fetchLaundryPickupsForDateRange query by laundryId failed, attempting fallback:", error);
+    console.warn(
+      "[firestore] fetchLaundryPickupsForDateRange query by laundryId failed, attempting fallback:",
+      error,
+    );
     try {
       // Fallback: If date range is reasonable (<= 31 days), fetch day by day
       const dates: string[] = [];
@@ -1814,10 +1891,13 @@ export async function fetchLaundryPickupsForDateRange(
 // ═══════════════════════════════════════════════════════════════════════════
 
 import type {
-  MessRecord, MessRecordInput,
+  MessRecord,
+  MessRecordInput,
   DoNotWantRecord,
-  MessRequest, MessRequestInput,
-  StudentLaundryRecord, StudentLaundryRecordInput,
+  MessRequest,
+  MessRequestInput,
+  StudentLaundryRecord,
+  StudentLaundryRecordInput,
 } from "./types";
 
 // ── IST helpers ───────────────────────────────────────────────────────────────
@@ -1952,9 +2032,7 @@ function mapStudentLaundryRecord(snap: QueryDocumentSnapshot<DocumentData>): Stu
 // ── Mess Records ──────────────────────────────────────────────────────────────
 
 /** Fetch or auto-create today's mess record for a student (upsert pattern) */
-export async function getOrCreateMessRecord(
-  input: MessRecordInput,
-): Promise<MessRecord> {
+export async function getOrCreateMessRecord(input: MessRecordInput): Promise<MessRecord> {
   try {
     const db = getDb();
     const docId = `${input.studentId}_${input.date}`;
@@ -1981,7 +2059,16 @@ export async function getOrCreateMessRecord(
       updatedAt: serverTimestamp(),
     };
     await setDoc(ref, data);
-    return { id: docId, ...input, lunchStatus: "pending", lunchReturnStatus: "pending", dinnerStatus: "pending", dinnerReturnStatus: "pending", createdAt: null, updatedAt: null };
+    return {
+      id: docId,
+      ...input,
+      lunchStatus: "pending",
+      lunchReturnStatus: "pending",
+      dinnerStatus: "pending",
+      dinnerReturnStatus: "pending",
+      createdAt: null,
+      updatedAt: null,
+    };
   } catch (error) {
     console.error("[firestore] getOrCreateMessRecord", error);
     throw new Error("Unable to load today's tiffin record. Please check your connection.");
@@ -2038,10 +2125,7 @@ export async function fetchMessRecordsForStudent(
 ): Promise<MessRecord[]> {
   try {
     const snap = await getDocs(
-      query(
-        collection(getDb(), "messRecords"),
-        where("studentId", "==", studentId),
-      ),
+      query(collection(getDb(), "messRecords"), where("studentId", "==", studentId)),
     );
     return snap.docs
       .map(mapMessRecord)
@@ -2090,10 +2174,7 @@ export async function createDoNotWantRecord(
 export async function fetchDoNotWantForStudent(studentId: string): Promise<DoNotWantRecord[]> {
   try {
     const snap = await getDocs(
-      query(
-        collection(getDb(), "doNotWantRecords"),
-        where("studentId", "==", studentId),
-      ),
+      query(collection(getDb(), "doNotWantRecords"), where("studentId", "==", studentId)),
     );
     return snap.docs
       .map(mapDoNotWant)
@@ -2176,10 +2257,7 @@ export async function deleteMessRequest(id: string): Promise<void> {
 export async function fetchMessRequestsForStudent(studentId: string): Promise<MessRequest[]> {
   try {
     const snap = await getDocs(
-      query(
-        collection(getDb(), "messRequests"),
-        where("studentId", "==", studentId),
-      ),
+      query(collection(getDb(), "messRequests"), where("studentId", "==", studentId)),
     );
     return snap.docs
       .map(mapMessRequest)
@@ -2194,11 +2272,7 @@ export async function fetchMessRequestsForStudent(studentId: string): Promise<Me
 export async function fetchMessRequestsForMess(messId: string): Promise<MessRequest[]> {
   try {
     const snap = await getDocs(
-      query(
-        collection(getDb(), "messRequests"),
-        where("messId", "==", messId),
-        limit(100),
-      ),
+      query(collection(getDb(), "messRequests"), where("messId", "==", messId), limit(100)),
     );
     // Sort client-side to avoid requiring a composite Firestore index
     return snap.docs
@@ -2213,11 +2287,7 @@ export async function fetchMessRequestsForMess(messId: string): Promise<MessRequ
 export async function fetchAllMessRequests(): Promise<MessRequest[]> {
   try {
     const snap = await getDocs(
-      query(
-        collection(getDb(), "messRequests"),
-        orderBy("createdAt", "desc"),
-        limit(200),
-      ),
+      query(collection(getDb(), "messRequests"), orderBy("createdAt", "desc"), limit(200)),
     );
     return snap.docs.map(mapMessRequest);
   } catch (error) {
@@ -2268,7 +2338,9 @@ export async function getOrCreateStudentLaundryRecord(
 export async function updateStudentLaundryRecord(
   studentId: string,
   weekId: string,
-  patch: Partial<Pick<StudentLaundryRecord, "pickupStatus" | "pickupAt" | "receivedStatus" | "receivedAt">>,
+  patch: Partial<
+    Pick<StudentLaundryRecord, "pickupStatus" | "pickupAt" | "receivedStatus" | "receivedAt">
+  >,
 ): Promise<void> {
   try {
     const docId = `${studentId}_${weekId}`;
@@ -2286,10 +2358,7 @@ export async function fetchStudentLaundryRecords(
 ): Promise<StudentLaundryRecord[]> {
   try {
     const snap = await getDocs(
-      query(
-        collection(getDb(), "studentLaundryRecords"),
-        where("studentId", "==", studentId),
-      ),
+      query(collection(getDb(), "studentLaundryRecords"), where("studentId", "==", studentId)),
     );
     return snap.docs
       .map(mapStudentLaundryRecord)
@@ -2358,7 +2427,11 @@ export async function createLeaveRequest(input: LeaveRequestInput): Promise<stri
     return ref.id;
   } catch (error) {
     console.error("[firestore] createLeaveRequest", error);
-    throw new Error(error instanceof Error ? error.message : "Unable to submit leave request. Please check your connection.");
+    throw new Error(
+      error instanceof Error
+        ? error.message
+        : "Unable to submit leave request. Please check your connection.",
+    );
   }
 }
 
@@ -2411,10 +2484,7 @@ export async function cancelLeaveRequest(id: string): Promise<void> {
 export async function fetchLeaveRequestsForStudent(studentId: string): Promise<LeaveRequest[]> {
   try {
     const snap = await getDocs(
-      query(
-        collection(getDb(), "leaveRequests"),
-        where("studentId", "==", studentId),
-      ),
+      query(collection(getDb(), "leaveRequests"), where("studentId", "==", studentId)),
     );
     return snap.docs
       .map(mapLeaveRequest)
@@ -2427,12 +2497,7 @@ export async function fetchLeaveRequestsForStudent(studentId: string): Promise<L
 
 export async function fetchAllLeaveRequests(): Promise<LeaveRequest[]> {
   try {
-    const snap = await getDocs(
-      query(
-        collection(getDb(), "leaveRequests"),
-        limit(400),
-      ),
-    );
+    const snap = await getDocs(query(collection(getDb(), "leaveRequests"), limit(400)));
     return snap.docs
       .map(mapLeaveRequest)
       .sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0));
@@ -2467,7 +2532,9 @@ function mapProfileUpdateRequest(snap: QueryDocumentSnapshot<DocumentData>): Pro
   };
 }
 
-export async function createProfileUpdateRequest(input: ProfileUpdateRequestInput): Promise<string> {
+export async function createProfileUpdateRequest(
+  input: ProfileUpdateRequestInput,
+): Promise<string> {
   try {
     const cleanCurrentData: Record<string, any> = {};
     for (const [k, v] of Object.entries(input.currentData || {})) {
@@ -2497,18 +2564,18 @@ export async function createProfileUpdateRequest(input: ProfileUpdateRequestInpu
     return ref.id;
   } catch (error) {
     console.error("[firestore] createProfileUpdateRequest", error);
-    throw new Error(error instanceof Error ? error.message : "Unable to submit profile update request.");
+    throw new Error(
+      error instanceof Error ? error.message : "Unable to submit profile update request.",
+    );
   }
 }
 
-
-export async function fetchProfileUpdateRequestsForStudent(studentId: string): Promise<ProfileUpdateRequest[]> {
+export async function fetchProfileUpdateRequestsForStudent(
+  studentId: string,
+): Promise<ProfileUpdateRequest[]> {
   try {
     const snap = await getDocs(
-      query(
-        collection(getDb(), "profileUpdateRequests"),
-        where("studentId", "==", studentId),
-      ),
+      query(collection(getDb(), "profileUpdateRequests"), where("studentId", "==", studentId)),
     );
     return snap.docs
       .map(mapProfileUpdateRequest)
@@ -2521,12 +2588,7 @@ export async function fetchProfileUpdateRequestsForStudent(studentId: string): P
 
 export async function fetchAllProfileUpdateRequests(): Promise<ProfileUpdateRequest[]> {
   try {
-    const snap = await getDocs(
-      query(
-        collection(getDb(), "profileUpdateRequests"),
-        limit(300),
-      ),
-    );
+    const snap = await getDocs(query(collection(getDb(), "profileUpdateRequests"), limit(300)));
     return snap.docs
       .map(mapProfileUpdateRequest)
       .sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0));

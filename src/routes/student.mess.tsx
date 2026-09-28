@@ -617,7 +617,7 @@ function StudentMessPage() {
   // History & Requests
   const { data: history = [], isLoading: histLoading } = useMessRecordsForStudent(myAdmission?.id ?? null);
   const { data: requests = [] } = useMessRequestsForStudent(myAdmission?.id ?? null);
-  const { data: myLeaves = [] } = useLeaveRequestsForStudent(myAdmission?.admissionId);
+  const { data: myLeaves = [] } = useLeaveRequestsForStudent(myAdmission?.id ?? null);
 
   const activeLeaveToday = myLeaves.find(
     (l) => l.status === "approved" && l.fromDate <= today && (!l.toDate || today <= l.toDate),
