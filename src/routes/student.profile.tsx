@@ -25,6 +25,10 @@ import {
   Camera,
   UploadCloud,
   Trash2,
+  Receipt,
+  Download,
+  CreditCard,
+  Wallet,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -73,7 +77,7 @@ import {
   getOptimizedCloudinaryUrl,
   deleteProfilePictureViaNetlify,
 } from "@/lib/cloudinary";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatINR } from "@/lib/format";
 import type { Admission, ProfileUpdateRequest } from "@/lib/types";
 
 export const Route = createFileRoute("/student/profile")({
@@ -342,6 +346,33 @@ function StudentProfilePage() {
   }
 
   const currentPhotoUrl = admission.profilePhoto?.url || admission.profileImageUrl || null;
+
+  // Package fee & payment calculations
+  const packageAmount = Math.max(0, Number(admission.packageAmount ?? 0));
+  const amountPaid = Math.max(0, Number(admission.amountPaid ?? 0));
+  const balanceAmount =
+    admission.balanceAmount !== undefined && admission.balanceAmount !== null
+      ? Math.max(0, Number(admission.balanceAmount))
+      : Math.max(0, packageAmount - amountPaid);
+  const isFullyPaid = balanceAmount <= 0 && (packageAmount > 0 || amountPaid > 0);
+  const paymentPercentage =
+    packageAmount > 0
+      ? Math.min(100, Math.round((amountPaid / packageAmount) * 100))
+      : amountPaid > 0
+      ? 100
+      : 0;
+
+  const handleDownloadReceipt = async () => {
+    if (!admission) return;
+    try {
+      const { downloadReceiptPDF } = await import("@/lib/receipt-pdf");
+      downloadReceiptPDF(admission);
+      toast.success("Fee receipt downloaded.");
+    } catch (err) {
+      console.error("Failed to download receipt:", err);
+      toast.error("Could not generate receipt PDF.");
+    }
+  };
 
   return (
     <StudentShell
@@ -775,6 +806,22 @@ function StudentProfilePage() {
                   {admission.packageName || "—"}
                 </span>
               </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground font-medium">Paid Package Amount</span>
+                <span className="text-success font-bold font-mono">
+                  {formatINR(amountPaid)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground font-medium">Remaining Amount</span>
+                <span
+                  className={`font-bold font-mono ${
+                    balanceAmount > 0 ? "text-destructive" : "text-success"
+                  }`}
+                >
+                  {balanceAmount > 0 ? formatINR(balanceAmount) : "₹0 (Cleared)"}
+                </span>
+              </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground font-medium">Meal Preference</span>
                 <span className="text-foreground font-semibold capitalize">
@@ -802,6 +849,154 @@ function StudentProfilePage() {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Card 5: Package Fee & Payment Overview */}
+          <div className="md:col-span-2 rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-soft space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-border">
+              <div className="flex items-center gap-2.5">
+                <div className="size-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                  <Receipt className="size-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm sm:text-base text-foreground">
+                    Package Fee & Payment Details
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    {admission.packageName || "Assigned Package Plan"}
+                    {admission.packageStartDate && admission.packageEndDate && (
+                      <span>
+                        {" "}· {formatDate(admission.packageStartDate)} to {formatDate(admission.packageEndDate)}
+                      </span>
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                {isFullyPaid ? (
+                  <Badge
+                    variant="outline"
+                    className="bg-success/15 text-success border-success/30 font-semibold gap-1 text-xs py-1"
+                  >
+                    <CheckCircle2 className="size-3.5" />
+                    Fully Paid
+                  </Badge>
+                ) : (
+                  <Badge
+                    variant="outline"
+                    className="bg-warning/15 text-warning border-warning/30 font-semibold gap-1 text-xs py-1"
+                  >
+                    <Clock className="size-3.5" />
+                    Balance Due: {formatINR(balanceAmount)}
+                  </Badge>
+                )}
+
+                {admission.paymentMode && (
+                  <Badge
+                    variant="outline"
+                    className="bg-muted text-muted-foreground border-border text-xs capitalize py-1"
+                  >
+                    {admission.paymentMode === "online" ? "💳 Online" : "💵 Cash"}
+                  </Badge>
+                )}
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDownloadReceipt}
+                  className="h-8 text-xs font-medium gap-1.5 rounded-xl border-border hover:bg-muted ml-auto sm:ml-0"
+                >
+                  <Download className="size-3.5 text-primary" />
+                  Download Receipt
+                </Button>
+              </div>
+            </div>
+
+            {/* 3 Metric Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {/* Total Package Fee */}
+              <div className="rounded-xl border border-border/80 bg-background/60 p-4 space-y-1">
+                <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider block">
+                  Total Package Fee
+                </span>
+                <p className="text-xl sm:text-2xl font-bold font-display text-foreground font-mono">
+                  {formatINR(packageAmount)}
+                </p>
+                <p className="text-[11px] text-muted-foreground truncate">
+                  {admission.packageName || "Standard Plan"}
+                </p>
+              </div>
+
+              {/* Paid Package Amount */}
+              <div className="rounded-xl border border-success/25 bg-success/5 p-4 space-y-1">
+                <span className="text-[11px] font-medium text-success uppercase tracking-wider block flex items-center justify-between">
+                  <span>Paid Package Amount</span>
+                  <CheckCircle2 className="size-3.5 text-success" />
+                </span>
+                <p className="text-xl sm:text-2xl font-bold font-display text-success font-mono">
+                  {formatINR(amountPaid)}
+                </p>
+                <p className="text-[11px] text-success/80">
+                  {paymentPercentage}% of package fee cleared
+                </p>
+              </div>
+
+              {/* Remaining Package Amount */}
+              <div
+                className={`rounded-xl border p-4 space-y-1 ${
+                  balanceAmount > 0
+                    ? "border-destructive/25 bg-destructive/5"
+                    : "border-success/25 bg-success/5"
+                }`}
+              >
+                <span
+                  className={`text-[11px] font-medium uppercase tracking-wider block flex items-center justify-between ${
+                    balanceAmount > 0 ? "text-destructive" : "text-success"
+                  }`}
+                >
+                  <span>Remaining Amount</span>
+                  {balanceAmount > 0 ? (
+                    <Clock className="size-3.5 text-destructive" />
+                  ) : (
+                    <CheckCircle2 className="size-3.5 text-success" />
+                  )}
+                </span>
+                <p
+                  className={`text-xl sm:text-2xl font-bold font-display font-mono ${
+                    balanceAmount > 0 ? "text-destructive" : "text-success"
+                  }`}
+                >
+                  {balanceAmount > 0 ? formatINR(balanceAmount) : "₹0 (Cleared)"}
+                </p>
+                <p
+                  className={`text-[11px] ${
+                    balanceAmount > 0 ? "text-destructive/80" : "text-success/80"
+                  }`}
+                >
+                  {balanceAmount > 0 ? "Outstanding package balance" : "All dues cleared in full"}
+                </p>
+              </div>
+            </div>
+
+            {/* Visual Progress Bar */}
+            {packageAmount > 0 && (
+              <div className="space-y-1.5 pt-1">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-muted-foreground font-medium">Payment Clearance</span>
+                  <span className="font-semibold text-foreground">{paymentPercentage}% Cleared</span>
+                </div>
+                <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                  <div
+                    className={`h-full transition-all duration-500 rounded-full ${
+                      isFullyPaid ? "bg-success" : "bg-primary"
+                    }`}
+                    style={{ width: `${paymentPercentage}%` }}
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
