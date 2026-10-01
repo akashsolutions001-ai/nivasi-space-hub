@@ -3,20 +3,24 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft, Search, UserCheck, Loader2, CheckSquare, Square,
+  Calendar, Pencil,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import { AdminShell } from "@/components/nivasi/admin-shell";
+import { UpdateMessJoiningDateDialog } from "@/components/nivasi/update-mess-joining-date-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useAdmissions, useMesses } from "@/lib/hooks";
-import { assignStudentToMess, updateStudentTiffinStatus, unassignStudentFromMess } from "@/lib/db";
-import type { TiffinStatus } from "@/lib/types";
+import { assignStudentToMess, updateStudentTiffinStatus, unassignStudentFromMess, todayDateString } from "@/lib/db";
+import { getStudentMessJoiningDate, formatToDDMMYYYY } from "@/lib/mess-export";
+import type { TiffinStatus, Admission } from "@/lib/types";
 
 export const Route = createFileRoute("/admin/mess/assign")({
   head: () => ({ meta: [{ title: "Assign Students to Mess — NivasiSpace Admin" }] }),
@@ -33,6 +37,8 @@ function MessAssignPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkMessId, setBulkMessId] = useState("");
   const [bulkTiffin, setBulkTiffin] = useState<TiffinStatus>("active");
+  const [bulkJoiningDate, setBulkJoiningDate] = useState(todayDateString());
+  const [dateEditStudent, setDateEditStudent] = useState<Admission | null>(null);
   const [assigning, setAssigning] = useState(false);
   const [singleAssigning, setSingleAssigning] = useState<string | null>(null);
 
@@ -95,13 +101,14 @@ function MessAssignPage() {
     if (!mess) return;
     setAssigning(true);
     try {
+      const joinDate = bulkJoiningDate.trim() || todayDateString();
       await Promise.all(
         [...selectedIds].map((id) =>
-          assignStudentToMess(id, bulkMessId, mess.messName, bulkTiffin),
+          assignStudentToMess(id, bulkMessId, mess.messName, bulkTiffin, joinDate),
         ),
       );
       await qc.invalidateQueries({ queryKey: ["admissions"] });
-      toast.success(`${selectedIds.size} student${selectedIds.size > 1 ? "s" : ""} assigned to ${mess.messName}.`);
+      toast.success(`${selectedIds.size} student${selectedIds.size > 1 ? "s" : ""} assigned to ${mess.messName} (joined ${formatToDDMMYYYY(joinDate)}).`);
       setSelectedIds(new Set());
       setBulkMessId("");
     } catch (err) {
@@ -165,7 +172,7 @@ function MessAssignPage() {
             </SelectContent>
           </Select>
           <Select value={bulkTiffin} onValueChange={(v) => setBulkTiffin(v as TiffinStatus)}>
-            <SelectTrigger className="w-36">
+            <SelectTrigger className="w-32">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -174,6 +181,18 @@ function MessAssignPage() {
               <SelectItem value="cancelled">Cancelled</SelectItem>
             </SelectContent>
           </Select>
+          <div className="flex items-center gap-1.5">
+            <Label htmlFor="bulk-join-date" className="text-xs text-muted-foreground whitespace-nowrap">
+              Joining Date:
+            </Label>
+            <Input
+              id="bulk-join-date"
+              type="date"
+              value={bulkJoiningDate}
+              onChange={(e) => setBulkJoiningDate(e.target.value)}
+              className="h-9 w-36 text-xs bg-background"
+            />
+          </div>
           <Button size="sm" onClick={assignBulk} disabled={assigning}>
             {assigning && <Loader2 className="mr-1.5 size-4 animate-spin" />}
             <UserCheck className="mr-1.5 size-4" />
@@ -242,6 +261,20 @@ function MessAssignPage() {
                         Tiffin: {tiffin}
                       </Badge>
                     )}
+                    {currentMessId && (
+                      <button
+                        type="button"
+                        onClick={() => setDateEditStudent(student)}
+                        className="inline-flex items-center gap-1 rounded border border-border/80 bg-muted/40 px-2 py-0.5 text-[11px] text-muted-foreground hover:border-primary/50 hover:text-foreground transition-colors"
+                        title="Click to update mess joining date"
+                      >
+                        <Calendar className="size-3 text-primary/70" />
+                        <span>
+                          Joined: <strong className="text-foreground">{formatToDDMMYYYY(getStudentMessJoiningDate(student)) || "Not set"}</strong>
+                        </span>
+                        <Pencil className="size-2.5 ml-0.5 text-primary" />
+                      </button>
+                    )}
                   </div>
                   <p className="mt-0.5 text-sm text-muted-foreground">
                     {student.phoneNumber}{student.propertyName ? ` · ${student.propertyName}` : ""}
@@ -271,6 +304,13 @@ function MessAssignPage() {
           })
         )}
       </div>
+
+      {/* Update Mess Joining Date Dialog */}
+      <UpdateMessJoiningDateDialog
+        open={Boolean(dateEditStudent)}
+        onClose={() => setDateEditStudent(null)}
+        student={dateEditStudent}
+      />
     </AdminShell>
   );
 }

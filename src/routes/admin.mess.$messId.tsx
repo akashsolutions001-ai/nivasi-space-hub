@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -6,7 +6,7 @@ import {
   CheckCircle2, Clock, XCircle, SkipForward, Pencil,
   RotateCcw, AlertCircle, MessageSquare, ChevronDown, ChevronUp,
   Loader2, FileText, UserMinus, Copy, ArrowRight, CalendarOff,
-  UserCheck, UserX, Download, Sliders,
+  UserCheck, UserX, Download, Sliders, Calendar,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -15,6 +15,7 @@ import { useIsAdmin } from "@/lib/auth";
 import { AdminShell } from "@/components/nivasi/admin-shell";
 import { MessExportDialog } from "@/components/nivasi/mess-export-dialog";
 import { MessDailyTiffinDialog } from "@/components/nivasi/mess-daily-tiffin-dialog";
+import { UpdateMessJoiningDateDialog } from "@/components/nivasi/update-mess-joining-date-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -32,7 +33,11 @@ import {
   useRooms, useProperties, useMessRecordsForDate, useMessRequestsForMess,
   useAllLeaveRequests,
 } from "@/lib/hooks";
-import { upsertDelivery, todayDateString, todayISTDateString, updateMess, unassignStudentFromMess } from "@/lib/db";
+import {
+  upsertDelivery, todayDateString, todayISTDateString, updateMess,
+  unassignStudentFromMess, updateStudentMessJoiningDate,
+} from "@/lib/db";
+import { getStudentMessJoiningDate, formatToDDMMYYYY } from "@/lib/mess-export";
 import type { Admission, DeliveryStatus, MessRecord, MessRequest } from "@/lib/types";
 
 export const Route = createFileRoute("/admin/mess/$messId")({
@@ -374,6 +379,7 @@ function MessStudentsPage() {
   const [exportOpen, setExportOpen] = useState(false);
   const [dailyOpsOpen, setDailyOpsOpen] = useState(false);
   const [unassigningId, setUnassigningId] = useState<string | null>(null);
+  const [dateEditStudent, setDateEditStudent] = useState<Admission | null>(null);
 
   const isAdmin = useIsAdmin();
 
@@ -659,6 +665,8 @@ function MessStudentsPage() {
             const tiffin = (student as any).tiffinStatus ?? "active";
             const leave = studentLeaveMap.get(student.admissionId) || studentLeaveMap.get(student.id);
             const isNonVeg = ((student.mealPreference || "veg").toLowerCase().includes("non"));
+            const joiningDateRaw = getStudentMessJoiningDate(student);
+            const joiningDateFormatted = joiningDateRaw ? formatToDDMMYYYY(joiningDateRaw) : "Not recorded";
 
             return (
               <div key={student.id} className={`rounded-2xl border bg-card p-4 shadow-soft transition-colors ${leave ? "border-sky-500/30 bg-sky-500/[0.02]" : "border-border"}`}>
@@ -705,6 +713,23 @@ function MessStudentsPage() {
                     {student.propertyName && (
                       <p className="mt-0.5 text-sm text-muted-foreground">{student.propertyName}{student.roomNumber ? ` · Room ${student.roomNumber}` : ""}</p>
                     )}
+                    {/* Mess Joined date preview & quick edit */}
+                    <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs">
+                      <span className="inline-flex items-center gap-1 text-muted-foreground">
+                        <Calendar className="size-3 text-primary/70" />
+                        <span>Mess Joined:</span>
+                        <span className="font-medium text-foreground">{joiningDateFormatted}</span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setDateEditStudent(student)}
+                        className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-medium text-primary hover:bg-primary/10 transition-colors"
+                        title="Update student mess joining date"
+                      >
+                        <Pencil className="size-2.5" />
+                        Edit Date
+                      </button>
+                    </div>
                   </div>
                   {/* Call & Map */}
                   <div className="flex shrink-0 gap-1.5">
@@ -768,10 +793,26 @@ function MessStudentsPage() {
                   requests={messRequests}
                 />
 
-                {/* Unassign Mess button — Only visible to Admins, not Employees */}
-                {isAdmin && (
-                  <div className="mt-2.5 pt-2.5 border-t border-dashed border-border/80 flex items-center justify-between">
-                    <span className="text-[11px] text-muted-foreground font-medium">Mess Assignment</span>
+                {/* Student management row: Mess Joining Date + Unassign */}
+                <div className="mt-2.5 pt-2.5 border-t border-dashed border-border/80 flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-[11px] text-muted-foreground font-medium">Joined Mess:</span>
+                    <Badge variant="outline" className="text-xs font-medium border-primary/20 bg-primary/5 text-primary">
+                      <Calendar className="mr-1 size-3 text-primary" />
+                      {joiningDateFormatted}
+                    </Badge>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setDateEditStudent(student)}
+                      className="h-7 px-2 text-xs text-primary hover:bg-primary/10 gap-1 font-medium"
+                    >
+                      <Pencil className="size-3" />
+                      Update Date
+                    </Button>
+                  </div>
+
+                  {isAdmin && (
                     <Button
                       variant="outline"
                       size="sm"
@@ -786,8 +827,8 @@ function MessStudentsPage() {
                       )}
                       Unassign Mess
                     </Button>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             );
           })
@@ -822,6 +863,14 @@ function MessStudentsPage() {
           admissions={admissions}
         />
       )}
+
+      {/* Update Mess Joining Date Dialog */}
+      <UpdateMessJoiningDateDialog
+        open={Boolean(dateEditStudent)}
+        onClose={() => setDateEditStudent(null)}
+        student={dateEditStudent}
+        messName={mess?.messName ?? "Mess"}
+      />
     </AdminShell>
   );
 }

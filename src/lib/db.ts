@@ -107,6 +107,7 @@ function mapAdmission(snap: QueryDocumentSnapshot<DocumentData>): Admission {
     messId: d.messId ?? "",
     messName: d.messName ?? "",
     tiffinStatus: d.tiffinStatus ?? "",
+    messJoiningDate: d.messJoiningDate ?? "",
     // Laundry fields
     laundryId: d.laundryId ?? "",
     laundryName: d.laundryName ?? "",
@@ -1132,6 +1133,23 @@ export async function updateStudentTiffinStatus(
   } catch (error) {
     console.error("[firestore] updateStudentTiffinStatus", error);
     throw new Error("Unable to update tiffin status.");
+  }
+}
+
+export async function updateStudentMessJoiningDate(
+  admissionDocId: string,
+  messJoiningDate: string,
+): Promise<void> {
+  try {
+    await updateDoc(doc(getDb(), "admissions", admissionDocId), {
+      messJoiningDate: messJoiningDate.trim(),
+      updatedAt: serverTimestamp(),
+    });
+  } catch (error) {
+    console.error("[firestore] updateStudentMessJoiningDate", error);
+    throw new Error(
+      "Unable to update mess joining date. Please check your connection and try again.",
+    );
   }
 }
 
