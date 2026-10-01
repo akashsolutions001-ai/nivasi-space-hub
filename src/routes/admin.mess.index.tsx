@@ -191,7 +191,7 @@ function MessIndexPage() {
   const [search, setSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Mess | null>(null);
-  const [exportTarget, setExportTarget] = useState<Mess | null>(null);
+  const [exportTarget, setExportTarget] = useState<Mess | "all" | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Mess | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -240,7 +240,16 @@ function MessIndexPage() {
       subtitle={isMessEmployee ? "Your assigned messes and their students." : "Manage messes, owners, employees and student assignments."}
       action={
         !isMessEmployee ? (
-          <div className="flex gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setExportTarget("all")}
+              className="gap-1.5 border-orange-500/30 bg-orange-50/50 dark:bg-orange-950/20 text-orange-600 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/40 shadow-soft"
+            >
+              <Download className="size-4" />
+              Export Monthly Report
+            </Button>
             <Button asChild variant="outline" size="sm">
               <Link to="/admin/mess/employees">
                 <Users className="mr-1.5 size-4" />
@@ -258,7 +267,17 @@ function MessIndexPage() {
               New Mess
             </Button>
           </div>
-        ) : undefined
+        ) : (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setExportTarget("all")}
+            className="gap-1.5 border-orange-500/30 bg-orange-50/50 dark:bg-orange-950/20 text-orange-600 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/40 shadow-soft"
+          >
+            <Download className="size-4" />
+            Export Monthly Report
+          </Button>
+        )
       }
     >
       {/* Search */}
@@ -332,16 +351,6 @@ function MessIndexPage() {
                   </Badge>
                 </div>
                 <div className="flex shrink-0 items-center gap-1.5">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setExportTarget(m)}
-                    className="h-8 gap-1.5 border-orange-500/30 bg-orange-50/60 dark:bg-orange-950/20 text-orange-600 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/40 hover:text-orange-700 dark:hover:text-orange-300 font-medium text-xs shadow-soft"
-                    title={`Export ${m.messName} Student Register to Excel`}
-                  >
-                    <Download className="size-3.5" />
-                    Export
-                  </Button>
                   {!isMessEmployee && (
                     <>
                       <Button
@@ -480,9 +489,10 @@ function MessIndexPage() {
       </AlertDialog>
       {/* Mess Export Register Dialog */}
       <MessExportDialog
-        open={!!exportTarget}
+        open={Boolean(exportTarget)}
         onClose={() => setExportTarget(null)}
         mess={exportTarget}
+        allMesses={messes}
         admissions={admissions ?? []}
       />
     </AdminShell>

@@ -369,8 +369,19 @@ import {
   fetchAllLeaveRequests,
   fetchProfileUpdateRequestsForStudent,
   fetchAllProfileUpdateRequests,
+  fetchMessDailyRecordsForMonth,
+  fetchMessBillingSettings,
 } from "@/lib/db";
-import type { MessRecord, MessRequest, StudentLaundryRecord, DoNotWantRecord, LeaveRequest, ProfileUpdateRequest } from "@/lib/types";
+import type {
+  MessRecord,
+  MessRequest,
+  StudentLaundryRecord,
+  DoNotWantRecord,
+  LeaveRequest,
+  ProfileUpdateRequest,
+  MessDailyRecord,
+  MessBillingSettings,
+} from "@/lib/types";
 
 export function useMessRecord(studentId: string | null, date: string) {
   return useQuery({
@@ -484,3 +495,30 @@ export function useAllProfileUpdateRequests() {
     refetchInterval: 5000,
   });
 }
+
+// ── Daily Mess Operational Records & Monthly Billing Hooks ───────────────────
+
+export function useMessDailyRecordsForMonth(
+  messId: string | "all" | null,
+  year: number,
+  month: number
+) {
+  const ready = useIsReady();
+  return useQuery<MessDailyRecord[]>({
+    queryKey: ["messDailyRecords", messId, year, month],
+    queryFn: () => (messId ? fetchMessDailyRecordsForMonth(messId, year, month) : Promise.resolve([])),
+    enabled: ready && Boolean(messId),
+    refetchInterval: 5000,
+  });
+}
+
+export function useMessBillingSettings() {
+  const ready = useIsReady();
+  return useQuery<MessBillingSettings>({
+    queryKey: ["messSettings", "billing_policy"],
+    queryFn: fetchMessBillingSettings,
+    enabled: ready,
+    staleTime: 60000,
+  });
+}
+

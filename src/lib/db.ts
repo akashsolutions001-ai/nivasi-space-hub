@@ -35,6 +35,11 @@ import type {
   ProfileUpdateRequest,
   ProfileUpdateRequestInput,
   ProfileUpdateStatus,
+  MessDailyRecord,
+  MessDailyRecordInput,
+  MessOperationalStatus,
+  LeaveBillingPolicy,
+  MessBillingSettings,
 } from "./types";
 
 function toDate(value: unknown): Date | null {
@@ -156,11 +161,36 @@ export async function fetchAdmission(admissionId: string): Promise<Admission | n
   }
 }
 
+/**
+ * Strips all undefined properties from an object (including nested plain objects)
+ * to prevent Firestore "Unsupported field value: undefined" errors.
+ */
+export function stripUndefined<T extends Record<string, any>>(obj: T): Partial<T> {
+  const result: Record<string, any> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== undefined) {
+      if (
+        value !== null &&
+        typeof value === "object" &&
+        !Array.isArray(value) &&
+        !(value instanceof Date) &&
+        typeof (value as any).toDate !== "function"
+      ) {
+        result[key] = stripUndefined(value);
+      } else {
+        result[key] = value;
+      }
+    }
+  }
+  return result as Partial<T>;
+}
+
 export async function createAdmission(input: AdmissionInput): Promise<string> {
   try {
+    const cleanInput = stripUndefined(input);
     // 1. Save the admission document to Firestore
     const ref = await addDoc(collection(getDb(), "admissions"), {
-      ...input,
+      ...cleanInput,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     });
@@ -184,7 +214,8 @@ export async function createAdmission(input: AdmissionInput): Promise<string> {
 
 export async function updateAdmission(id: string, patch: Partial<AdmissionInput>): Promise<void> {
   try {
-    await updateDoc(doc(getDb(), "admissions", id), { ...patch, updatedAt: serverTimestamp() });
+    const cleanPatch = stripUndefined(patch);
+    await updateDoc(doc(getDb(), "admissions", id), { ...cleanPatch, updatedAt: serverTimestamp() });
   } catch (error) {
     console.error("[firestore] updateAdmission", error);
     throw new Error(friendly("update this admission"));
@@ -2676,3 +2707,174 @@ export async function cancelProfileUpdateRequest(requestId: string): Promise<voi
     throw new Error("Unable to cancel profile update request.");
   }
 }
+
+// ── Mess Daily Operational Records & Monthly Billing ───────────────────────────
+
+function mapMessDailyRecord(snap: QueryDocumentSnapshot<DocumentData>): MessDailyRecord {
+  const d = snap.data();
+  return {
+    id: snap.id,
+    date: d["date"] ?? "",
+    dateKey: d["dateKey"] ?? d["date"] ?? "",
+    month: Number(d["month"] ?? 0),
+    year: Number(d["year"] ?? 0),
+    monthKey: d["monthKey"] ?? "",
+    messId: d["messId"] ?? "",
+    messName: d["messName"] ?? "",
+
+    assignedStudentCount: Number(d["assignedStudentCount"] ?? 0),
+    leaveStudentCount: Number(d["leaveStudentCount"] ?? 0),
+
+    lunchExpected: Number(d["lunchExpected"] ?? 0),
+    lunchAdjustment: Number(d["lunchAdjustment"] ?? 0),
+    lunchFinal: Number(d["lunchFinal"] ?? 0),
+
+    dinnerExpected: Number(d["dinnerExpected"] ?? 0),
+    dinnerAdjustment: Number(d["dinnerAdjustment"] ?? 0),
+    dinnerFinal: Number(d["dinnerFinal"] ?? 0),
+
+    lunchStatus: d["lunchStatus"] === "OFF" ? "OFF" : "OPEN",
+    dinnerStatus: d["dinnerStatus"] === "OFF" ? "OFF" : "OPEN",
+    messStatus: (d["messStatus"] ?? "OPEN") as MessOperationalStatus,
+
+    reason: d["reason"] ?? "",
+    leaveStudentIds: Array.isArray(d["leaveStudentIds"]) ? d["leaveStudentIds"] : [],
+
+    monthlyApplicableStudents: Number(d["monthlyApplicableStudents"] ?? 0),
+    monthlyRate: Number(d["monthlyRate"] ?? 2300),
+    monthlyAmount: Number(d["monthlyAmount"] ?? 0),
+
+    updatedBy: d["updatedBy"] ?? "",
+    createdAt: toDate(d["createdAt"]),
+    updatedAt: toDate(d["updatedAt"]),
+  };
+}
+
+/**
+ * Fetch or auto-create a daily operational record for a mess.
+ * Duplicate prevention: Checks doc `${messId}_${dateKey}`. If it exists, returns it immediately without creating duplicates.
+ */
+export async function getOrCreateMessDailyRecord(input: MessDailyRecordInput): Promise<MessDailyRecord> {
+  try {
+    const db = getDb();
+    const docId = `${input.messId}_${input.dateKey || input.date}`;
+    const ref = doc(db, "messDailyRecords", docId);
+    const snap = await getDoc(ref);
+    if (snap.exists()) {
+      return mapMessDailyRecord(snap as QueryDocumentSnapshot<DocumentData>);
+    }
+
+    const data = {
+      ...input,
+      dateKey: input.dateKey || input.date,
+      monthKey: input.monthKey || `${input.year}-${String(input.month).padStart(2, "0")}`,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    await setDoc(ref, data);
+    return {
+      id: docId,
+      ...input,
+      dateKey: input.dateKey || input.date,
+      monthKey: input.monthKey || `${input.year}-${String(input.month).padStart(2, "0")}`,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+  } catch (error) {
+    console.error("[firestore] getOrCreateMessDailyRecord", error);
+    throw new Error("Unable to save daily mess record.");
+  }
+}
+
+/**
+ * Update an existing daily record (adjustments, OFF status, remarks).
+ */
+export async function updateMessDailyRecord(
+  docId: string,
+  patch: Partial<Omit<MessDailyRecord, "id" | "createdAt">>
+): Promise<void> {
+  try {
+    const ref = doc(getDb(), "messDailyRecords", docId);
+    await setDoc(
+      ref,
+      {
+        ...patch,
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
+  } catch (error) {
+    console.error("[firestore] updateMessDailyRecord", error);
+    throw new Error("Unable to update daily mess record.");
+  }
+}
+
+/**
+ * Fetch all daily operational records for a given mess and month.
+ */
+export async function fetchMessDailyRecordsForMonth(
+  messId: string | "all",
+  year: number,
+  month: number
+): Promise<MessDailyRecord[]> {
+  try {
+    const db = getDb();
+    const monthKey = `${year}-${String(month).padStart(2, "0")}`;
+    let q;
+    if (messId === "all") {
+      q = query(
+        collection(db, "messDailyRecords"),
+        where("monthKey", "==", monthKey)
+      );
+    } else {
+      q = query(
+        collection(db, "messDailyRecords"),
+        where("messId", "==", messId),
+        where("monthKey", "==", monthKey)
+      );
+    }
+    const snap = await getDocs(q);
+    return snap.docs.map(mapMessDailyRecord);
+  } catch (error) {
+    console.error("[firestore] fetchMessDailyRecordsForMonth", error);
+    return [];
+  }
+}
+
+export const DEFAULT_MESS_BILLING_SETTINGS: MessBillingSettings = {
+  leaveBillingPolicy: "no_adjustment",
+  monthlyRate: 2300,
+  lunchRateShare: 1150,
+  dinnerRateShare: 1150,
+};
+
+export async function fetchMessBillingSettings(): Promise<MessBillingSettings> {
+  try {
+    const snap = await getDoc(doc(getDb(), "messSettings", "billing_policy"));
+    if (snap.exists()) {
+      const data = snap.data();
+      return {
+        leaveBillingPolicy: (data["leaveBillingPolicy"] || "no_adjustment") as LeaveBillingPolicy,
+        monthlyRate: Number(data["monthlyRate"] ?? 2300),
+        lunchRateShare: Number(data["lunchRateShare"] ?? 1150),
+        dinnerRateShare: Number(data["dinnerRateShare"] ?? 1150),
+        customProrateNotes: data["customProrateNotes"] || "",
+      };
+    }
+    return DEFAULT_MESS_BILLING_SETTINGS;
+  } catch (err) {
+    console.error("[firestore] fetchMessBillingSettings", err);
+    return DEFAULT_MESS_BILLING_SETTINGS;
+  }
+}
+
+export async function saveMessBillingSettings(settings: Partial<MessBillingSettings>): Promise<void> {
+  try {
+    const ref = doc(getDb(), "messSettings", "billing_policy");
+    await setDoc(ref, { ...settings, updatedAt: serverTimestamp() }, { merge: true });
+  } catch (err) {
+    console.error("[firestore] saveMessBillingSettings", err);
+    throw new Error("Unable to save mess billing settings.");
+  }
+}
+

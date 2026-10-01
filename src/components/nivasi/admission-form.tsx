@@ -349,7 +349,10 @@ export function AdmissionForm({ existing }: { existing?: Admission | null }) {
         tiffinPaymentCollected: form.tiffinPaymentCollected,
         mattressRequired: form.mattressRequired,
         mattressPaymentCollected: form.mattressPaymentCollected,
-        mealPreference: (form.mealPreference as "veg" | "non-veg") || undefined,
+        mealPreference:
+          form.mealPreference === "veg" || form.mealPreference === "non-veg"
+            ? form.mealPreference
+            : null,
         notes: form.notes.trim(),
       };
 

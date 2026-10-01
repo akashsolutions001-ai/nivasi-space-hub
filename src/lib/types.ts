@@ -51,7 +51,7 @@ export interface Admission {
   tiffinPaymentCollected: boolean;
   mattressRequired: boolean;
   mattressPaymentCollected: boolean;
-  mealPreference?: "veg" | "non-veg";
+  mealPreference?: "veg" | "non-veg" | null;
   notes?: string;
   // Mess & Tiffin
   messId?: string;
@@ -330,6 +330,65 @@ export interface MessRecord {
 }
 
 export type MessRecordInput = Omit<MessRecord, "id" | "createdAt" | "updatedAt">;
+
+// ── Mess Daily Operational Records (daily per mess) ──────────────────────────
+
+export type MessOperationalStatus =
+  | "OPEN"
+  | "LUNCH_OFF"
+  | "DINNER_OFF"
+  | "FULL_DAY_OFF"
+  | "HOLIDAY"
+  | "SPECIAL_CLOSURE";
+
+export type LeaveBillingPolicy = "no_adjustment" | "prorated" | "custom";
+
+export interface MessDailyRecord {
+  id: string; // `${messId}_${dateKey}`
+  date: string; // YYYY-MM-DD
+  dateKey: string; // YYYY-MM-DD
+  month: number; // 1-12
+  year: number; // e.g. 2026
+  monthKey: string; // "YYYY-MM"
+  messId: string;
+  messName: string;
+
+  assignedStudentCount: number;
+  leaveStudentCount: number;
+
+  lunchExpected: number;
+  lunchAdjustment: number;
+  lunchFinal: number;
+
+  dinnerExpected: number;
+  dinnerAdjustment: number;
+  dinnerFinal: number;
+
+  lunchStatus: "OPEN" | "OFF";
+  dinnerStatus: "OPEN" | "OFF";
+  messStatus: MessOperationalStatus;
+
+  reason?: string;
+  leaveStudentIds?: string[];
+
+  monthlyApplicableStudents?: number;
+  monthlyRate?: number; // 2300
+  monthlyAmount?: number;
+
+  updatedBy?: string;
+  createdAt?: Date | null;
+  updatedAt?: Date | null;
+}
+
+export type MessDailyRecordInput = Omit<MessDailyRecord, "id" | "createdAt" | "updatedAt">;
+
+export interface MessBillingSettings {
+  leaveBillingPolicy: LeaveBillingPolicy;
+  monthlyRate: number; // 2300
+  lunchRateShare: number; // 1150
+  dinnerRateShare: number; // 1150
+  customProrateNotes?: string;
+}
 
 // ── Do Not Want date-range records ────────────────────────────────────────────
 

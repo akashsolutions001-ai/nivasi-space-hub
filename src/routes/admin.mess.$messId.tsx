@@ -6,7 +6,7 @@ import {
   CheckCircle2, Clock, XCircle, SkipForward, Pencil,
   RotateCcw, AlertCircle, MessageSquare, ChevronDown, ChevronUp,
   Loader2, FileText, UserMinus, Copy, ArrowRight, CalendarOff,
-  UserCheck, UserX, Download,
+  UserCheck, UserX, Download, Sliders,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -14,6 +14,7 @@ import { useIsAdmin } from "@/lib/auth";
 
 import { AdminShell } from "@/components/nivasi/admin-shell";
 import { MessExportDialog } from "@/components/nivasi/mess-export-dialog";
+import { MessDailyTiffinDialog } from "@/components/nivasi/mess-daily-tiffin-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -371,6 +372,7 @@ function MessStudentsPage() {
   const [updatingKey, setUpdatingKey] = useState<string | null>(null);
   const [descDialogOpen, setDescDialogOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
+  const [dailyOpsOpen, setDailyOpsOpen] = useState(false);
   const [unassigningId, setUnassigningId] = useState<string | null>(null);
 
   const isAdmin = useIsAdmin();
@@ -497,14 +499,22 @@ function MessStudentsPage() {
               <p className="text-xs text-muted-foreground">Excludes students currently away on approved leave</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 text-xs gap-1.5"
+              onClick={() => setDailyOpsOpen(true)}
+            >
+              <Sliders className="size-3" /> Daily Operations & Mess-Off
+            </Button>
             <Button
               size="sm"
               variant="outline"
               className="h-7 text-xs gap-1.5 border-orange-500/30 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-950/40"
               onClick={() => setExportOpen(true)}
             >
-              <Download className="size-3" /> Export Excel Register
+              <Download className="size-3" /> Export Monthly Report (.xlsx)
             </Button>
             <Button
               size="sm"
@@ -799,8 +809,19 @@ function MessStudentsPage() {
         open={exportOpen}
         onClose={() => setExportOpen(false)}
         mess={mess ?? null}
+        allMesses={messes}
         admissions={admissions}
       />
+
+      {/* Daily Operations & Mess-Off Dialog */}
+      {mess && (
+        <MessDailyTiffinDialog
+          open={dailyOpsOpen}
+          onClose={() => setDailyOpsOpen(false)}
+          mess={mess}
+          admissions={admissions}
+        />
+      )}
     </AdminShell>
   );
 }
